@@ -1,0 +1,423 @@
+interface AuthObject {
+  user: any;
+}
+import { Inject, Injectable, HttpStatus, Logger } from '@nestjs/common';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
+import * as _ from 'lodash';
+import * as custom from '@repo/source/utilities/custom-helper';
+import { LoggerHandler } from '@repo/source/utilities/logger-handler';
+import { BlockResultDto, SettingsParamsDto } from '@repo/source/common/dto/common.dto';
+import { ResponseLibrary } from '@repo/source/utilities/response-library';
+import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
+import { ModuleService } from '@repo/source/services/module.service';
+import { ElasticService } from '@repo/source/services/elastic.service';
+import { ConfigService } from '@nestjs/config';
+import { distance } from 'mathjs';
+import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
+import { CarWishlistEntity } from '../entities/cars.entity';
+import { CustomerEntity } from '@repo/source/entities/customer.entity';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
+@Injectable()
+export class CarSlideService {
+  protected readonly log = new LoggerHandler(
+    CarSlideService.name,
+  ).getInstance();
+  protected inputParams: object = {};
+  protected blockResult: BlockResultDto;
+  protected settingsParams: SettingsParamsDto;
+  protected multipleKeys: any[] = [];
+  private keycloakUrl: string;
+  private keycloakRealm: string;
+  protected requestObj: AuthObject = {
+    user: {},
+  };
+  @InjectDataSource()
+  protected dataSource: DataSource;
+  @Inject()
+  protected readonly general: CitGeneralLibrary;
+  @Inject()
+  protected readonly response: ResponseLibrary;
+  @Inject()
+  protected readonly moduleService: ModuleService;
+  constructor(
+    protected readonly elasticService: ElasticService,
+    protected readonly configService: ConfigService,
+    @InjectRepository(CarWishlistEntity)
+    private readonly carWishlistRepo: Repository<CarWishlistEntity>,
+    @InjectRepository(CustomerEntity)
+    private readonly modCustomerRepo: Repository<CustomerEntity>,
+    @Inject(REQUEST) private readonly request: Request,
+  ) {
+    this.keycloakUrl = this.configService.get<string>('KEYCLOAK_BASE_URL');
+    this.keycloakRealm = this.configService.get<string>('KEYCLOAK_REALM');
+  }
+  async startCarSlide(reqObject, reqParams) {
+    let outputResponse = {};
+    try {
+      this.requestObj = reqObject;
+      this.inputParams = reqParams;
+      let inputParams = reqParams;
+      inputParams = await this.getCarSlide(inputParams);
+
+      if (!_.isEmpty(inputParams.car_slide)) {
+        outputResponse = this.carSlideFinishedSuccess(inputParams);
+      } else {
+        outputResponse = this.carSlideFinishedFailure(inputParams);
+      }
+    } catch (err) {
+      this.log.error('API Error >> car_slide >>', err);
+    }
+    return outputResponse;
+  }
+  async getCarSlide(inputParams: any) {
+    this.blockResult = {};
+    try {
+      let index = 'nest_local_cars';
+      let image_path =
+        process.env.BASE_URL +
+        '/' +
+        this.configService.get('app.upload_url') +
+        'images';
+      let cartagName = inputParams.tagName ? inputParams.tagName.split(',') : '';
+      let body_type = inputParams.body_code;
+      let search_params = {
+        size: 0,
+        query: cartagName
+          ? {
+            bool: {
+              filter: [
+                Array.isArray(cartagName)
+                  ? { terms: { car_tag: cartagName } }
+                  : { term: { car_tag: cartagName } },
+                ...(Array.isArray(cartagName) &&
+                  cartagName.includes('trending_cars') &&
+                  body_type
+                  ? [{ term: { body_code: body_type } }]
+                  : cartagName === 'trending_cars' && body_type
+                    ? [{ term: { body_code: body_type } }]
+                    : []),
+              ],
+            },
+          }
+          : undefined,
+        aggs: cartagName
+          ? Object.fromEntries(
+            (Array.isArray(cartagName) ? cartagName : [cartagName]).map((tag) => [
+              `${tag}_cars`,
+              {
+                filter: {
+                  bool: {
+                    must: [{ term: { car_tag: tag } }],
+                    ...(tag === 'trending_cars' && body_type
+                      ? { filter: [{ term: { body_code: body_type } }] }
+                      : {}),
+                  },
+                },
+                aggs: {
+                  cars: {
+                    top_hits: {
+                      size: 6,
+                      _source: [
+                        'carId',
+                        'bodyType',
+                        'carName',
+                        'price',
+                        'drivenDistance',
+                        'car_slug',
+                        'fuelType',
+                        'transmissionType',
+                        'car_image',
+                        'added_date',
+                        'body_code',
+                        'analytics'
+                      ],
+                      sort: [
+                        {
+                          added_date: {
+                            order: 'desc'
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ])
+          )
+          : {
+            group_by_car_tag: {
+              terms: {
+                field: 'car_tag',
+                size: 100,
+              },
+              aggs: {
+                cars: {
+                  top_hits: {
+                    size: 18,
+                    _source: [
+                      'carId',
+                      'bodyType',
+                      'carName',
+                      'price',
+                      'drivenDistance',
+                      'car_slug',
+                      'fuelType',
+                      'transmissionType',
+                      'car_image',
+                      'added_date',
+                      'body_code',
+                      'analytics'
+                    ],
+                    sort: [
+                      {
+                        added_date: {
+                          order: 'desc'
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+      };
+
+      const results = await this.elasticService.searchGlobalData(
+        index,
+        search_params,
+        'Yes',
+      );
+      if (!_.isObject(results) || _.isEmpty(results)) {
+        throw new Error('No records found.');
+      }
+      const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+      let fileConfig: FileFetchDto;
+      let currency_code = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX')
+      fileConfig = {};
+      fileConfig.source = 'amazon';
+      fileConfig.extensions =
+        await this.general.getConfigItem('allowed_extensions');
+      let data = cartagName
+        ? await Promise.all(
+          cartagName.map(async (element) => {
+            const carResults = results[`${element}_cars`]?.cars.hits.hits || [];
+
+            const processedCars = await Promise.all(
+              carResults.map(async (hit) => {
+
+                hit._source['is_wishlist'] = 'No';
+
+                const accessToken = this.request.cookies['front-access-token'];
+                if (accessToken) {
+                  const userInfoUrl = `${this.keycloakUrl}/realms/${this.keycloakRealm}/protocol/openid-connect/userinfo`;
+                  const headers = { Authorization: `Bearer ${accessToken}` };
+
+                  const userInfoResponse = await this.general.callThirdPartyApi('GET', userInfoUrl, '', headers);
+                  if (userInfoResponse.data) {
+                    const userInfo = userInfoResponse.data;
+                    const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+                    if (user) {
+
+                      const wishlist_data = await this.carWishlistRepo.findOne({
+                        where: { carId: hit._source['carId'], userId: user.id }
+                      });
+
+                      hit._source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
+                    }
+                  }
+                }
+
+                let carImage = '';
+                if (hit._source['car_image']) {
+                  fileConfig.path = `car_images_${aws_folder}/${hit._source['carId']}`;
+                  fileConfig.image_name = hit._source['car_image'];
+                  carImage = await this.general.getFile(fileConfig, inputParams);
+                }
+
+                return {
+                  ...hit._source,
+                  carSlug: hit._source['car_slug'],
+                  added_date: this.general.timeAgo(hit._source['added_date']),
+                  addedDate: this.general.timeAgo(hit._source['added_date']),
+                  price: this.general.numberFormat(
+                    hit._source['price'],
+                    'currency',
+                    'AED',
+                  ),
+                  currency_code: currency_code,
+                  carImage,
+                  drivenDistance:
+                    this.general.numberFormat(
+                      hit._source['drivenDistance'],
+                      'numerical',
+                    ),
+                  distanceSuffix: 'Miles',
+                  isWishlist: hit._source['is_wishlist']
+                };
+              })
+            );
+            return { [element]: processedCars };
+          })
+        )
+        : Object.assign(
+          {},
+          ...(await Promise.all(
+            results['group_by_car_tag'].buckets.map(async (key) => {
+              const cars = await Promise.all(
+                key.cars.hits.hits.map(async (hit) => {
+                  const { _source } = hit;
+
+                  _source['is_wishlist'] = 'No';
+
+                  const accessToken = this.request.cookies['front-access-token'];
+                  if (accessToken) {
+                    const userInfoUrl = `${this.keycloakUrl}/realms/${this.keycloakRealm}/protocol/openid-connect/userinfo`;
+                    const headers = { Authorization: `Bearer ${accessToken}` };
+                    const userInfoResponse = await this.general.callThirdPartyApi('GET', userInfoUrl, '', headers);
+                    if (userInfoResponse.data) {
+                      const userInfo = userInfoResponse.data;
+
+                      const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+
+                      if (user) {
+
+                        const wishlist_data = await this.carWishlistRepo.findOne({
+                          where: { carId: _source['carId'], userId: user.id }
+                        });
+
+                        _source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
+                      }
+                    }
+                  }
+
+                  let carImage = '';
+
+                  if (_source['car_image']) {
+                    fileConfig.path = `car_images_${aws_folder}/${hit._source['carId']}`;
+                    fileConfig.image_name = _source['car_image'];
+                    carImage = await this.general.getFile(fileConfig, inputParams);
+                  }
+
+                  return {
+                    ..._source,
+                    added_date: this.general.timeAgo(_source['added_date']),
+                    addedDate: this.general.timeAgo(_source['added_date']),
+                    carSlug: _source['car_slug'],
+                    price: this.general.numberFormat(
+                      _source['price'],
+                      'currency',
+                      'AED',
+                    ),
+                    currency_code: currency_code,
+                    carImage,
+                    drivenDistance:
+                      this.general.numberFormat(
+                        _source['drivenDistance'],
+                        'numerical',
+                      ) + ' Miles',
+                    isWishlist: _source['is_wishlist']
+                  };
+                }),
+              );
+
+              if (key.key === 'trending_cars') {
+                const groupedByBodyType = cars.reduce((acc, car) => {
+                  const bodyType = car.body_code || 'Unknown';
+                  acc[bodyType] = acc[bodyType] || [];
+                  acc[bodyType].push(car);
+                  return acc;
+                }, {} as Record<string, any[]>);
+
+                return { trending_cars: groupedByBodyType };
+              }
+              return { [key.key]: cars.slice(0, 6) };
+            }),
+          )),
+        );
+      if (data.length > 0) {
+        let finalResult = Object.assign({}, ...data);
+        const output = Object.keys(finalResult).length === 1
+          ? Object.values(finalResult)[0]
+          : finalResult;
+        data = output
+      }
+
+      if (_.isObject(data) && !_.isEmpty(data)) {
+        const success = 1;
+        const message = 'Records found.';
+
+        const queryResult = {
+          success,
+          message,
+          data,
+        };
+        this.blockResult = queryResult;
+      } else {
+        throw new Error('No records found.');
+      }
+    } catch (err) {
+      console.log(err)
+      this.blockResult.success = 0;
+      this.blockResult.message = err;
+      this.blockResult.data = [];
+    }
+    inputParams.car_slide = this.blockResult.data;
+    return inputParams;
+  }
+
+  carSlideFinishedSuccess(inputParams: any) {
+    const settingFields = {
+      status: 200,
+      success: 1,
+      message: custom.lang('car slide list found.'),
+      fields: [],
+    };
+    const outputKeys = ['car_slide'];
+    settingFields.fields = [
+      'tagName',
+      'carName',
+      'price',
+      'drivenDistance',
+      'carSlug',
+      'fuelType',
+      'transmissionType',
+      'bodyType',
+      'addedDate',
+      'carImage',
+      'carId',
+      'body_code',
+      'currency_code',
+      'analytics',
+      'isWishlist',
+    ];
+    const outputData: any = {};
+    outputData.settings = { ...settingFields, ...this.settingsParams };
+    outputData.data = inputParams;
+
+    const funcData: any = {};
+    funcData.name = 'car_slide';
+
+    funcData.output_keys = outputKeys;
+    funcData.multiple_keys = this.multipleKeys;
+    return this.response.outputResponse(outputData, funcData);
+  }
+  carSlideFinishedFailure(inputParams: any) {
+    const settingFields = {
+      status: 200,
+      success: 0,
+      message: custom.lang('car slide list not found.'),
+      fields: [],
+    };
+    return this.response.outputResponse(
+      {
+        settings: settingFields,
+        data: inputParams,
+      },
+      {
+        name: 'car_slide',
+      },
+    );
+  }
+}
