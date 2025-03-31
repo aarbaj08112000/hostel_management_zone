@@ -1,0 +1,198 @@
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { UserBase } from '@repo/source/entities/base-user.entity';
+enum Negotiable {
+  Yes = 'Yes',
+  No = 'No',
+}
+
+enum NegotiableRange {
+  High = 'High',
+  Medium = 'Medium',
+  Low = 'Low',
+}
+
+enum CarCondition {
+  Excellent = 'Excellent',
+  Good = 'Good',
+  Satisfactory = 'Satisfactory',
+}
+
+enum Status {
+  Active = 'Active',
+  Inactive = 'Inactive',
+  Booked = 'Booked',
+  Sold = 'Sold',
+  Draft = 'Draft',
+}
+enum YesNo {
+  Yes = 'Yes',
+  No = 'No',
+}
+@Entity('cars')
+export class CarEntity extends UserBase {
+  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
+  carId: number;
+
+  @Column({ type: 'varchar', length: 255 })
+  carName: string;
+
+  @Column({ type: 'text', nullable: true })
+  carDescription: string;
+
+  @Column({ type: 'double', precision: 15, scale: 2 })
+  price: number;
+
+  @Column({ type: 'enum', enum: Negotiable })
+  negotiable: Negotiable;
+
+  @Column({ type: 'enum', enum: NegotiableRange })
+  negotiableRange: NegotiableRange;
+
+  @Column({ type: 'enum', enum: CarCondition })
+  carCondition: CarCondition;
+
+  @Column({ type: 'double', precision: 15, scale: 2, nullable: true })
+  monthlyEMIAmount: number;
+
+  @Column({ type: 'varchar', length: 255 })
+  slug: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  carImage: string;
+
+  @Column({ type: 'text', nullable: true })
+  remarks: string;
+
+  @Column({ type: 'enum', enum: Status, default: Status.Active })
+  status: Status;
+
+  @Column({ type: 'longtext', nullable: true })
+  shortDescription: string;
+
+  @Column({ type: 'text', nullable: true })
+  contactDetails: string;
+
+  @Column({ type: 'text', nullable: true })
+  overviewTitle: string;
+
+  @Column({ type: 'enum', enum: YesNo, default: YesNo.Yes })
+  isListed: YesNo;
+
+  @Column({ type: 'text', nullable: true })
+  carCode: string;
+
+}
+
+enum InsuranceType {
+  ThirdParty = 'ThirdParty',
+  Comprehensible = 'Comprehensible',
+  NotAvailable = 'NotAvailable',
+}
+
+
+enum accidentalHistory {
+  no_accidental_history = 'no_accidental_history',
+  minor_wear_tear = 'minor_wear_tear',
+}
+
+@Entity('car_history')
+export class CarHistoryEntity extends UserBase {
+  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
+  carHistoryId: number;
+
+  @Column({ type: 'int', unsigned: true })
+  carId: number;
+
+  @Column({ type: 'varchar', length: 255 })
+  registrationNumber: string;
+
+  @Column({ type: 'date' })
+  registrationDate: Date;
+
+  @Column({ type: 'date' })
+  registrationExpiry: Date;
+
+  @Column({ type: 'int', unsigned: true })
+  locationId: number;
+
+  @Column({ type: 'enum', enum: InsuranceType })
+  insuranceType: InsuranceType;
+
+  @Column({ type: 'date', nullable: true })
+  insuranceExpiry: Date;
+
+  @Column({ type: 'enum', enum: YesNo })
+  accidentHistory: YesNo;
+
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  insuranceProvideId: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  insurancePolicyNumber: string;
+
+  @Column({ type: 'enum', enum: YesNo })
+  isColetral: YesNo;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  coletralWith: string;
+
+  @Column({ type: 'enum', enum: accidentalHistory })
+  accidentalHistory: accidentalHistory;
+
+  @Column({ type: 'enum', enum: YesNo })
+  afterMarketModification: YesNo;
+}
+
+@Entity('car_tags')
+export class CarTagEntity extends UserBase {
+  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
+  carTagId: number;
+
+  @Column({ type: 'int' })
+  tagId: number;
+
+  @Column({ type: 'int' })
+  carId: number;
+}
+
+@Entity('car_feature')
+export class CarFeatureEntity extends UserBase {
+  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
+  carFeatureId: number;
+
+  @Column({ type: 'int' })
+  featureId: number;
+
+  @Column({ type: 'int' })
+  carId: number;
+
+  @Column({ type: 'varchar' })
+  featureValue: string;
+}
+
+@Entity('car_documents')
+export class CarDocumentEntity extends UserBase {
+  @PrimaryGeneratedColumn()
+  carDocumentId: number;
+
+  @Column({ type: 'int' })
+  carId: number;
+
+  @Column({ type: 'varchar', length: 255 })
+  documentTitle: string;
+
+  @Column({ type: 'int' })
+  documentTypeId: string;
+}
+
+@Entity('car_wishlist')
+export class CarWishlistEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'int' })
+  carId: number;
+
+  @Column({ type: 'int' })
+  userId: number;
+}
