@@ -57,6 +57,7 @@ import { CarWishlistService } from './service/car_wishlist.service';
 import { CarListFrontService } from './service/car_list_front.service';
 import { CarFrontDetailsService } from './service/car_front_details.service';
 import { CustomerEntity } from '@repo/source/entities/customer.entity';
+import { CarCompareDetailsService } from "./service/car_compare.service";
 @Module({
   imports: [
     GlobalModule,
@@ -122,6 +123,7 @@ import { CustomerEntity } from '@repo/source/entities/customer.entity';
     CarWishlistService,
     CarListFrontService,
     CarFrontDetailsService,
+    CarCompareDetailsService,
     GlobalModule
   ],
 })

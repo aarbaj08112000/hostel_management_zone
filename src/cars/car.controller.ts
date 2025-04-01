@@ -58,6 +58,7 @@ import { filter } from 'lodash';
 import { parseArgs } from 'util';
 import { CarListFrontService } from './service/car_list_front.service';
 import { CarFrontDetailsService } from './service/car_front_details.service';
+import { CarCompareDetailsService } from './service/car_compare.service';
 import { Client, ClientTCP, MessagePattern, Payload } from '@nestjs/microservices';
 import { Transport } from '@nestjs/microservices';
 @Controller()
@@ -95,7 +96,8 @@ export class CarController {
     private testDriveDetailsService: TestDriveDetailsService,
     private carWishlistService: CarWishlistService,
     private carFrontListService: CarListFrontService,
-    private carFrontDetailService: CarFrontDetailsService
+    private carFrontDetailService: CarFrontDetailsService,
+    private carCompareDetail: CarCompareDetailsService,
   ) { }
   @Client({ transport: Transport.TCP, options: { port: 5005 } }) 
   public client: ClientTCP; 
@@ -132,27 +134,21 @@ export class CarController {
     };
     return this.carFrontDetailService.startCarDetails(request,inputParams);
   }
-  @Post('fetch-user')
-  async getCarDetails(user_id: string) {
-    try {
-      const pattern = 'user-data';
-      const payload = { user_id };
-      
-      console.log('Client connection status:', this.client['isConnected']); 
-      if (!this.client['isConnected']) {
-        console.log('Client is not connected, retrying...');
-        await this.client.connect(); 
-      }
-
-      console.log('Sending message to microservice');
-      const response = await this.client.send(pattern, payload)
-      console.log('Response from microservice:', response);
-
-      return response;
-    } catch (err) {
-      console.log('Error while sending message:', err);
-      throw err;  
-    }
+  @Post('car-compare')
+  async carCompare(
+    @Req() request: Request,
+    @Body()
+    body,
+  ) {
+    let search_by = 'slug';
+    let search_key = body.slug;
+    const index = 'nest_local_cars';
+    let inputParams = {
+      search_key,
+      index,
+      search_by,
+    };
+    return await this.carCompareDetail.startCarDetails(request, inputParams);
   }
   @Get('front-cars-details')
   async frontCarDetail(
@@ -179,7 +175,7 @@ export class CarController {
         if (!params.filters) {
           params.filters = {};
         }
-
+        params.filters = this.map_arr(params.filters)
         Object.assign(params.filters, {
           ...(params.brand && { brandName: params.brand }),
           ...(params.model && { modelName: params.model }),
@@ -639,7 +635,10 @@ export class CarController {
   async carList(@Req() request: Request, @Body() body: CarListDto) {
     try {
       const params = body;
+
       if ('is_front' in params && params.is_front === 'Yes') {
+        params.filters = this.map_arr(params.filters)
+
         if (!params.filters) {
           params.filters = {};
         }
@@ -649,7 +648,6 @@ export class CarController {
           ...(params.model && { modelName: params.model }),
           ...(params.tag && { car_tag: params.tag })
         });
-
         if (!params.sort) {
           params.sort = [];
         }
@@ -667,7 +665,7 @@ export class CarController {
     }
   }
 
-  @Get('car-compare')
+  @Get('car-compare-dropdown')
   async getCarCompareData(@Req() request: Request, @Query() params: any) {
     if ('brandName' in params) {
       params['filters'] = [{ "key": "brandCode", "value": params['brandName'], "operator": "contain" }];
@@ -726,123 +724,133 @@ export class CarController {
     }
   }
 
-  @Get('car-filter')
-  async fetchCarFilter(@Req() request: Request, @Query() params: any) {
+  @Post('car-filter')
+  async fetchCarFilter(@Req() request: Request, @Body() parameters: any) {
     let filter_arr = {};
-    let exteriorColor = await this.colorListService.startColor(request, params);
-
-    if (exteriorColor['data'].length > 0) {
-      exteriorColor = {
-        searchParam: 'exteriorColorName',
-        label: custom.lang('Color'),
-        values: Object.values(exteriorColor['data']).map((key) => ({
-          key: key['color_name'].toLowerCase(),
-          value: key['color_code'],
-          label: key['color_name'],
-        })),
-      };
-
-      filter_arr = { ...filter_arr, exteriorColor };
+    let params: any = {};
+    if (!params.filters) {
+      params.filters = {};
     }
+    parameters.filters = this.map_arr(parameters.filters);
+    params.filters = { status: 'Active' };
+    let exteriorColor = await this.colorListService.startColor(request, params);
+    exteriorColor = {
+      searchParam: 'color',
+      searchType: 'eq',
+      label: custom.lang('Color'),
+      values: exteriorColor['data'].length > 0 ? Object.values(exteriorColor['data']).map((key) => ({
+        key: key['color_name'].toLowerCase(),
+        value: key['color_code'],
+        label: key['color_name'],
+      })) : [],
+    };
+
+    filter_arr = { ...filter_arr, exteriorColor };
 
     let brandName = await this.brandListService.startBrand(request, params);
-    if (brandName['data'].length > 0) {
-      brandName = {
-        searchParam: 'brandName',
-        label: custom.lang('Brand'),
-        values: Object.values(brandName['data']).map((key) => ({
-          key: key['brand_code'].toLowerCase(),
-          value: key['brand_name'],
-          image: key['brand_image'] ? key['brand_image'] : ''
-        })),
-      };
+    brandName = {
+      searchParam: 'brand',
+      searchType: 'eq',
+      label: custom.lang('Brand'),
+      values: brandName['data'].length > 0 ? Object.values(brandName['data']).map((key) => ({
+        key: key['brand_code'].toLowerCase(),
+        value: key['brand_name'],
+        image: key['brand_image'] ? key['brand_image'] : ''
+      })) : [],
+    };
 
-      filter_arr = { ...filter_arr, brandName };
-    }
+    filter_arr = { ...filter_arr, brandName };
+
     let bodyType = await this.bodyList(request, params);
 
-    if (bodyType['data'].length > 0) {
-      bodyType = {
-        searchParam: 'bodyType',
-        label: custom.lang('Body Type'),
-        values: Object.values(bodyType['data']).map((key) => ({
-          key: key['body_code'].toLowerCase(),
-          value: key['body_type'],
-        })),
-      };
-      filter_arr = { ...filter_arr, bodyType };
-    }
-    if ('brandName' in params) {
-      params['filters'] = [{ "key": "brand_code", "value": params['brandName'], "operator": "contain" }]
+    bodyType = {
+      searchParam: 'body',
+      searchType: 'eq',
+      label: custom.lang('Body Type'),
+      values: bodyType['data'].length > 0 ? Object.values(bodyType['data']).map((key) => ({
+        key: key['body_code'].toLowerCase(),
+        value: key['body_type'],
+      })) : [],
+    };
+    filter_arr = { ...filter_arr, bodyType };
+
+    if ('brandCode' in parameters.filters) {
+      params['is_front'] = 'Yes';
+      params['filters'] = { 'brand_code': parameters.filters['brandCode'] }
     }
     let modelName = await this.modelList(request, params);
-    if (modelName['data'].length > 0) {
-      modelName = {
-        searchParam: 'modelName',
-        label: custom.lang('Model'),
-        values: Object.values(modelName['data']).map((key) => ({
-          key: key['model_code'].toLowerCase(),
-          value: key['model_name'],
-        })),
-      };
 
-      filter_arr = { ...filter_arr, modelName };
-    }
+    modelName = {
+      searchParam: 'model',
+      searchType: 'eq',
+      label: custom.lang('Model'),
+      values: modelName['data'].length > 0 ? Object.values(modelName['data']).map((key) => ({
+        key: key['model_code'].toLowerCase(),
+        value: key['model_name'],
+        brandCode: key['brand_code']
+      })) : [],
+    };
+
+    filter_arr = { ...filter_arr, modelName };
+
     if ('filters' in params) {
       delete params['filters']
     }
-    if ('modelName' in params) {
-      params['filters'] = [{ "key": "model_code", "value": params['modelName'], "operator": "contain" }]
+    if ('modelName' in parameters.filters) {
+      params['is_front'] = 'Yes';
+      params['filters'] = { 'model_code': parameters.filters['modelName'] }
     }
     let carVariant = await this.variantListService.startVariantList(request, params);
-    if (carVariant['data'].length > 0) {
-      carVariant = {
-        searchParam: 'carVariant',
-        label: custom.lang('Variants'),
-        values: Object.values(carVariant['data']).map((key) => ({
-          key: key['variant_code'].toLowerCase(),
-          value: key['variant_name'],
-        })),
-      };
+    carVariant = {
+      searchParam: 'carVariant',
+      searchType: 'eq',
+      label: custom.lang('Variants'),
+      values: carVariant['data'].length > 0 ? Object.values(carVariant['data']).map((key) => ({
+        key: key['variant_code'].toLowerCase(),
+        value: key['variant_name'],
+        modelCode: key['model_code']
+      })) : [],
+    };
 
-      filter_arr = { ...filter_arr, carVariant };
-    }
+    filter_arr = { ...filter_arr, carVariant };
     if ('filters' in params) {
       delete params['filters']
     }
     let fuelType = {
-      searchParam: 'fuelType',
+      searchParam: 'fuel',
+      searchType: 'eq',
       label: custom.lang('Fuel Type'),
       values: [
         {
-          key: 'petrol',
+          key: 'Petrol',
           value: 'Petrol',
         },
         {
-          key: 'diesel',
+          key: 'Diesel',
           value: 'Diesel',
         },
         {
-          key: 'hybrid',
+          key: 'Hybrid',
           value: 'Hybrid',
         },
         {
-          key: 'electric',
+          key: 'Electric',
           value: 'Electric',
         },
       ],
     };
     filter_arr = { ...filter_arr, fuelType };
     let transmissionType = {
-      searchParam: 'transmissionType',
+      searchParam: 'transmission',
+      searchType: 'eq',
       label: custom.lang('Transmission'),
       values: [
         {
-          key: 'manual',
+          key: 'Manual',
           value: 'Manual',
         },
         {
-          key: 'automatic',
+          key: 'Automatic',
           value: 'Automatic',
         },
         {
@@ -853,7 +861,8 @@ export class CarController {
     };
     filter_arr = { ...filter_arr, transmissionType };
     let manufactureYear = {
-      searchParam: 'manufactureYear',
+      searchParam: 'year',
+      searchType: 'btw',
       label: custom.lang('Year'),
       values: {
         from: '2021',
@@ -862,38 +871,11 @@ export class CarController {
     };
     filter_arr = { ...filter_arr, manufactureYear };
 
-    let carBudget = {
-      searchParam: 'carBudget',
-      label: custom.lang('Budget'),
-      values: [
-        {
-          key: 'below_10000',
-          value: 'Below AED 10,000',
-        },
-        {
-          key: '10000_20000',
-          value: 'AED 10,000 - AED 20,000',
-        },
-        {
-          key: '20000_30000',
-          value: 'AED 20,000 - AED 30,000',
-        },
-        {
-          key: '30000_50000',
-          value: 'AED 30,000 - AED 50,000',
-        },
-        {
-          key: 'above_50000',
-          value: 'Above AED 50,000',
-        },
-      ],
-    };
-    filter_arr = { ...filter_arr, carBudget };
-
     let price_limit = await this.general.getConfigItem('PRICE_LIMIT');
     price_limit = price_limit.split('-');
     let carPrice = {
       searchParam: 'price',
+      searchType: 'btw',
       label: custom.lang('Price'),
       values: {
         from: price_limit[0],
@@ -908,6 +890,7 @@ export class CarController {
     filter_arr = { ...filter_arr, carPrice };
     return filter_arr;
   }
+
 
   @Get('cars-filter')
   async fetchFilters(@Query('list') list: string) {
@@ -1133,5 +1116,35 @@ export class CarController {
   @Delete('car-wishlist-delete')
   async carWishlistDelete(@Req() request: ExpressRequest, @Body() body: CarWishlistDto) {
     return await this.carWishlistService.removeFromWishlist(request, body);
+  }
+  map_arr(type) {
+    try {
+      if (typeof type === 'undefined') {
+        return {};
+      }
+      const mapping = {
+        'color': 'exteriorColorName',
+        'brand': 'brandCode',
+        'body': 'body_code',
+        'model': 'modelName',
+        'fuel': 'fuelType',
+        'transmission': 'transmissionType',
+        'year': 'manufactureYear'
+      };
+
+      let mapped_filter = {};
+      for (const key in type) {
+        if (type.hasOwnProperty(key)) {
+          if (mapping[key]) {
+            mapped_filter[mapping[key]] = type[key];
+          } else {
+            mapped_filter[key] = type[key]
+          }
+        }
+      }
+      return mapped_filter;
+    } catch (err) {
+      console.error(err);
+    }
   }
 }
