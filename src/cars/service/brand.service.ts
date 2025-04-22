@@ -126,7 +126,7 @@ export class BrandService {
     const settingFields = {
       status: 200,
       success: 1,
-      message: custom.lang('brand list found.'),
+      message: custom.lang('Make list found.'),
       fields: [],
     };
     settingFields.fields = [
@@ -137,6 +137,9 @@ export class BrandService {
       'status',
       'added_date', 'updated_by', 'added_by', 'updated_date', 'added_name', 'updated_name'
     ];
+    if ('skip_brand' in inputParams && inputParams.skip_brand == 'Yes') {
+      settingFields.fields.push('model_codes')
+    }
     const outputKeys = ['brand'];
 
     const outputData: any = {};
@@ -154,7 +157,7 @@ export class BrandService {
     const settingFields = {
       status: 200,
       success: 0,
-      message: custom.lang('brand list not found.'),
+      message: custom.lang('Make list not found.'),
       fields: [],
     };
     return this.response.outputResponse(

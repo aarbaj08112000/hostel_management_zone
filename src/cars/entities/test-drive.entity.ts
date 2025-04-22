@@ -6,7 +6,7 @@ enum TYPE {
   ATSHOWRROM = 'AtShowroom'
 }
 
-enum STATUS {
+export enum STATUS {
   ACTIVE = 'Active',
   SCHEDULED = 'Scheduled',
   ONGOING = 'Ongoing',
@@ -52,4 +52,49 @@ export class TestDriveEntity extends UserBase {
 
   @Column({ type: 'text' })
   attachment: string;
+
+  @Column({ type: 'text', nullable: true })
+  consentInfo: string;
+
+  @Column({ type: 'int', nullable: true })
+  salesExecutiveId: number;
+
+}
+
+@Entity('test_drive_details')
+export class TestDriveDetailsEntity {
+
+  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
+  id: number;
+
+  @Column({ type: 'int', nullable: true })
+  testDriveId: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  licenseNo: string;
+
+  @Column({ type: 'int', nullable: true })
+  startOdometerReading: number;
+
+  @Column({ type: 'int', nullable: true })
+  endOdometerReading: number;
+
+  @Column({ type: 'text', nullable: true })
+  remarks: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  attachment: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  status: STATUS;
+
+  @Column({ type: 'int', nullable: true })
+  updatedBy: number;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedDate: Date;
 }

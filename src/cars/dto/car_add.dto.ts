@@ -13,13 +13,29 @@ import {
   IsDate,
   registerDecorator, ValidationArguments, ValidationOptions
 } from 'class-validator';
+function RequiredIfNotDraft() {
+  return ValidateIf((obj) => !obj.is_draft);
+}
 import * as custom from '@repo/source/utilities/custom-helper';
 import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { MaxFileSize, IsFileMimeType } from '@repo/source/decorators/file.decorators';
 import { Transform } from 'class-transformer';
 export class CarAddDto {
+  @RequiredIfNotDraft()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the location Id field.'),
+  })
+  location_id: number;
+
+  @RequiredIfNotDraft()
   @IsString()
+  @IsIn(['CanBeExported', 'NotForExport'])
+  export_status: string;
+
+  @IsString()
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please enter a value for the carName field.'),
   })
@@ -30,28 +46,11 @@ export class CarAddDto {
   car_description?: string;
 
   @Transform(({ value }) => Number(value))
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please enter a value for the price field.'),
   })
   price: number;
-
-  @IsString()
-  @IsIn(['Yes', 'No'])
-  // @IsNotEmpty({
-  //   message: () =>
-  //     custom.lang('Please enter a value for the negotiable field.'),
-  // })
-  @IsOptional()
-  negotiable: string;
-
-  @IsString()
-  @IsIn(['High', 'Medium', 'Low'])
-  // @IsNotEmpty({
-  //   message: () =>
-  //     custom.lang('Please enter a value for the negotiableRange field.'),
-  // })
-  @IsOptional()
-  negotiable_range: string;
 
   @IsString()
   @IsIn(['Excellent', 'Good', 'Satisfactory'])
@@ -62,11 +61,9 @@ export class CarAddDto {
   @IsOptional()
   car_condition: string;
 
-  @IsOptional()
-  @Transform(({ value }) => Number(value))
-  monthly_emi_amount?: number;
 
   @IsString()
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please enter a value for the slug field.'),
   })
@@ -76,11 +73,13 @@ export class CarAddDto {
   @IsString()
   remarks?: string;
 
-  @IsString()
-  @IsIn(['Active', 'Inactive', 'Booked', 'Sold', 'Draft'])
-  @IsNotEmpty({
-    message: () => custom.lang('Please enter a value for the status field.'),
-  })
+  // @IsString()
+  // @IsIn(['Available', 'UnAvailable', 'Booked', 'Sold', 'Draft'])
+  // @RequiredIfNotDraft()
+  // @IsNotEmpty({
+  //   message: () => custom.lang('Please enter a value for the status field.'),
+  // })
+  @IsOptional()
   status: string;
 
   @IsOptional()
@@ -89,7 +88,7 @@ export class CarAddDto {
 
   @IsOptional()
   @IsString()
-  contact_details: string;
+  contact_person_id: string;
 
   @IsOptional()
   @IsString()
@@ -107,10 +106,18 @@ export class CarAddDto {
   @IsString()
   @IsOptional()
   added_by: number;
+
+  @IsOptional()
+  car_id?: any
+
+  @IsOptional()
+  is_draft?: any
+
 }
 
 export class UpdateCarDTO extends PartialType(CarAddDto) {
   @Transform(({ value }) => Number(value))
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please enter a value for the car_id field.'),
   })
@@ -159,6 +166,7 @@ class UploadedFile {
 
 export class CarsDetailsDto {
   @ValidateIf((o) => !o.car_slug)
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang(
@@ -169,6 +177,7 @@ export class CarsDetailsDto {
 
   @ValidateIf((o) => !o.car_id)
   @IsString()
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang(
@@ -176,35 +185,40 @@ export class CarsDetailsDto {
       ),
   })
   car_slug?: string;
+
+  @IsOptional()
+  dev_publish?: string
+
+  @IsOptional()
+  location_enabled?: string
 }
+
 export class CarHistoryAddDto {
   @IsString()
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the registration Number field.'),
   })
   registration_number: string;
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the registration Date field.'),
   })
   registration_date: Date;
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the registration Expiry field.'),
   })
   registration_expiry: Date;
 
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the location Id field.'),
-  })
-  location_id: number;
-
   @IsString()
   @IsIn(['ThirdParty', 'Comprehensible', 'NotAvailable'])
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the insurance Type field.'),
@@ -216,6 +230,7 @@ export class CarHistoryAddDto {
 
   @IsString()
   @IsIn(['Yes', 'No'])
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the accident History field.'),
@@ -248,7 +263,58 @@ export class CarHistoryAddDto {
   @IsIn(['Yes', 'No'])
   after_market_modification: string;
 
+  @IsIn(['Yes', 'No'])
+  @RequiredIfNotDraft()
+  @IsNotEmpty({
+    message: () => custom.lang('Please select a valid serviceHistory option.'),
+  })
+  service_history: string;
 
+  @IsIn(['Yes', 'No'])
+  @RequiredIfNotDraft()
+  @IsNotEmpty({
+    message: () => custom.lang('Please select a valid warranty option.'),
+  })
+  warranty: string;
+
+  @Transform(({ value }) => Number(value))
+
+  @RequiredIfNotDraft()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the ownerNumber field.'),
+  })
+  owner_number: number;
+
+  @IsOptional()
+  is_draft?: any
 }
 export class CarHistoryUpdateDto extends PartialType(CarHistoryAddDto) { }
+
+export class TimeSlotDto {
+  @ValidateIf((o) => !o.car_slug)
+  @RequiredIfNotDraft()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the car_id field or provide car_slug.',
+      ),
+  })
+  car_id?: string;
+
+  @ValidateIf((o) => !o.car_id)
+  @IsString()
+  @RequiredIfNotDraft()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the car_slug field or provide car_id.',
+      ),
+  })
+  car_slug?: string;
+
+  @IsOptional()
+  date?: string
+}
+
 /* */

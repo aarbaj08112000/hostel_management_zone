@@ -41,8 +41,19 @@ export class CarFeatureAddService extends BaseService {
       this.inputParams = reqParams;
       this.setModuleAPI('add');
       const inputParams = await this.insertCarFeatures(reqParams);
+      let car_id = reqParams.car_id;
+      let car_name = reqParams.car_id;
+      let added_by = reqParams.added_by;
       if (!_.isEmpty(inputParams.inserted_car_features)) {
         outputResponse = this.featureFinishSuccess(inputParams, '');
+
+        let value_json = {
+          "CAR_NAME": car_name,
+          "CAR_ID": car_id,
+          "ADDED_BY": await this.general.getAdminName(added_by),
+          "ADDED_BY_ID": added_by
+        }
+        await this.general.addActivity(this.moduleName, this.moduleAPI, added_by, value_json, car_id);
       } else {
         outputResponse = this.featureFinishFailure(inputParams);
       }
@@ -62,12 +73,24 @@ export class CarFeatureAddService extends BaseService {
       this.setModuleAPI('update');
 
       const inputParams = await this.updateCarFeatureData(reqParams);
+      let car_id = inputParams.car_id;
+      let car_name = inputParams.car_id;
+      let updated_by = 0;
       if (!_.isEmpty(inputParams.updated_car_features)) {
         outputResponse = this.featureFinishSuccess(inputParams, 'update');
+        let value_json = {
+          "CAR_NAME": car_name,
+          "CAR_ID": car_id,
+          "UPDATED_BY": await this.general.getAdminName(updated_by),
+          "UPDATED_BY_ID": updated_by
+        }
+
+        await this.general.addActivity(this.moduleName, this.moduleAPI, updated_by, value_json, car_id);
       } else {
         outputResponse = this.featureFinishFailure(inputParams);
       }
     } catch (err) {
+      console.log(err)
       this.log.error('API Error >> car_feature_update >>', err);
     }
     return outputResponse;
@@ -107,42 +130,22 @@ export class CarFeatureAddService extends BaseService {
     try {
       const { car_id, feature_ids } = inputParams;
 
-      // Extract feature IDs from input
-      const newFeatureIds = feature_ids.map(obj => Object.keys(obj)[0]).filter(key => key !== "");
+      const newFeatureIds = feature_ids
+        .map(obj => obj.feature_id)
+        .filter(id => id !== undefined && id !== null);
 
-      // Get existing feature IDs for the car
-      const existingFeatures = await this.carFeatureRepo.find({ where: { carId: car_id } });
-      const existingFeatureIds = existingFeatures.map((feature) => feature.featureId);
-      if (typeof feature_ids != 'undefined' && feature_ids.length > 0) {
-        let temp = feature_ids.map(obj => obj.feature_id);
-        const newFeatureIds = temp.filter((id) => !existingFeatureIds.includes(id));
-        const removeFeatureIds = existingFeatureIds.filter((id) => !feature_ids.includes(id));
+      await this.carFeatureRepo.delete({ carId: car_id });
 
-        // Delete removed features
-        if (removeFeatureIds.length > 0) {
-          await this.carFeatureRepo.delete({
-            carId: car_id,
-            featureId: In(removeFeatureIds),
-          });
-        }
-
-        // // Insert new features
-        if (newFeatureIds.length > 0) {
-          this.insertCarFeatures(inputParams)
-        }
-        return {
-          success: 1,
-          message: 'Car Features updated successfully.',
-          updated_car_features: { added: newFeatureIds, removed: removeFeatureIds },
-        };
-      } else {
-        await this.carFeatureRepo.delete({ carId: car_id });
-        return {
-          success: 1,
-          message: 'Nothing to Update',
-          updated_car_features: { car_id: car_id }
-        }
+      if (newFeatureIds.length > 0) {
+        await this.insertCarFeatures(inputParams);
       }
+
+      return {
+        success: 1,
+        message: 'Car Features updated successfully.',
+        updated_car_features: { added: newFeatureIds },
+        car_id: car_id
+      };
     } catch (err) {
       console.error('Error updating car features:', err);
       return { success: 0, message: 'Failed to update car features', error: err };
@@ -150,21 +153,23 @@ export class CarFeatureAddService extends BaseService {
   }
 
   // ============ RESPONSE HANDLING ============
-  featureFinishSuccess(inputParams: any, type: string) {
+  async featureFinishSuccess(inputParams: any, type: string) {
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'car_features',
+        data: ''
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'car_list',
+        data: inputParams.car_id
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(
       {
         settings: {

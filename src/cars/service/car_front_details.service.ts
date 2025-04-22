@@ -15,7 +15,8 @@ import { ModuleService } from '@repo/source/services/module.service';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { CarWishlistEntity } from '../entities/cars.entity';
-import { CustomerEntity } from '@repo/source/entities/customer.entity';
+// import { CustomerEntity } from '../entities/customer.entity';
+import { LookupEntity } from '@repo/source/entities/lookup.entity';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 @Injectable()
@@ -45,8 +46,8 @@ export class CarFrontDetailsService {
     protected readonly configService: ConfigService,
     @InjectRepository(CarWishlistEntity)
     private readonly carWishlistRepo: Repository<CarWishlistEntity>,
-    @InjectRepository(CustomerEntity)
-    private readonly modCustomerRepo: Repository<CustomerEntity>,
+    @InjectRepository(LookupEntity)
+    private readonly modCustomerRepo: Repository<LookupEntity>,
     @Inject(REQUEST) private readonly request: Request,
   ) {
     this.keycloakUrl = this.configService.get<string>('KEYCLOAK_BASE_URL');
@@ -107,7 +108,16 @@ export class CarFrontDetailsService {
         "numberOfDoors",
         "latitude",
         "longitude",
-        "locationAddress"
+        "locationAddress",
+        "contactDetails",
+        "warranty",
+        "isListed",
+        "brandName",
+        "modelName",
+        "model_name",
+        "location_id",
+        "operating_hours",
+        "status"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -118,22 +128,41 @@ export class CarFrontDetailsService {
         '',
         _source
       );
-      data['is_wishlist'] = 'No';
-      const accessToken = this.request.headers ? this.request.headers['front-access-token'] : null;
+      if (data['isListed'] == 'No') {
+        if (inputParams?.dev_publish != 'Yes') {
+          throw new Error('No records found.');
+        }
+      }
+      data['isWishList'] = 'No';
+
+      const accessToken = this.request.cookies['front-access-token'];
       if (accessToken) {
         const userInfoUrl = `${this.keycloakUrl}/realms/${this.keycloakRealm}/protocol/openid-connect/userinfo`;
         const headers = { Authorization: `Bearer ${accessToken}` };
 
         const userInfoResponse = await this.general.callThirdPartyApi('GET', userInfoUrl, '', headers);
-        const userInfo = userInfoResponse.data;
+        if (userInfoResponse.data) {
+          const userInfo = userInfoResponse.data;
 
-        const user = await this.modCustomerRepo.findOne({ where: { email: userInfo.email } });
+          // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+          const user = await this.modCustomerRepo
+            .createQueryBuilder('mod_customer')
+          .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
+            phoneNumber: userInfo.preferred_username,
+          })
+            .andWhere("mod_customer.entityName = :entityName", {
+    entityName: 'customer', 
+  })
+          .getOne();
+          if (user) {
 
-        const wishlist_data = await this.carWishlistRepo.findOne({
-          where: { carId: data['carId'], userId: user.id }
-        });
+            const wishlist_data = await this.carWishlistRepo.findOne({
+              where: { carId: data['carId'], userId: user.entityId}
+            });
 
-        data['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
+            data['isWishList'] = wishlist_data ? 'Yes' : 'No';
+          }
+        }
       }
 
       if (data?.car_image != '') {
@@ -182,34 +211,52 @@ export class CarFrontDetailsService {
         data.car_documents = docTags
       }
       data.images = images;
+      data.modelName = data.model_name
       data.engineCapacity = data?.engineCapacity ? this.general.numberFormat(data?.engineCapacity, 'numerical') : '';
       data.drivenDistance = data?.drivenDistance ? this.general.numberFormat(data?.drivenDistance, 'numerical') : '';
       let features = {
         key_features: [],
-        all_features: {}
+        all_features: []
       };
-
       if (data?.features != null) {
+        const categoryAccumulator = {};
+
         data.features.forEach(value => {
           features.key_features.push(value.featureName);
-          if (!features.all_features[value.featureCategoryCode]) {
-            features.all_features[value.featureCategoryCode] = [];
+          if (!categoryAccumulator[value.featureCategoryName]) {
+            categoryAccumulator[value.featureCategoryName] = [];
           }
-          features.all_features[value.featureCategoryCode].push(value.featureName);
+          categoryAccumulator[value.featureCategoryName].push(value.featureName);
         });
+        for (const categoryCode in categoryAccumulator) {
+          features.all_features.push({
+            category: categoryCode,
+            values: categoryAccumulator[categoryCode]
+          });
+        }
         data.features = features;
       }
-      data.distanceSuffix = 'CC';
+
+      data.distanceSuffix = 'km';
+      data.carSlug = data.car_slug;
       data.currencyCode = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX')
       data.formattedPrice = data?.price ? this.general.numberFormat(
         data.price,
         'currency',
         'AED'
       ) : '';
-      console.log(JSON.stringify(data,null,2))
+      data.rating = "4.4"
+      data.horsePowerSuffix = 'HP';
+      data.transmissionSuffix = 'Transmission'
+      data.seatingCapacitySuffix = 'Seater'
+      data.locationTiming = '10:00 AM to 6:00 PM'
+      data.engineSuffix = 'CC';
+      data.noOfCylinders = '6';
+      data.added_date = this.general.timeAgo(data.added_date)
       if (_.isObject(data) && !_.isEmpty(data)) {
         const success = 1;
         const message = 'Records found.';
+
         const queryResult = {
           success,
           message,
@@ -235,15 +282,12 @@ export class CarFrontDetailsService {
       fields: [],
     };
     settingFields.fields = [
-      "carId",
       "carName",
       "price",
       "drivenDistance",
-      "car_slug",
+      "carSlug",
       "fuelType",
       "transmissionType",
-      "car_image",
-      "added_date",
       "bodyName",
       "analytics",
       "interiorImages",
@@ -266,14 +310,30 @@ export class CarFrontDetailsService {
       "currencyCode",
       "latitude",
       "longitude",
-      "locationAddress"
+      "locationAddress",
+      "contactDetails",
+      "isWishList",
+      "rating",
+      "horsePowerSuffix",
+      "transmissionSuffix",
+      "seatingCapacitySuffix",
+      "locationTiming",
+      "engineSuffix",
+      "noOfCylinders",
+      "warranty",
+      "brandName",
+      "modelName",
+      "status",
+      "added_date"
     ];
+    if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
+      settingFields.fields.push('location_id', 'carId', 'operating_hours')
+    }
     const outputKeys = ['car_details'];
 
     const outputData: any = {};
     outputData.settings = { ...settingFields, ...this.settingsParams };
     outputData.data = inputParams;
-
     const funcData: any = {};
     funcData.name = 'car_details';
 

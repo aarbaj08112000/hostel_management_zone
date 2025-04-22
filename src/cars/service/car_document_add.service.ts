@@ -139,14 +139,21 @@ export class CarDocumentAddService {
     return inputParams;
   }
 
-  carDocumentFinishSuccess(inputParams: any) {
+  async carDocumentFinishSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 1,
       message: custom.lang('Car documents added successfully.'),
       fields: ['insert_id', 'insert_carDocument_data'],
     };
-
+    let job_data = {
+      job_function: 'sync_elastic_data',
+      job_params: {
+        module: 'car_list',
+        data: inputParams.car_id
+      },
+    };
+    await this.general.submitGearmanJob(job_data);
     const outputData: any = {
       settings: settingFields,
       data: inputParams,

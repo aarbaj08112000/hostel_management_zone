@@ -113,7 +113,7 @@ export class CarImageDeleteService extends carImageAddService {
 
     return inputParams;
   }
-  carImageFinishSuccess(inputParams: any) {
+  async carImageFinishSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 1,
@@ -126,7 +126,7 @@ export class CarImageDeleteService extends carImageAddService {
         module: 'car_list',
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(
       {
         settings: settingFields,

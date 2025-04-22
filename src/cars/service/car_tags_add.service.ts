@@ -40,7 +40,9 @@ export class CarTagsAddService extends BaseService {
       this.requestObj = reqObject;
       this.inputParams = reqParams;
       this.setModuleAPI('add');
-      const inputParams = await this.insertCarTags(reqParams);
+
+      let inputParams: any = await this.insertCarTags(reqParams);
+      inputParams = { ...inputParams, car_id: reqParams.car_id }
       if (!_.isEmpty(inputParams.inserted_car_tags)) {
         outputResponse = this.tagFinishSuccess(inputParams, '');
       } else {
@@ -66,6 +68,7 @@ export class CarTagsAddService extends BaseService {
           success: 1,
           message: 'Car badge(s) updated successfully.',
           inserted_car_tags: 'successs',
+          process_data: 'No'
         };
       }
 
@@ -84,6 +87,7 @@ export class CarTagsAddService extends BaseService {
         success: 1,
         message: 'Car badge(s) added successfully.',
         inserted_car_tags: insertData,
+        process_data: 'Yes'
       };
     } catch (err) {
       console.error('Error inserting car tags:', err);
@@ -93,33 +97,51 @@ export class CarTagsAddService extends BaseService {
 
 
   // ============ RESPONSE HANDLING ============
-  tagFinishSuccess(inputParams: any, type: string) {
-    let job_data = {
-      job_function: 'sync_elastic_data',
-      job_params: {
-        module: 'tag_list',
-      },
-    };
-    this.general.submitGearmanJob(job_data);
-    let car_job_data = {
-      job_function: 'sync_elastic_data',
-      job_params: {
-        module: 'car_list',
-      },
-    };
-    this.general.submitGearmanJob(car_job_data);
-    return this.response.outputResponse(
-      {
-        settings: {
-          status: 200,
-          success: 1,
-          message: inputParams.message || 'Car badge(s) added successfully.',
-          fields: ['inserted_car_tags'],
+  async tagFinishSuccess(inputParams: any, type: string) {
+    try {
+      let job_data
+      if ('inserted_car_tags' in inputParams && 'process_data' in inputParams && inputParams.process_data == 'Yes') {
+        let tag_ids = inputParams.inserted_car_tags.map((data) => data.tagId)
+        job_data = {
+          job_function: 'sync_elastic_data',
+          job_params: {
+            module: 'tag_list',
+            data: tag_ids
+          },
+        };
+      } else {
+        job_data = {
+          job_function: 'sync_elastic_data',
+          job_params: {
+            module: 'tag_list',
+            data: ''
+          },
+        };
+      }
+      await this.general.submitGearmanJob(job_data);
+      let car_job_data = {
+        job_function: 'sync_elastic_data',
+        job_params: {
+          module: 'car_list',
+          data: inputParams.car_id
         },
-        data: inputParams,
-      },
-      { name: 'car_tag_add' },
-    );
+      };
+      await this.general.submitGearmanJob(car_job_data);
+      return this.response.outputResponse(
+        {
+          settings: {
+            status: 200,
+            success: 1,
+            message: inputParams.message || 'Car badge(s) added successfully.',
+            fields: ['inserted_car_tags'],
+          },
+          data: inputParams,
+        },
+        { name: 'car_tag_add' },
+      );
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   tagFinishFailure(inputParams: any) {

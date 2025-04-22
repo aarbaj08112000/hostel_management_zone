@@ -15,7 +15,8 @@ import { ModuleService } from '@repo/source/services/module.service';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { CarWishlistEntity } from '../entities/cars.entity';
-import { CustomerEntity } from '@repo/source/entities/customer.entity';
+// import { CustomerEntity } from '../entities/customer.entity';
+import { LookupEntity } from '@repo/source/entities/lookup.entity';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 @Injectable()
@@ -45,8 +46,8 @@ export class CarDetailsService {
     protected readonly configService: ConfigService,
     @InjectRepository(CarWishlistEntity)
     private readonly carWishlistRepo: Repository<CarWishlistEntity>,
-    @InjectRepository(CustomerEntity)
-    private readonly modCustomerRepo: Repository<CustomerEntity>,
+    @InjectRepository(LookupEntity)
+    private readonly modCustomerRepo: Repository<LookupEntity>,
     @Inject(REQUEST) private readonly request: Request,
   ) {
     this.keycloakUrl = this.configService.get<string>('KEYCLOAK_BASE_URL');
@@ -86,9 +87,10 @@ export class CarDetailsService {
         index,
         search_by,
       );
+
       data['is_wishlist'] = 'No';
 
-      const accessToken = this.request.headers ? this.request.headers['front-access-token'] : null;
+      const accessToken = this.request.cookies['front-access-token'];
       if (accessToken) {
         const userInfoUrl = `${this.keycloakUrl}/realms/${this.keycloakRealm}/protocol/openid-connect/userinfo`;
         const headers = { Authorization: `Bearer ${accessToken}` };
@@ -97,10 +99,20 @@ export class CarDetailsService {
         if (userInfoResponse.data) {
           const userInfo = userInfoResponse.data;
 
-          const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+          // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+          const user = await this.modCustomerRepo
+            .createQueryBuilder('mod_customer')
+          .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
+            phoneNumber: userInfo.preferred_username,
+          })
+            .andWhere("mod_customer.entityName = :entityName", {
+    entityName: 'customer', 
+  })
+          .getOne();
+      
           if (user) {
             const wishlist_data = await this.carWishlistRepo.findOne({
-              where: { carId: data['carId'], userId: user.id }
+              where: { carId: data['carId'], userId: user.entityId }
             });
 
             data['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
@@ -142,15 +154,45 @@ export class CarDetailsService {
         });
         data.tag_information = tags;
       }
+      // if (data?.car_documents) {
+      //   const pairs = data.car_documents.split(",");
+      //   console.log(pairs)
+      //   const docTags = await Promise.all(pairs.map(async pair => {
+      //     fileConfig.image_name = pair.split(':')[1];
+      //     fileConfig.path = `car_documents_${aws_folder}/${data['carId']}`;
+      //     return { doc_id: pair.split(':')[0], doc_name: await this.general.getFile(fileConfig, inputParams) };
+      //   }));
+      //   data.car_documents = docTags
+      // }
       if (data?.car_documents) {
-        const pairs = data.car_documents.split(",");
-        const docTags = await Promise.all(pairs.map(async pair => {
-          fileConfig.image_name = pair.split(':')[1];
+        const pairs = data.car_documents.match(/{[^}]+}/g);
+        const docTags = await Promise.all(pairs.map(async (pair) => {
+          const doc = {} as {
+            doc_id: string | null;
+            doc_title: string | null;
+            doc_type: string | null;
+          };
+          const idMatch = pair.match(/id:(\d+)/);
+          const titleMatch = pair.match(/title:"([^"]+)"/);
+          const typeMatch = pair.match(/type:(\d+)/);
+
+          doc.doc_id = idMatch ? idMatch[1] : null;
+          doc.doc_title = titleMatch ? titleMatch[1] : null;
+          doc.doc_type = typeMatch ? typeMatch[1] : null;
+          fileConfig.image_name = doc.doc_title;
           fileConfig.path = `car_documents_${aws_folder}/${data['carId']}`;
-          return { doc_id: pair.split(':')[0], doc_name: await this.general.getFile(fileConfig, inputParams) };
+
+          return {
+            doc_id: doc.doc_id,
+            doc_name: await this.general.getFile(fileConfig, inputParams),
+            key: doc.doc_type
+          };
         }));
-        data.car_documents = docTags
+
+        data.car_documents = docTags;
       }
+
+      data.modelName = data.model_name;
       if (_.isObject(data) && !_.isEmpty(data)) {
         const success = 1;
         const message = 'Records found.';

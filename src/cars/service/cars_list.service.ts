@@ -15,8 +15,8 @@ import { ModuleService } from '@repo/source/services/module.service';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import { ConfigService } from '@nestjs/config';
 import { CarWishlistEntity } from '../entities/cars.entity';
-import { CustomerEntity } from '@repo/source/entities/customer.entity';
-
+// import { CustomerEntity } from '../entities/customer.entity';
+import { LookupEntity } from '@repo/source/entities/lookup.entity';
 @Injectable()
 export class CarListService {
   protected readonly log = new LoggerHandler(CarListService.name).getInstance();
@@ -45,8 +45,8 @@ export class CarListService {
     @InjectRepository(CarWishlistEntity)
     private readonly carWishlistRepo: Repository<CarWishlistEntity>,
 
-    @InjectRepository(CustomerEntity)
-    private readonly modCustomerRepo: Repository<CustomerEntity>,
+    @InjectRepository(LookupEntity)
+    private readonly modCustomerRepo: Repository<LookupEntity>,
 
     @Inject(REQUEST) private readonly request: Request,
   ) {
@@ -134,12 +134,20 @@ export class CarListService {
             if (userInfoResponse.data) {
               const userInfo = userInfoResponse.data;
 
-              const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+              // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+              const user = await this.modCustomerRepo
+              .createQueryBuilder('mod_customer')
+              .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
+                phoneNumber: userInfo.preferred_username,
+              }).andWhere("mod_customer.entityName = :entityName", {
+                entityName: 'customer', 
+              })
+              .getOne();
 
               if (user) {
 
                 const wishlist_data = await this.carWishlistRepo.findOne({
-                  where: { carId: hit._source['carId'], userId: user.id }
+                  where: { carId: hit._source['carId'], userId: user.entityId }
                 });
 
                 hit._source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
@@ -224,6 +232,7 @@ export class CarListService {
     };
     settingFields.fields = [
       'carId',
+      'carCode',
       'carName',
       'price',
       'negotiable',
@@ -282,6 +291,7 @@ export class CarListService {
       'exteriorColorName',
       'interiorColorName',
       'is_wishlist',
+      'export_status'
     ];
     const outputKeys = ['get_car_list'];
 

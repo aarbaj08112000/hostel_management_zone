@@ -216,7 +216,7 @@ export class carImageAddService {
    * @param array inputParams inputParams array to process loop flow.
    * @return array response returns array of api response.
    */
-  carImageFinishSuccess(inputParams: any) {
+  async carImageFinishSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 1,
@@ -248,7 +248,7 @@ export class carImageAddService {
         module: 'car_list',
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(outputData, funcData);
   }
 
@@ -260,8 +260,8 @@ export class carImageAddService {
   carImageFinishFailure(inputParams: any) {
     const settingFields = {
       status: 200,
-      success: 0,
-      message: inputParams?.no_upload == 'Yes' ? custom.lang('Nothing to upload.') : custom.lang('Something went wrong, Please try again.'),
+      success: inputParams?.no_upload ? 1 : 0,
+      message: inputParams?.no_upload == 'Yes' ? custom.lang('Images Updated successfully.') : custom.lang('Something went wrong, Please try again.'),
       fields: [],
     };
     return this.response.outputResponse(

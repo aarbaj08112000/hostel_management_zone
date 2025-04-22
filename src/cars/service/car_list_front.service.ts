@@ -15,8 +15,8 @@ import { ModuleService } from '@repo/source/services/module.service';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import { ConfigService } from '@nestjs/config';
 import { CarWishlistEntity } from '../entities/cars.entity';
-import { CustomerEntity } from '@repo/source/entities/customer.entity';
-
+// import { CustomerEntity } from '../entities/customer.entity';
+import { LookupEntity } from '@repo/source/entities/lookup.entity';
 @Injectable()
 export class CarListFrontService {
   protected readonly log = new LoggerHandler(CarListFrontService.name).getInstance();
@@ -45,8 +45,8 @@ export class CarListFrontService {
     @InjectRepository(CarWishlistEntity)
     private readonly carWishlistRepo: Repository<CarWishlistEntity>,
 
-    @InjectRepository(CustomerEntity)
-    private readonly modCustomerRepo: Repository<CustomerEntity>,
+    @InjectRepository(LookupEntity)
+    private readonly modCustomerRepo: Repository<LookupEntity>,
 
     @Inject(REQUEST) private readonly request: Request,
   ) {
@@ -85,9 +85,9 @@ export class CarListFrontService {
       let index = 'nest_local_cars';
       if ('is_front' in inputParams && (inputParams?.is_front == 'Yes' || inputParams?.is_front == 'yes')) {
         if ('filters' in inputParams) {
-          inputParams.filters = { ...inputParams.filters, status: 'Active', isListed: 'Yes' };
+          inputParams.filters = { ...inputParams.filters, status: ['Available', 'Booked'], isListed: 'Yes' };
         } else {
-          inputParams = { ...inputParams, filters: { status: 'Active', isListed: 'Yes' } };
+          inputParams = { ...inputParams, filters: { status: ['Available', 'Booked'], isListed: 'Yes' } };
         }
       }
       let search_params = this.general.createElasticSearchQuery(inputParams);
@@ -103,7 +103,8 @@ export class CarListFrontService {
         "car_image",
         "added_date",
         "body_code",
-        "analytics"
+        "analytics",
+        "status"
       ]
       search_params['_source'] = _source;
       let pageIndex = 1;
@@ -140,8 +141,7 @@ export class CarListFrontService {
 
           hit._source['isWishlist'] = 'No';
 
-          // const accessToken = this.request.cookies['front-access-token'];
-          const accessToken = this.request.headers ? this.request.headers['front-access-token'] : null;
+          const accessToken = this.request.cookies['front-access-token'];
           if (accessToken) {
             const userInfoUrl = `${this.keycloakUrl}/realms/${this.keycloakRealm}/protocol/openid-connect/userinfo`;
             const headers = { Authorization: `Bearer ${accessToken}` };
@@ -150,10 +150,19 @@ export class CarListFrontService {
             if (userInfoResponse.data) {
               const userInfo = userInfoResponse.data;
 
-              const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+              // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+              const user = await this.modCustomerRepo
+            .createQueryBuilder('mod_customer')
+          .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
+            phoneNumber: userInfo.preferred_username,
+          })
+            .andWhere("mod_customer.entityName = :entityName", {
+    entityName: 'customer', 
+  })
+          .getOne();
               if (user) {
                 const wishlist_data = await this.carWishlistRepo.findOne({
-                  where: { carId: hit._source['carId'], userId: user.id }
+                  where: { carId: hit._source['carId'], userId: user.entityId }
                 });
 
                 hit._source['isWishlist'] = wishlist_data ? 'Yes' : 'No';
@@ -175,7 +184,7 @@ export class CarListFrontService {
             hit._source['drivenDistance'],
             'numerical',
           ),
-            hit._source['distanceSuffix'] = 'Miles';
+            hit._source['distanceSuffix'] = 'km';
           hit._source['carSlug'] = hit._source['car_slug']
           hit._source['currency_code'] = currency_code,
             hit._source['carImage'] = hit._source['car_image']
@@ -297,7 +306,8 @@ export class CarListFrontService {
       'exteriorColorName',
       'interiorColorName',
       'isWishlist',
-      'distanceSuffix'
+      'distanceSuffix',
+      "status"
     ];
     const outputKeys = ['get_car_list'];
 

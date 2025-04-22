@@ -15,13 +15,11 @@ async function bootstrap() {
   app.use(cookieParser());
   app.connectMicroservice({
     transport: Transport.TCP,
-    options: { port: process.env.MICROSERVICE }, 
+    options: { port: process.env.MICROSERVICE },
   });
   await app.startAllMicroservices();
-  console.log( process.env.MICROSERVICE)
   const configService = app.get(ConfigService);
   await app.listen(process.env.PORT ?? 3001);
   app.enableShutdownHooks();
-
 }
 bootstrap();

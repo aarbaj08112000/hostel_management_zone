@@ -91,17 +91,22 @@ export class CarCompareDetailsService {
         "horsePower",
         "exteriorColorName",
         "numberOfDoors",
+        "modelName",
+        "model_name",
+        "brandName",
+        "status",
+        "isListed"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
-      const data = await this.elasticService.getById(
+      let data = await this.elasticService.getById(
         search_key,
         index,
         search_by,
         '',
         _source
       );
-
+      data = data.filter(car => car.isListed !== 'No' && (car.status == 'Booked' || car.status == 'Available'));
       for (const car of data) {
         if (car.car_image) {
           fileConfig.image_name = car['car_image'];
@@ -128,11 +133,13 @@ export class CarCompareDetailsService {
           car.formattedPrice = '';
         }
 
-        car.distanceSuffix = 'CC';
-
+        car.distanceSuffix = 'km';
+        car.horsePowerSuffix = 'HP';
+        car.engineSuffix = 'CC';
+        car.noOfCylinders = '6';
+        car.modelName = car.model_name;
         car.currencyCode = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX');
       }
-
 
 
       if (_.isObject(data) && !_.isEmpty(data)) {
@@ -190,6 +197,12 @@ export class CarCompareDetailsService {
       "formattedPrice",
       "distanceSuffix",
       "currencyCode",
+      "horsePowerSuffix",
+      "engineSuffix",
+      "noOfCylinders",
+      "modelName",
+      "brandName",
+      "status"
     ];
     const outputKeys = ['car_details'];
 

@@ -7,7 +7,11 @@ import {
   IsOptional,
   ValidateNested,
   IsIn,
+  ValidateIf,
 } from 'class-validator';
+function RequiredIfNotDraft() {
+  return ValidateIf((obj) => !obj.is_draft);
+}
 import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import * as custom from '@repo/source/utilities/custom-helper';
@@ -25,8 +29,12 @@ export class CarImagesDto {
       custom.lang('Please enter a value for the image_type field.'),
   })
   image_type: string;
+
+  @IsOptional()
+  is_draft: string;
 }
 export class CarAddImageFileDto {
+  @RequiredIfNotDraft()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UploadedFile)
@@ -34,13 +42,16 @@ export class CarAddImageFileDto {
   @MaxFileSize(10485760)
   internal_images: Express.Multer.File[];
 
-
+  @RequiredIfNotDraft()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UploadedFile)
   @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp'])
   @MaxFileSize(10485760)
   external_images: Express.Multer.File[];
+
+  @IsOptional()
+  is_draft: string;
 }
 export class UpdateCarImagesDTO extends PartialType(CarAddImageFileDto) {
 }

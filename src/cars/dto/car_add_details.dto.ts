@@ -7,17 +7,19 @@ import {
   ArrayMinSize,
   IsOptional,
   IsIn,
+  ValidateIf,
 } from 'class-validator';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { PartialType } from '@nestjs/mapped-types';
 import { Transform } from 'class-transformer';
 import { Optional } from '@nestjs/common';
+function RequiredIfNotDraft() {
+  return ValidateIf((obj) => !obj.is_draft);
+}
 export class CarDetailsDto {
+  @IsOptional()
   @IsString()
   @MaxLength(255)
-  @IsNotEmpty({
-    message: () => custom.lang('Please enter a value for the vinNumber field.'),
-  })
   vin_number: string;
 
   @IsOptional()
@@ -27,6 +29,7 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please enter a value for the brandId field.'),
   })
@@ -34,6 +37,7 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please enter a value for the modelId field.'),
   })
@@ -41,17 +45,20 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please enter a value for the body_id field.'),
   })
   body_id: string;
 
   @IsIn(['Petrol', 'Diesel', 'Hybrid', 'Electric'])
+  @RequiredIfNotDraft()
   @IsNotEmpty({ message: () => custom.lang('Please select a valid fuelType.') })
   fuel_type: string;
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the manufactureYear field.'),
@@ -60,34 +67,32 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the manufactureMonth field.'),
   })
   manufacture_month: number;
 
+  @IsOptional()
   @IsString()
   @MaxLength(255)
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the serialNumber field.'),
-  })
   serial_number: string;
 
   @Transform(({ value }) => Number(value))
 
-  @IsNotEmpty({
-    message: () => custom.lang('Please enter a value for the countryId field.'),
-  })
+  @IsOptional()
   country_id: number;
 
   @IsIn(['Manual', 'Automatic'])
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please select a valid transmissionType.'),
   })
   transmission_type: string;
 
   @IsIn(['ICE', 'EV', 'HEV', 'PHEV'])
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please select a valid carCategory.'),
   })
@@ -95,6 +100,7 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the engineCapacity field.'),
@@ -103,6 +109,7 @@ export class CarDetailsDto {
 
   @IsString()
   @MaxLength(255)
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the engineType field.'),
@@ -111,6 +118,7 @@ export class CarDetailsDto {
 
   @IsString()
   @MaxLength(255)
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the engineSize field.'),
@@ -119,6 +127,7 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the horsePower field.'),
@@ -127,6 +136,7 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the exteriorColorId field.'),
@@ -135,6 +145,7 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the interiorColorId field.'),
@@ -142,6 +153,7 @@ export class CarDetailsDto {
   interior_colorId: number;
 
   @IsIn(['LeftHand', 'RightHand'])
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () => custom.lang('Please select a valid steeringSide.'),
   })
@@ -149,39 +161,43 @@ export class CarDetailsDto {
 
   @Transform(({ value }) => Number(value))
 
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the regionalSpecsId field.'),
   })
   regional_specsId: number;
 
-  @Transform(({ value }) => Number(value))
 
+  @Transform(({ value }) => Number(value))
+  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the drivenDistance field.'),
   })
   driven_distance: number;
 
+  @IsString()
   @IsIn(['Yes', 'No'])
-  @IsNotEmpty({
-    message: () => custom.lang('Please select a valid serviceHistory option.'),
-  })
-  service_history: string;
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the negotiable field.'),
+  // })
+  @IsOptional()
+  negotiable: string;
 
-  @IsIn(['Yes', 'No'])
-  @IsNotEmpty({
-    message: () => custom.lang('Please select a valid warranty option.'),
-  })
-  warranty: string;
+  @IsString()
+  @IsIn(['High', 'Medium', 'Low'])
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the negotiableRange field.'),
+  // })
+  @IsOptional()
+  negotiable_range: string;
 
+  @IsOptional()
   @Transform(({ value }) => Number(value))
-
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the ownerNumber field.'),
-  })
-  owner_number: number;
+  monthly_emi_amount?: number;
 
   @IsOptional()
   @Transform(({ value }) => Number(value))
@@ -198,17 +214,20 @@ export class CarDetailsDto {
 
   variant_id: number;
 
+  @IsOptional()
+  is_draft?: any
+
+  @IsOptional()
+  added_by?: any
 }
-export class UpdateCarDetailsDTO extends PartialType(CarDetailsDto) { }
+export class UpdateCarDetailsDTO extends PartialType(CarDetailsDto) {
+  @IsOptional()
+  updated_by?: any
+}
 
 export class CarTagAddDto {
   @Optional()
   @IsArray({ message: 'tag_ids must be an array' })
-  // @ArrayMinSize(1, { message: 'At least one tag_id must be provided.' })
-  // @IsNumber(
-  //   {},
-  //   { each: true, message: 'each value in tag_ids must be a number' },
-  // )
   tag_ids: number[];
 }
 export class CarFeatureAddDto {
