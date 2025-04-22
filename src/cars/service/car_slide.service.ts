@@ -16,7 +16,8 @@ import { ConfigService } from '@nestjs/config';
 import { distance } from 'mathjs';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { CarWishlistEntity } from '../entities/cars.entity';
-import { CustomerEntity } from '@repo/source/entities/customer.entity';
+// import { CustomerEntity } from '../entities/customer.entity';
+import { LookupEntity } from '@repo/source/entities/lookup.entity';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 @Injectable()
@@ -46,8 +47,8 @@ export class CarSlideService {
     protected readonly configService: ConfigService,
     @InjectRepository(CarWishlistEntity)
     private readonly carWishlistRepo: Repository<CarWishlistEntity>,
-    @InjectRepository(CustomerEntity)
-    private readonly modCustomerRepo: Repository<CustomerEntity>,
+    @InjectRepository(LookupEntity)
+    private readonly modCustomerRepo: Repository<LookupEntity>,
     @Inject(REQUEST) private readonly request: Request,
   ) {
     this.keycloakUrl = this.configService.get<string>('KEYCLOAK_BASE_URL');
@@ -98,10 +99,19 @@ export class CarSlideService {
                   : cartagName === 'trending_cars' && body_type
                     ? [{ term: { body_code: body_type } }]
                     : []),
+                { terms: { status: ['Available', 'Booked'] } },
+                { term: { isListed: "Yes" } },
               ],
             },
           }
-          : undefined,
+          : {
+            bool: {
+              filter: [
+                { terms: { status: ['Available', 'Booked'] } },
+                { term: { isListed: "Yes" } },
+              ],
+            },
+          },
         aggs: cartagName
           ? Object.fromEntries(
             (Array.isArray(cartagName) ? cartagName : [cartagName]).map((tag) => [
@@ -113,6 +123,10 @@ export class CarSlideService {
                     ...(tag === 'trending_cars' && body_type
                       ? { filter: [{ term: { body_code: body_type } }] }
                       : {}),
+                    filter: [
+                      { terms: { status: ['Available', 'Booked'] } },
+                      { term: { isListed: "Yes" } },
+                    ],
                   },
                 },
                 aggs: {
@@ -131,19 +145,20 @@ export class CarSlideService {
                         'car_image',
                         'added_date',
                         'body_code',
-                        'analytics'
+                        'analytics',
+                        'status'
                       ],
                       sort: [
                         {
                           added_date: {
-                            order: 'desc'
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
+                            order: 'desc',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
             ])
           )
           : {
@@ -168,22 +183,22 @@ export class CarSlideService {
                       'car_image',
                       'added_date',
                       'body_code',
-                      'analytics'
+                      'analytics',
+                      'status'
                     ],
                     sort: [
                       {
                         added_date: {
-                          order: 'desc'
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            }
+                          order: 'desc',
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
           },
       };
-
       const results = await this.elasticService.searchGlobalData(
         index,
         search_params,
@@ -217,14 +232,23 @@ export class CarSlideService {
                   const userInfoResponse = await this.general.callThirdPartyApi('GET', userInfoUrl, '', headers);
                   if (userInfoResponse.data) {
                     const userInfo = userInfoResponse.data;
-                    const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+                    // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+                    const user = await this.modCustomerRepo
+                    .createQueryBuilder('mod_customer')
+                    .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
+                      phoneNumber: userInfo.preferred_username,
+                    })
+                    .andWhere("mod_customer.entityName = :entityName", {
+                      entityName: 'customer', 
+                    })
+                    .getOne();
+                
                     if (user) {
-
                       const wishlist_data = await this.carWishlistRepo.findOne({
-                        where: { carId: hit._source['carId'], userId: user.id }
+                        where: { carId: data['carId'], userId: user.entityId }
                       });
-
-                      hit._source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
+          
+                      data['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
                     }
                   }
                 }
@@ -253,7 +277,7 @@ export class CarSlideService {
                       hit._source['drivenDistance'],
                       'numerical',
                     ),
-                  distanceSuffix: 'Miles',
+                  distanceSuffix: 'km',
                   isWishlist: hit._source['is_wishlist']
                 };
               })
@@ -279,12 +303,20 @@ export class CarSlideService {
                     if (userInfoResponse.data) {
                       const userInfo = userInfoResponse.data;
 
-                      const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
-
+                      // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
+                      const user = await this.modCustomerRepo
+                      .createQueryBuilder('mod_customer')
+                      .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
+                        phoneNumber: userInfo.preferred_username,
+                      })
+                      .andWhere("mod_customer.entityName = :entityName", {
+                        entityName: 'customer', 
+                      })
+                      .getOne();
                       if (user) {
 
                         const wishlist_data = await this.carWishlistRepo.findOne({
-                          where: { carId: _source['carId'], userId: user.id }
+                          where: { carId: _source['carId'], userId: user.entityId}
                         });
 
                         _source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
@@ -316,7 +348,8 @@ export class CarSlideService {
                       this.general.numberFormat(
                         _source['drivenDistance'],
                         'numerical',
-                      ) + ' Miles',
+                      ),
+                    distanceSuffix: 'km',
                     isWishlist: _source['is_wishlist']
                   };
                 }),
@@ -391,6 +424,8 @@ export class CarSlideService {
       'currency_code',
       'analytics',
       'isWishlist',
+      'distanceSuffix',
+      'status'
     ];
     const outputData: any = {};
     outputData.settings = { ...settingFields, ...this.settingsParams };

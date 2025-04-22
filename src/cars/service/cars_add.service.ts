@@ -53,6 +53,7 @@ export class CarsAddService extends BaseService {
   protected carDocumentRepo: Repository<CarDocumentEntity>;
   constructor() {
     super();
+    this.moduleName = 'car';
   }
   async startCarAdd(reqObject, reqParams) {
     let outputResponse = {};
@@ -60,7 +61,6 @@ export class CarsAddService extends BaseService {
     try {
       this.requestObj = reqObject;
       this.inputParams = reqParams;
-      this.setModuleAPI('add');
       let inputParams = reqParams;
       let success = 1;
       let response;
@@ -70,28 +70,63 @@ export class CarsAddService extends BaseService {
       }
 
       if (mode == 'Update') {
-        let car_id = inputParams.car_data.car_id;
+        this.setModuleAPI('update');
 
-        let update_response = await this.updateCarData(inputParams, car_id);
+        let car_id = inputParams.car_data.car_id;
+        inputParams = await this.customUniqueCondition(inputParams, car_id);
+        if (typeof inputParams.car_data != 'undefined' && inputParams.car_result.unique_status === 1) {
+          outputResponse = this.carsUniqueFailure(inputParams.car_result);
+          success = 0;
+        }
         if (
-          !_.isEmpty(inputParams.update_car_data.car_data) ||
-          !_.isEmpty(inputParams.update_car_data.car_details) ||
-          !_.isEmpty(inputParams.update_car_data.car_history) ||
-          !_.isEmpty(inputParams.update_car_data.car_tag_data)
+          typeof inputParams.car_details != 'undefined' &&
+          inputParams.car_details_result.unique_status === 1
         ) {
-          let message = this.blockResult.message;
-          inputParams = {
-            ...inputParams,
-            message,
-          };
-          outputResponse = this.carsFinishSuccess(inputParams);
-          return outputResponse;
-        } else {
-          outputResponse = this.carsFinishFailure(inputParams);
+          outputResponse = this.carsUniqueFailure(
+            inputParams.car_details_result,
+          );
+          success = 0;
+        }
+        if (
+          typeof inputParams.car_history != 'undefined' &&
+          inputParams.car_history_details_result.unique_status === 1
+        ) {
+          outputResponse = this.carsUniqueFailure(
+            inputParams.car_history_details_result,
+          );
+          success = 0;
+        }
+        if (success == 1) {
+          let update_response = await this.updateCarData(inputParams, car_id);
+          if (
+            !_.isEmpty(inputParams.update_car_data.car_data) ||
+            !_.isEmpty(inputParams.update_car_data.car_details) ||
+            !_.isEmpty(inputParams.update_car_data.car_history) ||
+            !_.isEmpty(inputParams.update_car_data.car_tag_data)
+          ) {
+            let message = this.blockResult.message;
+            inputParams = {
+              ...inputParams,
+              message,
+            };
+            outputResponse = this.carsFinishSuccess(inputParams);
+            let value_json = {
+              "CAR_NAME": inputParams.car_data.car_name,
+              "CAR_ID": inputParams.car_data.car_id,
+              "UPDATED_BY": await this.general.getAdminName(inputParams.car_data.updated_by),
+              "UPDATED_BY_ID": inputParams.car_data.updated_by
+            }
+
+            await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.car_data.updated_by, value_json, inputParams.car_data.car_id);
+            return outputResponse;
+          } else {
+            outputResponse = this.carsFinishFailure(inputParams);
+          }
         }
       }
 
       if (mode == 'Add') {
+        this.setModuleAPI('add');
         inputParams = await this.customUniqueCondition(inputParams);
         if (inputParams.car_result.unique_status === 1) {
           outputResponse = this.carsUniqueFailure(inputParams.car_result);
@@ -163,18 +198,14 @@ export class CarsAddService extends BaseService {
                 };
               }
             }
-            // if (inputParams.car_document) {
-            //   let car_id = car_add_response.insert_id;
-            //   inputParams.car_document = { ...inputParams.car_document, added_by: inputParams?.car_data?.added_by }
-            //   let carDocumentOutput = await this.insertCarDocument(inputParams.car_document, car_id)
-            //   if (!_.isEmpty(carDocumentOutput.insert_car_document_data)) {
-            //     response = {
-            //       ...response,
-            //       carDocumentOutput,
-            //     };
-            //   }
-            // }
             outputResponse = this.carsFinishSuccess(response);
+            let value_json = {
+              "CAR_NAME": inputParams.car_data.car_name,
+              "CAR_ID": response.insert_id,
+              "ADDED_BY": await this.general.getAdminName(inputParams.car_data.added_by),
+              "ADDED_BY_ID": inputParams.added_by
+            }
+            await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.car_data.added_by, value_json, response.insert_id);
           } else {
             outputResponse = this.carsFinishFailure(response);
           }
@@ -186,13 +217,14 @@ export class CarsAddService extends BaseService {
     }
     return outputResponse;
   }
-  async customUniqueCondition(inputParams: any) {
+  async customUniqueCondition(inputParams: any, car_id?: any) {
     let formatData: any = {};
-    const { car_data, car_details, car_history } = inputParams;
+    let { car_data, car_details, car_history } = inputParams;
     try {
       //@ts-ignore
       let result = {};
       if (car_data) {
+        car_data = { ...car_data, id: car_id };
         this.serviceConfig = {
           module_name: 'cars_add',
           table_name: 'cars',
@@ -202,8 +234,8 @@ export class CarsAddService extends BaseService {
           unique_fields: {
             type: 'and',
             fields: {
-              car_id: 'carId',
               slug: 'slug',
+              car_id: 'carId'
             },
             message:
               'Record already exists with these details of Car Id or Slug',
@@ -215,20 +247,22 @@ export class CarsAddService extends BaseService {
         result['car_result'] = car_result;
       }
       if (car_details) {
+        car_details = { ...car_details, id: car_id, carId: car_id }
         this.serviceConfig = {
           module_name: 'cars_details',
           table_name: 'cars_details',
           table_alias: 'cad',
-          primary_key: 'carsDetailsId',
+          primary_key: 'carId',
           primary_alias: 'cad_id',
           unique_fields: {
-            type: 'and',
+            type: 'or',
             fields: {
-              car_id: 'carId',
               vin_number: 'vinNumber',
+              chassis_number: 'chassisNumber',
+              serial_number: 'serialNumber'
             },
             message:
-              'Record already exists with these details of Car Id or Car vin_number',
+              'Record already exists with these details of vin_number , chassis_number or serial_number.',
           },
           expRefer: {},
           topRefer: {},
@@ -237,16 +271,16 @@ export class CarsAddService extends BaseService {
         result['car_details_result'] = car_details_result;
       }
       if (car_history) {
+        car_history = { ...car_history, id: car_id, carId: car_id }
         this.serviceConfig = {
           module_name: 'car_history',
           table_name: 'car_history',
           table_alias: 'ch',
-          primary_key: 'carHistoryId',
+          primary_key: 'carId',
           primary_alias: 'ch_id',
           unique_fields: {
             type: 'and',
             fields: {
-              car_id: 'carId',
               registration_number: 'registrationNumber',
             },
             message:
@@ -291,11 +325,14 @@ export class CarsAddService extends BaseService {
     let fileProp: any = {};
     let fileInfo: any = {};
     fileInfo = await this.processFiles(inputParams);
-
     this.blockResult = {};
     try {
       const queryColumns: any = {};
-
+      for (let key in inputParams) {
+        if (inputParams[key] === '') {
+          inputParams[key] = null;
+        }
+      }
       if ('car_name' in inputParams) {
         queryColumns.carName = inputParams.car_name;
       }
@@ -305,17 +342,8 @@ export class CarsAddService extends BaseService {
       if ('price' in inputParams) {
         queryColumns.price = inputParams.price;
       }
-      if ('negotiable' in inputParams) {
-        queryColumns.negotiable = inputParams.negotiable;
-      }
-      if ('negotiable_range' in inputParams) {
-        queryColumns.negotiableRange = inputParams.negotiable_range;
-      }
       if ('car_condition' in inputParams) {
         queryColumns.carCondition = inputParams.car_condition;
-      }
-      if ('monthly_emi_amount' in inputParams) {
-        queryColumns.monthlyEMIAmount = inputParams.monthly_emi_amount;
       }
       if ('slug' in inputParams) {
         queryColumns.slug = inputParams.slug;
@@ -329,10 +357,8 @@ export class CarsAddService extends BaseService {
       if ('short_description' in inputParams) {
         queryColumns.shortDescription = inputParams.short_description;
       }
-      if ('contact_details' in inputParams) {
-        queryColumns.contactDetails = JSON.stringify(
-          inputParams.contact_details,
-        );
+      if ('contact_person_id' in inputParams) {
+        queryColumns.contactPersonId = inputParams.contact_person_id;
       }
       if ('car_image' in inputParams) {
         queryColumns.carImage = inputParams.car_image
@@ -345,6 +371,12 @@ export class CarsAddService extends BaseService {
       }
       if ('added_by' in inputParams) {
         queryColumns.addedBy = inputParams.added_by
+      }
+      if ('location_id' in inputParams) {
+        queryColumns.locationId = inputParams.location_id
+      }
+      if ('export_status' in inputParams) {
+        queryColumns.exportStatus = inputParams.export_status
       }
       let code = await this.general.getCustomToken('cars', '', 'Add');
       if (code != '') {
@@ -406,18 +438,18 @@ export class CarsAddService extends BaseService {
         car_name: 'carName',
         car_description: 'carDescription',
         price: 'price',
-        negotiable: 'negotiable',
-        negotiable_range: 'negotiableRange',
         car_condition: 'carCondition',
-        monthly_emi_amount: 'monthlyEMIAmount',
         car_image: 'carImage',
         remarks: 'remarks',
         status: 'status',
         short_description: 'shortDescription',
-        contact_details: 'contactDetails',
+        contact_person_id: 'contactPersonId',
         overview_title: 'overviewTitle',
         is_listed: 'isListed',
-        updated_by: 'updatedBy'
+        updated_by: 'updatedBy',
+        location_id: 'locationId',
+        export_status: 'exportStatus',
+        slug: 'slug'
       };
       const car_details_field_mapping: Record<string, string> = {
         chassis_number: 'chassisNumber',
@@ -425,6 +457,7 @@ export class CarsAddService extends BaseService {
         model_id: 'modelId',
         body_id: 'bodyTypeid',
         fuel_type: 'fuelType',
+        vin_number: 'vinNumber',
         manufacture_year: 'manufactureYear',
         manufacture_month: 'manufactureMonth',
         serial_number: 'serialNumber',
@@ -440,19 +473,18 @@ export class CarsAddService extends BaseService {
         steering_side: 'steeringSide',
         regional_specsId: 'regionalSpecsId',
         driven_distance: 'drivenDistance',
-        service_history: 'serviceHistory',
-        warranty: 'warranty',
-        owner_number: 'ownerNumber',
         seating_capacity: 'seatingCapacity',
         number_Of_doors: 'numberOfDoors',
         variant_id: 'variantId',
-        updated_by: 'updatedBy'
+        updated_by: 'updatedBy',
+        negotiable: 'negotiable',
+        negotiable_range: 'negotiableRange',
+        monthly_emi_amount: 'monthlyEMIAmount',
       };
       const car_history_data_mapping: Record<string, string> = {
         registration_number: 'registrationNumber',
         registration_date: 'registrationDate',
         registration_expiry: 'registrationExpiry',
-        location_id: 'locationId',
         insurance_type: 'insuranceType',
         insurance_expiry: 'insuranceExpiry',
         accident_history: 'accidentHistory',
@@ -462,7 +494,10 @@ export class CarsAddService extends BaseService {
         coletral_with: 'coletralWith',
         accidental_history: 'accidentalHistory',
         after_market_modification: 'afterMarketModification',
-        updated_by: 'updatedBy'
+        updated_by: 'updatedBy',
+        service_history: 'serviceHistory',
+        warranty: 'warranty',
+        owner_number: 'ownerNumber',
       };
       const car_tag_data_mapping: Record<string, string> = {
         tag_id: 'tagId',
@@ -479,7 +514,7 @@ export class CarsAddService extends BaseService {
         const carQueryColumns: any = {};
         Object.keys(car_data_mapping).forEach((key) => {
           if (key in car_data) {
-            carQueryColumns[car_data_mapping[key]] = car_data[key];
+            carQueryColumns[car_data_mapping[key]] = car_data[key] ? car_data[key] : null;
           }
         });
         carQueryColumns.updatedDate = () => 'NOW()';
@@ -506,7 +541,7 @@ export class CarsAddService extends BaseService {
         const carDetailsColumn: any = {};
         Object.keys(car_details_field_mapping).forEach((key) => {
           if (key in car_details) {
-            carDetailsColumn[car_details_field_mapping[key]] = car_details[key];
+            carDetailsColumn[car_details_field_mapping[key]] = car_details[key] ? car_details[key] : null;
           }
         });
         if (!_.isEmpty(carDetailsColumn) && !_.isEmpty(existed_car_details)) {
@@ -531,7 +566,7 @@ export class CarsAddService extends BaseService {
         Object.keys(car_history_data_mapping).forEach((key) => {
           if (key in car_history) {
             carHistoryDetailColumn[car_history_data_mapping[key]] =
-              car_history[key];
+              car_history[key] ? car_history[key] : null;
           }
         });
 
@@ -604,6 +639,11 @@ export class CarsAddService extends BaseService {
         ...inputParams,
         car_id,
       };
+      for (let key in inputParams) {
+        if (inputParams[key] === '') {
+          inputParams[key] = null;
+        }
+      }
       const queryColumns: any = {};
       if ('car_id' in inputParams) {
         queryColumns.carId = inputParams.car_id;
@@ -671,15 +711,6 @@ export class CarsAddService extends BaseService {
       if ('driven_distance' in inputParams) {
         queryColumns.drivenDistance = inputParams.driven_distance;
       }
-      if ('service_history' in inputParams) {
-        queryColumns.serviceHistory = inputParams.service_history;
-      }
-      if ('warranty' in inputParams) {
-        queryColumns.warranty = inputParams.warranty;
-      }
-      if ('owner_number' in inputParams) {
-        queryColumns.ownerNumber = inputParams.owner_number;
-      }
       if ('seating_capacity' in inputParams) {
         queryColumns.seatingCapacity = inputParams.seating_capacity;
       }
@@ -692,27 +723,20 @@ export class CarsAddService extends BaseService {
       if ('added_by' in inputParams) {
         queryColumns.addedBy = inputParams.added_by
       }
+      if ('negotiable' in inputParams) {
+        queryColumns.negotiable = inputParams.negotiable;
+      }
+      if ('negotiable_range' in inputParams) {
+        queryColumns.negotiableRange = inputParams.negotiable_range;
+      }
+      if ('monthly_emi_amount' in inputParams) {
+        queryColumns.monthlyEMIAmount = inputParams.monthly_emi_amount;
+      }
       const queryObject = this.carEntityDetailsRepo;
       const res = await queryObject.insert(queryColumns);
       const data = {
         insert_id: res.raw.insertId,
       };
-      if (res.raw.insertId != '') {
-        const return_data = await this.dataSource.query(
-          `select brandCode , modelCode  FROM car_list where carId = ${car_id}`,
-        );
-        let code = await this.general.getCustomToken('cars', return_data[0]);
-        if (code != '' && !_.isEmpty(code)) {
-          const queryObject = this.carEntityRepo
-            .createQueryBuilder()
-            .update(CarEntity)
-            .set({ carCode: code });
-          if (car_id) {
-            queryObject.andWhere('carId = :id', { id: car_id });
-          }
-          const res = await queryObject.execute();
-        }
-      }
       const success = 1;
       const message = 'Record(s) inserted.';
 
@@ -743,7 +767,6 @@ export class CarsAddService extends BaseService {
         registration_number: 'registrationNumber',
         registration_date: 'registrationDate',
         registration_expiry: 'registrationExpiry',
-        location_id: 'locationId',
         insurance_type: 'insuranceType',
         insurance_expiry: 'insuranceExpiry',
         accident_history: 'accidentHistory',
@@ -753,17 +776,19 @@ export class CarsAddService extends BaseService {
         coletral_with: 'coletralWith',
         accidental_history: 'accidentalHistory',
         after_market_modification: 'afterMarketModification',
-        added_by: 'addedBy'
+        added_by: 'addedBy',
+        service_history: 'serviceHistory',
+        warranty: 'warranty',
+        owner_number: 'ownerNumber',
       };
       inputParams = {
         ...inputParams,
         car_id,
       };
-
       const queryColumns: any = {};
       Object.keys(car_history_data_mapping).forEach((key) => {
         if (key in inputParams) {
-          queryColumns[car_history_data_mapping[key]] = inputParams[key];
+          queryColumns[car_history_data_mapping[key]] = inputParams[key] ? inputParams[key] : null;
         }
       });
 
@@ -923,7 +948,7 @@ export class CarsAddService extends BaseService {
       console.log(err);
     }
   }
-  carsFinishSuccess(inputParams: any) {
+  async carsFinishSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 1,
@@ -963,9 +988,10 @@ export class CarsAddService extends BaseService {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'car_list',
+        data: inputParams.insert_id ? inputParams.insert_id : inputParams?.car_data?.car_id
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(outputData, funcData);
   }
   carsFinishFailure(inputParams: any) {

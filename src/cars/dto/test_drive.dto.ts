@@ -1,16 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional, IsIn, ValidateNested, IsArray, IsDate, IsTimeZone, IsNumber, } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsIn, ValidateNested, IsArray, IsDate, IsTimeZone, IsNumber, ValidateIf, } from 'class-validator';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { MaxFileSize, IsFileMimeType } from '@repo/source/decorators/file.decorators';
 import { PartialType } from '@nestjs/mapped-types';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class TestDriveAddDto {
-
-  @IsString()
-  @IsNotEmpty({
-    message: () => custom.lang('Please enter a value for the code field.'),
-  })
-  code: string;
 
   @IsString()
   @IsIn(['AtShowroom', 'AtDoorstep'])
@@ -19,6 +13,7 @@ export class TestDriveAddDto {
   })
   type: string;
 
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsNotEmpty({
     message: () =>
@@ -26,6 +21,7 @@ export class TestDriveAddDto {
   })
   car_id: string;
 
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsNotEmpty({
     message: () =>
@@ -33,6 +29,7 @@ export class TestDriveAddDto {
   })
   location_id: string;
 
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsNotEmpty({
     message: () =>
@@ -54,7 +51,15 @@ export class TestDriveAddDto {
 
   @IsString()
   @IsOptional()
+  license_holder_details: string;
+
+  @IsString()
+  @IsOptional()
   remarks: string;
+
+  @IsString()
+  @IsOptional()
+  consent_info: string;
 
   @IsString()
   @IsOptional()
@@ -68,7 +73,72 @@ export class TestDriveAddDto {
       custom.lang('Please enter a value for the status field.'),
   })
   status: string;
+
+  @IsOptional()
+  sales_executive_id: string;
 }
+
+export class TestDriveAddFrontDto {
+
+  @IsString()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the car_slug field.'),
+  })
+  car_slug: string;
+
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the slot_date field.'),
+  })
+  slot_date: string;
+
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the slot_time field.'),
+  })
+  slot_time: string;
+
+  @IsString()
+  @IsOptional()
+  salutation: string;
+
+  @IsString()
+  @IsOptional()
+  first_name: string;
+
+  @IsString()
+  @IsOptional()
+  last_name: string;
+
+  @IsString()
+  @IsOptional()
+  dial_code: string;
+
+  @IsString()
+  @IsOptional()
+  phone: string;
+
+  @IsString()
+  @IsOptional()
+  email: string;
+
+  @IsString()
+  @IsOptional()
+  address: string;
+
+  @IsString()
+  @IsOptional()
+  remarks: string;
+
+  @IsString()
+  @IsOptional()
+  consent_info: string;
+
+  @IsOptional()
+  sales_executive_id: string;
+}
+
 class UploadedFile {
   fieldname: string;
   originalname: string;
@@ -82,7 +152,7 @@ export class TestDriveAddAttachmentDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UploadedFile)
-  @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp'])
+  @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
   @MaxFileSize(10485760)
   attachment: Express.Multer.File[];
 }
@@ -107,4 +177,149 @@ export class TestDriveDetailsDto {
       custom.lang('Please enter a value for the id field.'),
   })
   id?: string;
+}
+
+export class TestDriveCancelDto {
+  @ValidateIf((o) => !o.code)
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the id field or provide code.',
+      ),
+  })
+  id?: string;
+
+  @ValidateIf((o) => !o.id)
+  @IsString()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the code field or provide id.',
+      ),
+  })
+  code?: string;
+
+  @IsString()
+  @IsOptional()
+  updated_by: string;
+}
+
+export class TestDriveRescheduleDto {
+  @ValidateIf((o) => !o.code)
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the id field or provide code.',
+      ),
+  })
+  id?: string;
+
+  @ValidateIf((o) => !o.id)
+  @IsString()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the code field or provide id.',
+      ),
+  })
+  code?: string;
+
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the slot_date field.'),
+  })
+  slot_date: string;
+
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the slot_time field.'),
+  })
+  slot_time: string;
+
+  @IsString()
+  @IsOptional()
+  remarks: string;
+
+  @IsString()
+  @IsOptional()
+  updated_by: string;
+
+  @IsOptional()
+  sales_executive_id: string;
+}
+
+export class TestDriveInitiateDto {
+  @ValidateIf((o) => !o.code)
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the id field or provide code.',
+      ),
+  })
+  id?: string;
+
+  @ValidateIf((o) => !o.id)
+  @IsString()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the code field or provide id.',
+      ),
+  })
+  code?: string;
+
+  @IsString()
+  @IsOptional()
+  license_no: string;
+
+  @IsNumber()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the start_odometer_reading field.'),
+  })
+  start_odometer_reading: number;
+
+  @IsString()
+  @IsOptional()
+  remarks: string;
+
+  @IsString()
+  @IsOptional()
+  updated_by: string;
+}
+
+export class TestDriveCompleteDto {
+  @ValidateIf((o) => !o.code)
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the id field or provide code.',
+      ),
+  })
+  id?: string;
+
+  @ValidateIf((o) => !o.id)
+  @IsString()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang(
+        'Please enter a value for the code field or provide id.',
+      ),
+  })
+  code?: string;
+
+  @IsNumber()
+  @IsNotEmpty({
+    message: () =>
+      custom.lang('Please enter a value for the end_odometer_reading field.'),
+  })
+  end_odometer_reading: number;
+
+  @IsString()
+  @IsOptional()
+  remarks: string;
+
+  @IsString()
+  @IsOptional()
+  updated_by: string;
 }

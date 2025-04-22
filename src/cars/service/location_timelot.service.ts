@@ -1,3 +1,4 @@
+
 interface AuthObject {
   user: any;
 }
@@ -12,10 +13,11 @@ import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ModuleService } from '@repo/source/services/module.service';
 import { ElasticService } from '@repo/source/services/elastic.service';
+import { stringify } from 'querystring';
 @Injectable()
-export class TestDriveListService {
+export class LocationtimeSlotService {
   protected readonly log = new LoggerHandler(
-    TestDriveListService.name,
+    LocationtimeSlotService.name,
   ).getInstance();
   protected inputParams: object = {};
   protected blockResult: BlockResultDto;
@@ -33,30 +35,30 @@ export class TestDriveListService {
   @Inject()
   protected readonly moduleService: ModuleService;
   constructor(protected readonly elasticService: ElasticService) { }
-  async startTestDriveList(reqObject, reqParams) {
+  async startLocationtimeSlot(reqObject, reqParams) {
     let outputResponse = {};
     try {
       this.requestObj = reqObject;
       this.inputParams = reqParams;
       let inputParams = reqParams;
 
-      inputParams = await this.getTestDriveList(inputParams);
-      if (!_.isEmpty(inputParams.test_drive_list)) {
-        outputResponse = this.testDriveListFinishedSuccess(inputParams);
+      inputParams = await this.getLocationtimeSlot(inputParams);
+      if (!_.isEmpty(inputParams.location_timeSlot)) {
+        outputResponse = this.locationtimeSlotFinishedSuccess(inputParams);
       } else {
-        outputResponse = this.testDriveListFinishedFailure(inputParams);
+        outputResponse = this.locationtimeSlotFinishedFailure(inputParams);
       }
     } catch (err) {
-      this.log.error('API Error >> test_drive_list >>', err);
+      this.log.error('API Error >> location_timeSlot >>', err);
     }
     return outputResponse;
   }
-  async getTestDriveList(inputParams: any) {
+  async getLocationtimeSlot(inputParams: any) {
     this.blockResult = {};
     try {
       let index = 'nest_local_test_drive_list';
+      inputParams.filters = { ...inputParams.filters, car_id: inputParams.carId, slot_date: inputParams.requested_date + 'T00:00:00.000Z' };
       let search_params = this.general.createElasticSearchQuery(inputParams);
-
       let pageIndex = 1;
       if ('page' in inputParams) {
         pageIndex = Number(inputParams.page);
@@ -72,92 +74,131 @@ export class TestDriveListService {
         startIdx,
         recLimit,
       );
-
+      let operating_hours = inputParams?.operating_hours;
+      operating_hours = '';
+      let timeSlot = await this.general.getConfigItem('TIME_SLOT');
+      let location_open = `${inputParams.requested_date} 08:00:00`;
+      let location_close = `${inputParams.requested_date} 20:00:00`;
+      if (typeof operating_hours != 'undefined' && operating_hours != '' && operating_hours != null) {
+        let temp = operating_hours.split('-');
+        if (temp.length == 2) {
+          location_open = `${inputParams.requested_date} ${temp[0]}`;
+          location_close = `${inputParams.requested_date} ${temp[1]}`;
+        }
+      }
       if (!_.isObject(results) || _.isEmpty(results)) {
         throw new Error('No records found.');
       }
       const totalCount = results['total']['value'];
-      this.settingsParams = custom.getPagination(
-        totalCount,
-        pageIndex,
-        recLimit,
-      );
       if (totalCount <= 0) {
-        throw new Error('No records found.');
-      }
+        const success = 1;
+        const message = 'No records found. Only available time slots are fetched.';
+        let getTimeSlot = this.general.createTimeSlots(location_open, location_close, parseInt(timeSlot));
+        const slotDate = location_open.split(' ')[0];
+        const now = new Date();
 
-      const data = results.hits.map((hit) => {
+        const updatedTimeSlots = getTimeSlot.map(slot => {
+          const [start, end] = slot.slot_time.split(' - ');
+          const endTime = new Date(`${slotDate}T${end}`);
+
+          let status = "available";
+          if (now > endTime) {
+            status = "not_available";
+          }
+
+          return {
+            ...slot,
+            status
+          };
+        });
+
+
+        const queryResult = {
+          success,
+          message,
+          data: updatedTimeSlots,
+        };
+
+        this.blockResult = queryResult;
+        inputParams.location_timeSlot = this.blockResult.data;
+        return inputParams;
+
+      }
+      console.log(results)
+      let data = results.hits.map((hit) => {
         return hit._source;
       });
+      let temp: any = data;
       if (_.isObject(data) && data.length > 0) {
         const success = 1;
         const message = 'Records found.';
+
+        const slotDate = location_open.split(' ')[0];
+        const now = new Date();
+
+        let getTimeSlot = this.general.createTimeSlots(location_open, location_close, parseInt(timeSlot));
+        const bookedTimes = temp.map(booking => booking.slot_time);
+
+        const updatedTimeSlots = getTimeSlot.map(slot => {
+          const [start, end] = slot.slot_time.split(' - ');
+          const endTime = new Date(`${slotDate}T${end}`);
+
+          const isBooked = bookedTimes.includes(slot.slot_time);
+          const isPast = now > endTime;
+
+          return {
+            ...slot,
+            status: isBooked || isPast ? "not_available" : "available"
+          };
+        });
+
+        data = updatedTimeSlots;
 
         const queryResult = {
           success,
           message,
           data,
         };
+
         this.blockResult = queryResult;
-      } else {
+      }
+      else {
         throw new Error('No records found.');
       }
     } catch (err) {
+      console.log(err)
       this.blockResult.success = 0;
       this.blockResult.message = err;
       this.blockResult.data = [];
     }
-    inputParams.test_drive_list = this.blockResult.data;
+    inputParams.location_timeSlot = this.blockResult.data;
     return inputParams;
   }
-  testDriveListFinishedSuccess(inputParams: any) {
+  locationtimeSlotFinishedSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 1,
-      message: custom.lang('Test Drive List found.'),
+      message: custom.lang('location timeSlot list found.'),
       fields: [],
     };
-    const outputKeys = ['test_drive_list'];
-    settingFields.fields = [
-      'id',
-      'code',
-      'location_id',
-      'location_name',
-      'car_id',
-      'car_name',
-      'car_code',
-      'customer_id',
-      'first_name',
-      'middle_name',
-      'last_name',
-      'slot_date',
-      'slot_time',
-      'added_by',
-      'added_name',
-      'added_date',
-      'status',
-      'updated_by',
-      'updated_name',
-      'updated_date',
-      'sales_executive_name',
-      'sales_executive_id'
-    ];
+    const outputKeys = ['location_timeSlot'];
+    settingFields.fields = ['car_id', 'slot_date', 'slot_time', 'customer_id', 'displayTime', 'status'];
     const outputData: any = {};
     outputData.settings = { ...settingFields, ...this.settingsParams };
     outputData.data = inputParams;
 
     const funcData: any = {};
-    funcData.name = 'test_drive_list';
+    funcData.name = 'location_timeSlot';
 
     funcData.output_keys = outputKeys;
     funcData.multiple_keys = this.multipleKeys;
     return this.response.outputResponse(outputData, funcData);
   }
-  testDriveListFinishedFailure(inputParams: any) {
+  locationtimeSlotFinishedFailure(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 0,
-      message: custom.lang('Test Drive List not found.'),
+      message: custom.lang('location timeSlot list not found.'),
       fields: [],
     };
     return this.response.outputResponse(
@@ -166,7 +207,7 @@ export class TestDriveListService {
         data: inputParams,
       },
       {
-        name: 'test_drive_list',
+        name: 'location_timeSlot',
       },
     );
   }

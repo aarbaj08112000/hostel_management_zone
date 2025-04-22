@@ -10,7 +10,7 @@ import { DataSource, Repository } from 'typeorm';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { ModuleService } from '@repo/source/services/module.service';
-import { ModelEntity } from '@repo/source/entities/model.entity';
+import { ModelEntity } from '../entities/model.entity';
 import { BaseService } from '@repo/source/services/base.service';
 import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
@@ -183,7 +183,7 @@ export class ModelAddService extends BaseService {
           },
           path: 'api/master/delete-data'
         };
-        this.general.submitGearmanJob(job_data);
+        await this.general.submitGearmanJob(job_data);
         outputResponse = this.modelFinishSuccess(inputParams, inputParams.message);
       } else {
         outputResponse = this.modelFinishFailure(inputParams);
@@ -298,7 +298,7 @@ export class ModelAddService extends BaseService {
     return inputParams;
   }
 
-  modelFinishSuccess(inputParams: any, message: string) {
+  async modelFinishSuccess(inputParams: any, message: string) {
     const settingFields = {
       status: 200,
       success: 1,
@@ -324,14 +324,14 @@ export class ModelAddService extends BaseService {
     funcData.output_alias = outputAliases;
     funcData.output_objects = outputObjects;
     funcData.single_keys = this.singleKeys;
-
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'model_list',
+        data: inputParams.insert_id ? inputParams.insert_id : inputParams.id
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(outputData, funcData);
   }
 

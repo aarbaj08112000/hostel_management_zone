@@ -113,7 +113,7 @@ export class CarDocumentDeleteService extends CarDocumentAddService {
 
     return inputParams;
   }
-  carDocumentFinishSuccess(inputParams: any) {
+  async carDocumentFinishSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 1,
@@ -124,9 +124,10 @@ export class CarDocumentDeleteService extends CarDocumentAddService {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'car_list',
+        data: inputParams.id
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(
       {
         settings: settingFields,

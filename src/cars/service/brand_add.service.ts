@@ -10,7 +10,7 @@ import { DataSource, Repository } from 'typeorm';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { ModuleService } from '@repo/source/services/module.service';
-import { BrandEntity } from '@repo/source/entities/brand.entity';
+import { BrandEntity } from '../entities/brand.entity';
 import { BaseService } from '@repo/source/services/base.service';
 import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
@@ -57,7 +57,7 @@ export class BrandAddService extends BaseService {
         fields: {
           brand_code: 'brandCode',
         },
-        message: 'Record already exists with this Brand Code',
+        message: 'Record already exists with this Make Code',
       },
       expRefer: {},
       topRefer: {},
@@ -78,7 +78,14 @@ export class BrandAddService extends BaseService {
       } else {
         inputParams = await this.updateBrandData(inputParams);
         if (!_.isEmpty(inputParams.update_brand_data)) {
-          outputResponse = this.brandFinishSuccess(inputParams, 'Brand updated successfully.');
+          outputResponse = this.brandFinishSuccess(inputParams, 'Make updated successfully.');
+          let value_json = {
+            "BRAND_NAME": inputParams.brand_name,
+            "BRAND_ID": inputParams.id,
+            "UPDATED_BY": await this.general.getAdminName(inputParams.updated_by),
+            "UPDATED_BY_ID": inputParams.updated_by
+          }
+          await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.updated_by, value_json, inputParams.id);
         } else {
           outputResponse = this.brandFinishFailure(inputParams);
         }
@@ -121,7 +128,7 @@ export class BrandAddService extends BaseService {
       };
 
       const success = 1;
-      const message = 'Brand updated successfully.';
+      const message = 'Make updated successfully.';
       uploadResult = await this.uploadFiles(
         fileInfo,
         inputParams,
@@ -160,7 +167,14 @@ export class BrandAddService extends BaseService {
       } else {
         inputParams = await this.insertBrandData(inputParams);
         if (!_.isEmpty(inputParams.insert_brand_data)) {
-          outputResponse = this.brandFinishSuccess(inputParams, 'Brand Added Successfully.');
+          outputResponse = this.brandFinishSuccess(inputParams, 'Make Added Successfully.');
+          let value_json = {
+            "BRAND_NAME": inputParams.brand_name,
+            "BRAND_ID": inputParams.id,
+            "ADDED_BY": await this.general.getAdminName(inputParams.added_by),
+            "ADDED_BY_ID": inputParams.added_by
+          }
+          await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.added_by, value_json, inputParams.id);
         } else {
           outputResponse = this.brandFinishFailure(inputParams);
         }
@@ -187,7 +201,7 @@ export class BrandAddService extends BaseService {
           },
           path: 'api/master/delete-data'
         };
-        this.general.submitGearmanJob(job_data);
+        await this.general.submitGearmanJob(job_data);
         outputResponse = this.brandFinishSuccess(inputParams, inputParams.message);
       } else {
         outputResponse = this.brandFinishFailure(inputParams);
@@ -209,7 +223,7 @@ export class BrandAddService extends BaseService {
 
       return {
         success: 1,
-        message: 'Brand Deleted Successfully.',
+        message: 'Make Deleted Successfully.',
         deleted_brand: deleteResult.affected
       };
     } catch (err) {
@@ -236,7 +250,7 @@ export class BrandAddService extends BaseService {
     const settingFields = {
       status: 200,
       success: 0,
-      message: custom.lang('Record already exists with this Brand Code'),
+      message: custom.lang('Record already exists with this Make Code'),
       fields: [],
     };
     return this.response.outputResponse(
@@ -285,7 +299,7 @@ export class BrandAddService extends BaseService {
         data.insert_id,
       );
       const success = 1;
-      const message = 'Brand Added Successfully.';
+      const message = 'Make Added Successfully.';
 
       const queryResult = {
         success,
@@ -307,7 +321,7 @@ export class BrandAddService extends BaseService {
     return inputParams;
   }
 
-  brandFinishSuccess(inputParams: any, message: string) {
+  async brandFinishSuccess(inputParams: any, message: string) {
     const settingFields = {
       status: 200,
       success: 1,
@@ -333,14 +347,14 @@ export class BrandAddService extends BaseService {
     funcData.output_alias = outputAliases;
     funcData.output_objects = outputObjects;
     funcData.single_keys = this.singleKeys;
-
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'brand_list',
+        data: inputParams.insert_id ? inputParams.insert_id : inputParams.id
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(outputData, funcData);
   }
 
@@ -402,7 +416,7 @@ export class BrandAddService extends BaseService {
           extensions:
             paramKey === 'car_document'
               ? 'pdf,doc,docx'
-              : 'gif,png,jpg,jpeg,jpe,bmp,ico',
+              : 'gif,png,jpg,jpeg,jpe,bmp,ico,webp',
         };
 
         uploadInfo[paramKey] = fileInfo;

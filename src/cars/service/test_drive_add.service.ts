@@ -61,18 +61,13 @@ export class TestDriveAddService extends BaseService {
       this.requestObj = reqObject;
       this.inputParams = reqParams;
       this.setModuleAPI('add');
-      let inputParams = await this.customUniqueCondition(reqParams);
-
-      if (inputParams.unique_status === 1) {
-        outputResponse = this.testDriveUniqueFailure(inputParams);
+      let inputParams = await this.insertTestDriveData(reqParams);
+      if (!_.isEmpty(inputParams.insert_test_drive_data)) {
+        outputResponse = this.testDriveFinishSuccess(inputParams, 'Test Drive added successfully.');
       } else {
-        inputParams = await this.insertTestDriveData(inputParams);
-        if (!_.isEmpty(inputParams.insert_test_drive_data)) {
-          outputResponse = this.testDriveFinishSuccess(inputParams, 'Test Drive added successfully.');
-        } else {
-          outputResponse = this.testDriveFinishFailure(inputParams);
-        }
+        outputResponse = this.testDriveFinishFailure(inputParams);
       }
+
     } catch (err) {
       this.log.error('API Error >> test_drive_add >>', err);
     }
@@ -85,7 +80,6 @@ export class TestDriveAddService extends BaseService {
 
     try {
       const queryColumns: any = {};
-      if ('code' in inputParams) queryColumns.code = inputParams.code;
       if ('type' in inputParams) queryColumns.type = inputParams.type;
       if ('location_id' in inputParams) queryColumns.locationId = inputParams.location_id;
       if ('car_id' in inputParams) queryColumns.carId = inputParams.car_id;
@@ -93,10 +87,17 @@ export class TestDriveAddService extends BaseService {
       if ('slot_date' in inputParams) queryColumns.slotDate = inputParams.slot_date;
       if ('slot_time' in inputParams) queryColumns.slotTime = inputParams.slot_time;
       if ('remarks' in inputParams) queryColumns.remarks = inputParams.remarks;
+      if ('consent_info' in inputParams) queryColumns.consentInfo = inputParams.consent_info;
       if ('license_holder_details' in inputParams) queryColumns.licenseHolderDetails = inputParams.license_holder_details;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('added_by' in inputParams) queryColumns.addedBy = inputParams.added_by;
+      if ('sales_executive_id' in inputParams) queryColumns.salesExecutiveId = inputParams.sales_executive_id;
       queryColumns.addedDate = () => 'NOW()';
+
+      let code = await this.general.getCustomToken('test_drive', 'TD', 'Add');
+      if (code != '') {
+        queryColumns.code = code;
+      }
 
       if ('attachment' in inputParams) {
         queryColumns.attachment = inputParams.attachment;
@@ -157,9 +158,11 @@ export class TestDriveAddService extends BaseService {
       if ('slot_date' in inputParams) queryColumns.slotDate = inputParams.slot_date;
       if ('slot_time' in inputParams) queryColumns.slotTime = inputParams.slot_time;
       if ('remarks' in inputParams) queryColumns.remarks = inputParams.remarks;
+      if ('consent_info' in inputParams) queryColumns.consentInfo = inputParams.consent_info;
       if ('license_holder_details' in inputParams) queryColumns.licenseHolderDetails = inputParams.license_holder_details;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('updated_by' in inputParams) queryColumns.updatedBy = inputParams.updated_by;
+      if ('sales_executive_id' in inputParams) queryColumns.salesExecutiveId = inputParams.sales_executive_id;
       queryColumns.updatedDate = () => 'NOW()';
 
       if ('attachment' in inputParams) {
@@ -178,12 +181,11 @@ export class TestDriveAddService extends BaseService {
       const res = await queryObject.execute();
       const data = { affected_rows: res.affected };
 
-      uploadResult = await this.uploadFiles(fileInfo, inputParams);
+      uploadResult = await this.uploadFiles(fileInfo, inputParams, inputParams.id);
       const queryResult = { success: 1, message: 'Test Drive updated successfully.', data };
 
       this.blockResult = queryResult;
     } catch (err) {
-      console.log(err);
       this.blockResult = { success: 0, message: err, data: [] };
     }
 
@@ -208,7 +210,7 @@ export class TestDriveAddService extends BaseService {
           file_type: this.general.getFileMime(filePath),
           file_size: this.general.getFileSize(filePath),
           max_size: 512000,
-          extensions: 'gif,png,jpg,jpeg,webp',
+          extensions: 'png,jpg,jpeg,webp,pdf',
         };
 
         uploadInfo[paramKey] = fileInfo;
@@ -264,12 +266,15 @@ export class TestDriveAddService extends BaseService {
     );
   }
 
-  testDriveFinishSuccess(inputParams: any, message: string) {
+  async testDriveFinishSuccess(inputParams: any, message: string) {
     let job_data = {
       job_function: 'sync_elastic_data',
-      job_params: { module: 'test_drive_list' },
+      job_params: {
+        module: 'test_drive_list',
+        data: inputParams.insert_id ? inputParams.insert_id : inputParams.id
+      },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
 
     return this.response.outputResponse(
       {

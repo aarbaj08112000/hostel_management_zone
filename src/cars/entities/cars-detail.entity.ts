@@ -44,6 +44,17 @@ enum YesNo {
   No = 'No',
 }
 
+enum Negotiable {
+  Yes = 'Yes',
+  No = 'No',
+}
+
+enum NegotiableRange {
+  High = 'High',
+  Medium = 'Medium',
+  Low = 'Low',
+}
+
 @Entity('cars_details')
 export class CarDetailsEntity extends UserBase {
   @PrimaryGeneratedColumn({ type: 'int' })
@@ -115,15 +126,6 @@ export class CarDetailsEntity extends UserBase {
   @Column({ type: 'double' })
   drivenDistance: number;
 
-  @Column({ type: 'enum', enum: YesNo })
-  serviceHistory: YesNo;
-
-  @Column({ type: 'enum', enum: YesNo })
-  warranty: YesNo;
-
-  @Column({ type: 'int' })
-  ownerNumber: number;
-
   @Column({ type: 'int' })
   seatingCapacity: number;
 
@@ -133,5 +135,13 @@ export class CarDetailsEntity extends UserBase {
   @Column({ type: 'int' })
   variantId: number;
 
+  @Column({ type: 'double', precision: 15, scale: 2, nullable: true })
+  monthlyEMIAmount: number;
+
+  @Column({ type: 'enum', enum: Negotiable })
+  negotiable: Negotiable;
+
+  @Column({ type: 'enum', enum: NegotiableRange })
+  negotiableRange: NegotiableRange;
 }
 /* */

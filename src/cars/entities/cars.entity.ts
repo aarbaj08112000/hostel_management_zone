@@ -1,15 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { UserBase } from '@repo/source/entities/base-user.entity';
-enum Negotiable {
-  Yes = 'Yes',
-  No = 'No',
-}
 
-enum NegotiableRange {
-  High = 'High',
-  Medium = 'Medium',
-  Low = 'Low',
-}
 
 enum CarCondition {
   Excellent = 'Excellent',
@@ -18,8 +9,8 @@ enum CarCondition {
 }
 
 enum Status {
-  Active = 'Active',
-  Inactive = 'Inactive',
+  Available = 'Available',
+  UnAvailable = 'UnAvailable',
   Booked = 'Booked',
   Sold = 'Sold',
   Draft = 'Draft',
@@ -27,6 +18,10 @@ enum Status {
 enum YesNo {
   Yes = 'Yes',
   No = 'No',
+}
+enum Export {
+  CanBeExported = 'CanBeExported',
+  NotForExport = 'NotForExport'
 }
 @Entity('cars')
 export class CarEntity extends UserBase {
@@ -42,17 +37,8 @@ export class CarEntity extends UserBase {
   @Column({ type: 'double', precision: 15, scale: 2 })
   price: number;
 
-  @Column({ type: 'enum', enum: Negotiable })
-  negotiable: Negotiable;
-
-  @Column({ type: 'enum', enum: NegotiableRange })
-  negotiableRange: NegotiableRange;
-
   @Column({ type: 'enum', enum: CarCondition })
   carCondition: CarCondition;
-
-  @Column({ type: 'double', precision: 15, scale: 2, nullable: true })
-  monthlyEMIAmount: number;
 
   @Column({ type: 'varchar', length: 255 })
   slug: string;
@@ -63,14 +49,17 @@ export class CarEntity extends UserBase {
   @Column({ type: 'text', nullable: true })
   remarks: string;
 
-  @Column({ type: 'enum', enum: Status, default: Status.Active })
+  @Column({ type: 'enum', enum: Status, default: Status.Draft })
   status: Status;
 
   @Column({ type: 'longtext', nullable: true })
   shortDescription: string;
 
-  @Column({ type: 'text', nullable: true })
-  contactDetails: string;
+  // @Column({ type: 'text', nullable: true })
+  // contactDetails: string;
+
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  contactPersonId: number;
 
   @Column({ type: 'text', nullable: true })
   overviewTitle: string;
@@ -81,6 +70,11 @@ export class CarEntity extends UserBase {
   @Column({ type: 'text', nullable: true })
   carCode: string;
 
+  @Column({ type: 'int', unsigned: true })
+  locationId: number;
+
+  @Column({ type: 'enum', enum: Export })
+  exportStatus: Export;
 }
 
 enum InsuranceType {
@@ -112,9 +106,6 @@ export class CarHistoryEntity extends UserBase {
   @Column({ type: 'date' })
   registrationExpiry: Date;
 
-  @Column({ type: 'int', unsigned: true })
-  locationId: number;
-
   @Column({ type: 'enum', enum: InsuranceType })
   insuranceType: InsuranceType;
 
@@ -130,7 +121,7 @@ export class CarHistoryEntity extends UserBase {
   @Column({ type: 'varchar', length: 255, nullable: true })
   insurancePolicyNumber: string;
 
-  @Column({ type: 'enum', enum: YesNo })
+  @Column({ type: 'enum', enum: YesNo, nullable: true })
   isColetral: YesNo;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -141,6 +132,15 @@ export class CarHistoryEntity extends UserBase {
 
   @Column({ type: 'enum', enum: YesNo })
   afterMarketModification: YesNo;
+
+  @Column({ type: 'enum', enum: YesNo })
+  serviceHistory: YesNo;
+
+  @Column({ type: 'enum', enum: YesNo })
+  warranty: YesNo;
+
+  @Column({ type: 'int' })
+  ownerNumber: number;
 }
 
 @Entity('car_tags')

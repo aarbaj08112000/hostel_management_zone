@@ -171,23 +171,25 @@ export class CarTagAddService extends BaseService {
   }
 
 
-  tagFinishSuccess(inputParams: any, type: string) {
-
+  async tagFinishSuccess(inputParams: any, type: string) {
+    let car_ids = inputParams.inserted_car_tags.map((data) => data.carId)
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'tag_list',
+        data: inputParams.inserted_car_tags[0]['tagId']
       },
     };
-    this.general.submitGearmanJob(job_data);
+    await this.general.submitGearmanJob(job_data);
 
     let car_job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'car_list',
+        data: car_ids
       },
     };
-    this.general.submitGearmanJob(car_job_data);
+    await this.general.submitGearmanJob(car_job_data);
 
     return this.response.outputResponse(
       {

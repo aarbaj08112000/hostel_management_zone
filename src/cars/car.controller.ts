@@ -35,34 +35,41 @@ import { CarDetailsService } from './service/car_details.service';
 import { CarModuleService } from './service/car_module.service';
 import { CarSlideService } from './service/car_slide.service';
 import { CarListDto } from './dto/car_list.dto';
-import { CarAddDto, UpdateCarDTO, CarsAddFileDto, CarsDetailsDto } from './dto/car_add.dto';
+import { CarAddDto, UpdateCarDTO, CarsAddFileDto, CarsDetailsDto, TimeSlotDto } from './dto/car_add.dto';
 import { CarHistoryAddDto, CarHistoryUpdateDto } from './dto/car_add.dto';
 import { CarListService } from './service/cars_list.service';
 import { CarsAddService } from './service/cars_add.service';
 import { CarTagAddDto, CarDetailsDto, UpdateCarDetailsDTO, } from './dto/car_add_details.dto';
 import { BrandService } from './service/brand.service';
-import { VariantListService } from './service/variant_list.service';
 import { BodyListService } from './service/body_list.service';
 import { ElasticService } from '@repo/source/services/elastic.service';
-import { ColorService } from './service/color.service';
 import { CarDocumentAddService } from './service/car_document_add.service';
 import { CarAddDocumentFileDto, carDocumentDeleteDto, CarDocumentsDto } from './dto/car_documents.dto';
 import { CarDocumentDeleteService } from './service/car_document_delete.service';
 import { TestDriveListService } from './service/test_drive_list.service';
 import { TestDriveAddService } from './service/test_drive_add.service';
+import { TestDriveAddFrontService } from './service/test_drive_add_front.service';
+import { TestDriveUpdateFrontService } from './service/test_drive_update_front.service';
 import { TestDriveDetailsService } from './service/test_drive_details.service';
-import { TestDriveAddAttachmentDto, TestDriveAddDto, TestDriveDetailsDto, TestDriveUpdateAttachmentDto, TestDriveUpdateDto } from './dto/test_drive.dto';
+import { TestDriveUpdateService } from './service/test_drive_update.service';
+import { TestDriveAddAttachmentDto, TestDriveAddDto, TestDriveAddFrontDto, TestDriveCancelDto, TestDriveCompleteDto, TestDriveDetailsDto, TestDriveInitiateDto, TestDriveRescheduleDto, TestDriveUpdateAttachmentDto, TestDriveUpdateDto } from './dto/test_drive.dto';
 import { CarWishlistService } from './service/car_wishlist.service';
 import { CarWishlistDto } from './dto/car_wishlist.dto';
-import { filter } from 'lodash';
-import { parseArgs } from 'util';
 import { CarListFrontService } from './service/car_list_front.service';
 import { CarFrontDetailsService } from './service/car_front_details.service';
 import { CarCompareDetailsService } from './service/car_compare.service';
-import { Client, ClientTCP, MessagePattern, Payload } from '@nestjs/microservices';
-import { Transport } from '@nestjs/microservices';
+import { CarPublishUpdateDto } from './dto/car_publish_update.dto';
+import { CarPublishUpdateService } from './service/car_publish_update.service';
+import { LocationtimeSlotService } from './service/location_timelot.service';
+import { BookingAddDto, BookingUpdateDto } from './dto/booking.dto';
+import { BookingAddService } from './service/booking_add.service';
+import { DistanceDto } from './dto/distance.dto';
+import { CarMicroserviceService } from './service/car_microservice.service';
+import { CommonInterceptor } from './service/common_interceptor_service';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 @Controller()
 @UseFilters(HttpExceptionFilter)
+@UseInterceptors(CommonInterceptor)
 export class CarController {
   CarDocumentDeleteService: any;
   constructor(
@@ -82,10 +89,8 @@ export class CarController {
     protected carTagsService: CarTagsAddService,
     protected carFeatureService: CarFeatureAddService,
     private brandListService: BrandService,
-    private variantListService: VariantListService,
     private bodyListService: BodyListService,
     private elasticService: ElasticService,
-    private colorListService: ColorService,
     protected modelService: ModelAddService,
     protected bodyService: BodyAddService,
     private readonly bodyTypeDetailsService: BodyTypeDetailsService,
@@ -93,62 +98,112 @@ export class CarController {
     private carDocumentDeleteService: CarDocumentDeleteService,
     private testDriveListService: TestDriveListService,
     private testDriveAddService: TestDriveAddService,
+    private testDriveAddFrontService: TestDriveAddFrontService,
+    private testDriveUpdateFrontService: TestDriveUpdateFrontService,
     private testDriveDetailsService: TestDriveDetailsService,
+    private testDriveUpdateService: TestDriveUpdateService,
     private carWishlistService: CarWishlistService,
     private carFrontListService: CarListFrontService,
     private carFrontDetailService: CarFrontDetailsService,
     private carCompareDetail: CarCompareDetailsService,
+    private carPublishUpdateService: CarPublishUpdateService,
+    private timeSlotService: LocationtimeSlotService,
+    private bookingAddService: BookingAddService,
+    private carMicroservice : CarMicroserviceService
   ) { }
-  @Client({ transport: Transport.TCP, options: { port: 5005 } }) 
-  public client: ClientTCP; 
-  async onModuleInit() {
+  @MessagePattern('get-data')
+  async getMasterData( @Req() request: Request, @Payload() payload: any) {
     try {
-      let retries = 5;
-      while (retries) {
-        try {
-          await this.client.connect();
-          console.log('Client connected successfully!');
-          break;
-        } catch (error) {
-          retries--;
-          console.error('Failed to connect, retrying...', error);
-          if (retries === 0) {
-            console.error('Failed to connect after multiple retries');
-          }
-          await new Promise(res => setTimeout(res, 2000)); 
-        }
-      }
-    } catch (error) {
-      console.error('Failed to connect to microservice', error);
+      return this.carMicroservice.getData(payload);
+    }catch(err){
+      console.log(err);
     }
   }
-  @MessagePattern('car-data')
-  async getUser( @Req() request: Request, @Payload() payload: string) {
-    const index = 'nest_local_cars';
-    let search_by = 'id';
-    let search_key = payload['car_id'];
-    let inputParams = {
-      search_key,
-      index,
-      search_by,
-    };
-    return this.carFrontDetailService.startCarDetails(request,inputParams);
+  @MessagePattern('set-data')
+  async setCarData( @Req() request: Request, @Payload() payload: any) {
+    try{
+      return this.carMicroservice.setData(payload);
+    }catch(err){
+      console.log(err)
+    }
   }
+  
+  @Get('get-distance')
+  async getDistance(@Req() request: Request, @Query() body: DistanceDto) {
+    try {
+      let { source_loc, dest_loc } = body
+      const [sourceLat, sourceLon] = source_loc.split(',').map(Number);
+      const [destLat, destLon] = dest_loc.split(',').map(Number);
+      if ([sourceLat, sourceLon, destLat, destLon].some(isNaN)) {
+        throw new Error("Invalid coordinate format");
+      }
+      return { success: 1, distance: this.general.calculateDistance(sourceLat, sourceLon, destLat, destLon) }
+    } catch (err) {
+      return { success: 0, message: err.message }
+    }
+  }
+  @Get('time-slot')
+  async getLocationTimeSlot(@Req() request: Request, @Query() body: TimeSlotDto) {
+    let output: any;
+    try {
+      let search_by = '';
+      let search_key = '';
+      if ('car_id' in body) {
+        search_key = body.car_id;
+        search_by = 'id';
+      } else {
+        search_key = body.car_slug;
+        search_by = 'slug';
+      }
+      let location_enabled = 'Yes'
+      const index = 'nest_local_cars';
+      let inputParams: any = {
+        search_key,
+        index,
+        search_by,
+        location_enabled
+      };
+      let response: any = await this.carFrontDetailService.startCarDetails(request, inputParams);
+      if (response.settings.success == 1) {
+        response.data = { ...response.data, requested_date: body.date }
+        return await this.timeSlotService.startLocationtimeSlot(request, response.data)
+      } else {
+        return response
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   @Post('car-compare')
   async carCompare(
     @Req() request: Request,
     @Body()
     body,
   ) {
-    let search_by = 'slug';
-    let search_key = body.slug;
-    const index = 'nest_local_cars';
-    let inputParams = {
-      search_key,
-      index,
-      search_by,
-    };
-    return await this.carCompareDetail.startCarDetails(request, inputParams);
+    try {
+      if (!('slug' in body)) {
+        return {
+          "settings": {
+            "status": 200,
+            "success": 0,
+            "message": "please provide slug."
+          },
+          "data": {}
+        }
+      }
+      let search_by = 'slug';
+      let search_key = body.slug;
+      const index = 'nest_local_cars';
+      let inputParams = {
+        search_key,
+        index,
+        search_by,
+      };
+      return await this.carCompareDetail.startCarDetails(request, inputParams);
+    } catch (err) {
+      console.log(err)
+    }
   }
   @Get('front-cars-details')
   async frontCarDetail(
@@ -156,6 +211,8 @@ export class CarController {
     @Query()
     body: CarsDetailsDto,
   ) {
+    let dev_publish = body?.dev_publish ? body.dev_publish : 'No'
+    let location_enabled = body.location_enabled
     let search_by = 'slug';
     let search_key = body.car_slug;
     const index = 'nest_local_cars';
@@ -163,6 +220,8 @@ export class CarController {
       search_key,
       index,
       search_by,
+      dev_publish,
+      location_enabled
     };
     return await this.carFrontDetailService.startCarDetails(request, inputParams);
   }
@@ -187,6 +246,8 @@ export class CarController {
         }
 
         if (typeof params.sort === 'object' && !Array.isArray(params.sort)) {
+          params.sort = this.sort_map_arr(params.sort);
+          console.log(params.sort);
           params.sort = Object.entries(params.sort).map(([key, dir]) => ({
             prop: key,
             dir: dir
@@ -209,6 +270,12 @@ export class CarController {
   async carFeatureUpdate(@Req() request: Request, @Body() body: CarFeatureUpdateDto) {
     const params = body;
     return await this.carFeatureService.updateCarFeatures(request, params);
+  }
+
+  @Put('car-publish-update')
+  async carPublishUpdate(@Req() request: Request, @Body() body: CarPublishUpdateDto) {
+    const params = body;
+    return await this.carPublishUpdateService.updateCarStatus(params);
   }
 
   @Post('car-feature')
@@ -288,18 +355,18 @@ export class CarController {
     let fileDto;
     let carId = body.car_id;
     let existed_image_data = await this.carImageAddService.fetchImageData(carId);
+
     if (existed_image_data.length > 0) {
       fileDto = new UpdateCarImagesDTO();
     } else {
       fileDto = new CarAddImageFileDto();
     }
     /*File Sectionn*/
-
+    let is_draft = body?.is_draft;
     fileDto.external_images = files?.external_images;
     fileDto.internal_images = files?.internal_images;
     const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
+    if (errors.length > 0 && is_draft != 'Yes') {
       const errorMessages = errors
         .map((error) => {
           if (error.hasOwnProperty('constraints')) {
@@ -451,11 +518,19 @@ export class CarController {
       car_history?: CarHistoryAddDto | CarHistoryUpdateDto;
       car_tags?: CarTagAddDto;
       car_feature?: CarFeatureAddDto;
+      carId?: string | number,
+      is_draft?: string
     },
     @UploadedFiles() files: Record<string, Express.Multer.File[]>,
   ) {
     try {
-      const { car_data, car_details, car_history, car_tags } = body;
+      if (body.carId !== undefined && body.carId !== '' && body.carId !== null) {
+        if (body.car_data === undefined || body.car_data === null) {
+          body.car_data = {} as CarAddDto | UpdateCarDTO;
+        }
+        body.car_data.car_id = body.carId;
+      }
+      let { car_data, car_details, car_history, car_tags, is_draft } = body;
       /*File Sectionn*/
       const fileDto = new CarsAddFileDto();
       fileDto.car_image = files?.car_image;
@@ -536,6 +611,15 @@ export class CarController {
 
       await Promise.all(uploadPromises);
       /*File Section End */
+      if ('car_details' in body || "car_history" in body || "car_tags" in body) {
+        if (!("car_data" in body)) {
+          return {
+            success: 0,
+            status: 404,
+            message: 'Please enter value for carId'
+          }
+        }
+      }
       let car_id = car_data['car_id'];
       let fetchCarData;
       if (typeof car_id != 'undefined') {
@@ -544,9 +628,11 @@ export class CarController {
 
       let carDataDto;
 
-      if ('car_id' in car_data && car_data.car_id) {
+      if (('car_id' in car_data && car_data.car_id) || (typeof is_draft != 'undefined' && is_draft == 'Yes')) {
+        car_data = { ...car_data, is_draft }
         carDataDto = Object.assign(new UpdateCarDTO(), car_data);
       } else {
+        body.car_data = { ...body.car_data, status: 'Available' }
         carDataDto = Object.assign(new CarAddDto(), car_data);
       }
       const carDataErrors = await validate(carDataDto);
@@ -555,12 +641,13 @@ export class CarController {
       }
       if (car_details) {
         let carDetailsDto;
-        if (
+        if ((
           'car_id' in car_data &&
           car_data.car_id &&
           fetchCarData.existed_car_details != null &&
-          typeof fetchCarData.existed_car_details != 'undefined'
+          typeof fetchCarData.existed_car_details != 'undefined') || (typeof is_draft != 'undefined' && is_draft == 'Yes')
         ) {
+          car_details = { ...car_details, is_draft }
           carDetailsDto = Object.assign(new UpdateCarDetailsDTO(), car_details);
         } else {
           carDetailsDto = Object.assign(new CarDetailsDto(), car_details);
@@ -573,12 +660,13 @@ export class CarController {
       }
       if (car_history) {
         let carHistoryDto;
-        if (
+        if ((
           'car_id' in car_data &&
           car_data.car_id &&
           fetchCarData.existed_car_history_details != null &&
-          typeof fetchCarData.existed_car_history_details != 'undefined'
+          typeof fetchCarData.existed_car_history_details != 'undefined') || (typeof is_draft != 'undefined' && is_draft == 'Yes')
         ) {
+          car_history = { ...car_history, is_draft }
           carHistoryDto = Object.assign(new CarHistoryUpdateDto(), car_history);
         } else {
           carHistoryDto = Object.assign(new CarHistoryAddDto(), car_history);
@@ -604,6 +692,7 @@ export class CarController {
     }
     catch (err) {
       console.log(err)
+      return err
     }
   }
 
@@ -677,6 +766,11 @@ export class CarController {
         { "key": "modelName", "value": params['modelName'].toLowerCase(), "operator": "contain" }
       ];
     }
+    params['filters'] = [
+      ...(params['filters'] || []),
+      { "key": "isListed", "value": 'Yes', "operator": "in" },
+      { "key": "status", "value": ['Booked', 'Available'], "operator": "in" }
+    ];
 
     let carList = await this.carList(request, params);
     carList = {
@@ -690,7 +784,8 @@ export class CarController {
         distance_driven: this.general.numberFormat(key['drivenDistance'], 'numerical') + ' ' + 'Miles',
         color: key['exteriorColorName'],
         manufacture_year: key['manufactureYear'],
-        brand_name: key['brandName']
+        brand_name: key['brandName'],
+        status: key['status']
       }))
     }
     return carList
@@ -718,6 +813,7 @@ export class CarController {
         visitors: analaytics_res['total_visitor']['value'] ? analaytics_res['total_visitor']['value'] : 0,
         views: analaytics_res['total_views']['value'] ? analaytics_res['total_views']['value'] : 0
       }
+      console.log(data)
       let to_update_index = 'nest_local_cars';
       return await this.elasticService.updateElasticDocument(slug, to_update_index, 'slug', 'analytics', data);
 
@@ -726,169 +822,202 @@ export class CarController {
 
   @Post('car-filter')
   async fetchCarFilter(@Req() request: Request, @Body() parameters: any) {
-    let filter_arr = {};
-    let params: any = {};
-    if (!params.filters) {
-      params.filters = {};
+    try {
+      let filter_arr = {};
+      let params: any = {};
+      if (!params.filters) {
+        params.filters = {};
+      }
+      parameters.filters = this.map_arr(parameters.filters);
+      params.filters = { status: 'Active' };
+      // let exteriorColor = await this.colorListService.startColor(request, params);
+      // exteriorColor = {
+      //   searchParam: 'color',
+      //   searchType: 'eq',
+      //   label: custom.lang('Color'),
+      //   values: exteriorColor['data'].length > 0 ? Object.values(exteriorColor['data']).map((key) => ({
+      //     key: key['color_name'].toLowerCase(),
+      //     value: key['color_code'],
+      //     label: key['color_name'],
+      //   })) : [],
+      // };
+
+      // filter_arr = { ...filter_arr, exteriorColor };
+      params = { ...params, skip_brand: 'Yes' }
+      let brandName = await this.brandListService.startBrand(request, params);
+      brandName = {
+        searchParam: 'brand',
+        searchType: 'eq',
+        label: custom.lang('Brand'),
+        values: brandName['data'].length > 0 ? Object.values(brandName['data']).map((key) => {
+          if (key['model_codes'] == null || key['model_codes'] == '') {
+            return null;
+          }
+          return {
+            key: key['brand_code'].toLowerCase(),
+            value: key['brand_name'],
+            image: key['brand_image'] ? key['brand_image'] : ''
+          };
+        }).filter(item => item !== null) : [],
+      };
+
+      filter_arr = { ...filter_arr, brandName };
+
+      let bodyType = await this.bodyList(request, params);
+
+      bodyType = {
+        searchParam: 'body',
+        searchType: 'eq',
+        label: custom.lang('Body Type'),
+        values: bodyType['data'].length > 0 ? Object.values(bodyType['data']).map((key) => ({
+          key: key['body_code'].toLowerCase(),
+          value: key['body_type'],
+        })) : [],
+      };
+      filter_arr = { ...filter_arr, bodyType };
+
+      if ('brandCode' in parameters.filters) {
+        params['is_front'] = 'Yes';
+        params['filters'] = { 'brand_code': parameters.filters['brandCode'] }
+      }
+      let modelName = await this.modelList(request, params);
+
+      modelName = {
+        searchParam: 'model',
+        searchType: 'eq',
+        label: custom.lang('Model'),
+        values: modelName['data'].length > 0 ? Object.values(modelName['data']).map((key) => ({
+          key: key['model_code'].toLowerCase(),
+          value: key['model_name'],
+          brandCode: key['brand_code']
+        })) : [],
+      };
+
+      filter_arr = { ...filter_arr, modelName };
+
+      if ('filters' in params) {
+        delete params['filters']
+      }
+      if ('modelName' in parameters.filters) {
+        params['is_front'] = 'Yes';
+        params['filters'] = { 'model_code': parameters.filters['modelName'] }
+      }
+      // let carVariant = await this.variantListService.startVariantList(request, params);
+      // carVariant = {
+      //   searchParam: 'carVariant',
+      //   searchType: 'eq',
+      //   label: custom.lang('Variants'),
+      //   values: carVariant['data'].length > 0 ? Object.values(carVariant['data']).map((key) => ({
+      //     key: key['variant_code'].toLowerCase(),
+      //     value: key['variant_name'],
+      //     modelCode: key['model_code']
+      //   })) : [],
+      // };
+
+      // filter_arr = { ...filter_arr, carVariant };
+      if ('filters' in params) {
+        delete params['filters']
+      }
+      let fuelType = {
+        searchParam: 'fuel',
+        searchType: 'eq',
+        label: custom.lang('Fuel Type'),
+        values: [
+          {
+            key: 'Petrol',
+            value: 'Petrol',
+          },
+          {
+            key: 'Diesel',
+            value: 'Diesel',
+          },
+          {
+            key: 'Hybrid',
+            value: 'Hybrid',
+          },
+          {
+            key: 'Electric',
+            value: 'Electric',
+          },
+        ],
+      };
+      filter_arr = { ...filter_arr, fuelType };
+      let transmissionType = {
+        searchParam: 'transmission',
+        searchType: 'eq',
+        label: custom.lang('Transmission'),
+        values: [
+          {
+            key: 'Manual',
+            value: 'Manual',
+          },
+          {
+            key: 'Automatic',
+            value: 'Automatic',
+          },
+          {
+            key: 'semiAutomatic',
+            value: 'Semi Automatic',
+          },
+        ],
+      };
+      filter_arr = { ...filter_arr, transmissionType };
+      let manufactureYear = {
+        searchParam: 'year',
+        searchType: 'btw',
+        label: custom.lang('Year'),
+        values: {
+          from: '2021',
+          to: '2025',
+        },
+      };
+      filter_arr = { ...filter_arr, manufactureYear };
+
+      let price_limit = await this.general.getConfigItem('PRICE_LIMIT');
+      price_limit = price_limit.split('-');
+      let carPrice = {
+        searchParam: 'price',
+        searchType: 'btw',
+        label: custom.lang('Price'),
+        values: {
+          from: price_limit[0],
+          to: price_limit[1],
+        },
+        default_values: {
+          from: price_limit[0],
+          to: price_limit[1],
+        },
+      };
+
+      filter_arr = { ...filter_arr, carPrice };
+
+      let sort = {
+        "manufactureYear": {
+          sortParam: 'year',
+          label: custom.lang('Year'),
+        },
+        "price": {
+          sortParam: 'price',
+          label: custom.lang('Price'),
+        },
+        "drivenDistance": {
+          sortParam: 'distance',
+          label: custom.lang('KM Driven'),
+        },
+        "newestFirst": {
+          sortParam: 'newest',
+          label: custom.lang('Newest First'),
+        },
+        "oldestFirst": {
+          sortParam: 'oldest',
+          label: custom.lang('Oldest First'),
+        }
+      }
+      filter_arr = { ...filter_arr, sort }
+      return filter_arr;
+    } catch (err) {
+      console.log(err)
     }
-    parameters.filters = this.map_arr(parameters.filters);
-    params.filters = { status: 'Active' };
-    let exteriorColor = await this.colorListService.startColor(request, params);
-    exteriorColor = {
-      searchParam: 'color',
-      searchType: 'eq',
-      label: custom.lang('Color'),
-      values: exteriorColor['data'].length > 0 ? Object.values(exteriorColor['data']).map((key) => ({
-        key: key['color_name'].toLowerCase(),
-        value: key['color_code'],
-        label: key['color_name'],
-      })) : [],
-    };
-
-    filter_arr = { ...filter_arr, exteriorColor };
-
-    let brandName = await this.brandListService.startBrand(request, params);
-    brandName = {
-      searchParam: 'brand',
-      searchType: 'eq',
-      label: custom.lang('Brand'),
-      values: brandName['data'].length > 0 ? Object.values(brandName['data']).map((key) => ({
-        key: key['brand_code'].toLowerCase(),
-        value: key['brand_name'],
-        image: key['brand_image'] ? key['brand_image'] : ''
-      })) : [],
-    };
-
-    filter_arr = { ...filter_arr, brandName };
-
-    let bodyType = await this.bodyList(request, params);
-
-    bodyType = {
-      searchParam: 'body',
-      searchType: 'eq',
-      label: custom.lang('Body Type'),
-      values: bodyType['data'].length > 0 ? Object.values(bodyType['data']).map((key) => ({
-        key: key['body_code'].toLowerCase(),
-        value: key['body_type'],
-      })) : [],
-    };
-    filter_arr = { ...filter_arr, bodyType };
-
-    if ('brandCode' in parameters.filters) {
-      params['is_front'] = 'Yes';
-      params['filters'] = { 'brand_code': parameters.filters['brandCode'] }
-    }
-    let modelName = await this.modelList(request, params);
-
-    modelName = {
-      searchParam: 'model',
-      searchType: 'eq',
-      label: custom.lang('Model'),
-      values: modelName['data'].length > 0 ? Object.values(modelName['data']).map((key) => ({
-        key: key['model_code'].toLowerCase(),
-        value: key['model_name'],
-        brandCode: key['brand_code']
-      })) : [],
-    };
-
-    filter_arr = { ...filter_arr, modelName };
-
-    if ('filters' in params) {
-      delete params['filters']
-    }
-    if ('modelName' in parameters.filters) {
-      params['is_front'] = 'Yes';
-      params['filters'] = { 'model_code': parameters.filters['modelName'] }
-    }
-    let carVariant = await this.variantListService.startVariantList(request, params);
-    carVariant = {
-      searchParam: 'carVariant',
-      searchType: 'eq',
-      label: custom.lang('Variants'),
-      values: carVariant['data'].length > 0 ? Object.values(carVariant['data']).map((key) => ({
-        key: key['variant_code'].toLowerCase(),
-        value: key['variant_name'],
-        modelCode: key['model_code']
-      })) : [],
-    };
-
-    filter_arr = { ...filter_arr, carVariant };
-    if ('filters' in params) {
-      delete params['filters']
-    }
-    let fuelType = {
-      searchParam: 'fuel',
-      searchType: 'eq',
-      label: custom.lang('Fuel Type'),
-      values: [
-        {
-          key: 'Petrol',
-          value: 'Petrol',
-        },
-        {
-          key: 'Diesel',
-          value: 'Diesel',
-        },
-        {
-          key: 'Hybrid',
-          value: 'Hybrid',
-        },
-        {
-          key: 'Electric',
-          value: 'Electric',
-        },
-      ],
-    };
-    filter_arr = { ...filter_arr, fuelType };
-    let transmissionType = {
-      searchParam: 'transmission',
-      searchType: 'eq',
-      label: custom.lang('Transmission'),
-      values: [
-        {
-          key: 'Manual',
-          value: 'Manual',
-        },
-        {
-          key: 'Automatic',
-          value: 'Automatic',
-        },
-        {
-          key: 'semiAutomatic',
-          value: 'Semi Automatic',
-        },
-      ],
-    };
-    filter_arr = { ...filter_arr, transmissionType };
-    let manufactureYear = {
-      searchParam: 'year',
-      searchType: 'btw',
-      label: custom.lang('Year'),
-      values: {
-        from: '2021',
-        to: '2025',
-      },
-    };
-    filter_arr = { ...filter_arr, manufactureYear };
-
-    let price_limit = await this.general.getConfigItem('PRICE_LIMIT');
-    price_limit = price_limit.split('-');
-    let carPrice = {
-      searchParam: 'price',
-      searchType: 'btw',
-      label: custom.lang('Price'),
-      values: {
-        from: price_limit[0],
-        to: price_limit[1],
-      },
-      default_values: {
-        from: price_limit[0],
-        to: price_limit[1],
-      },
-    };
-
-    filter_arr = { ...filter_arr, carPrice };
-    return filter_arr;
   }
 
 
@@ -991,12 +1120,12 @@ export class CarController {
     }
   }
 
-  @Post('test-drive-add')
+  @Post('test-drive-add-front')
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'attachment' },
     ]))
-  async BrandAdd(@Req() request: Request, @Body() body: TestDriveAddDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+  async TestDriveAddFront(@Req() request: ExpressRequest, @Body() body: TestDriveAddFrontDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
     const fileDto = new TestDriveAddAttachmentDto();
     fileDto.attachment = files?.attachment;
     const errors = await validate(fileDto, { whitelist: true });
@@ -1035,6 +1164,66 @@ export class CarController {
     }
     await Promise.all(uploadPromises);
     const params = body;
+    return await this.testDriveAddFrontService.startTestDriveAdd(request, params);
+  }
+
+  @Post('test-drive-add')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async TestDriveAdd(@Req() request: Request, @Body() body: TestDriveAddDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+    const fileDto = new TestDriveAddAttachmentDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          success: 0,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+
+    let search_key = body.car_id;
+    let search_by = 'id';
+    let server_name = await this.general.getServerName();
+    let index = server_name.toLowerCase() + '_' + 'cars';
+    let car_details = await this.elasticService.getById(
+      search_key,
+      index,
+      search_by,
+    );
+    if (typeof body.sales_executive_id == 'undefined' || body.sales_executive_id == null) {
+      body = { ...body, sales_executive_id: car_details.sales_executive_id };
+    }
+    const params = body;
     return await this.testDriveAddService.startTestDriveAdd(request, params);
   }
 
@@ -1043,7 +1232,7 @@ export class CarController {
     FileFieldsInterceptor([
       { name: 'attachment' },
     ]))
-  async BrandUpdate(@Req() request: Request, @Body() body: TestDriveUpdateDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+  async TestDriveUpdate(@Req() request: Request, @Body() body: TestDriveUpdateDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
 
     const fileDto = new TestDriveUpdateAttachmentDto();
     fileDto.attachment = files?.attachment;
@@ -1082,6 +1271,18 @@ export class CarController {
       }
     }
     await Promise.all(uploadPromises);
+    let search_key = body.car_id;
+    let search_by = 'id';
+    let server_name = await this.general.getServerName();
+    let index = server_name.toLowerCase() + '_' + 'cars';
+    let car_details = await this.elasticService.getById(
+      search_key,
+      index,
+      search_by,
+    );
+    if (typeof body.sales_executive_id == 'undefined' || body.sales_executive_id == null) {
+      body = { ...body, sales_executive_id: car_details.sales_executive_id };
+    }
     const params = body;
     return await this.testDriveAddService.startTestDriveUpdate(request, params);
   }
@@ -1108,6 +1309,215 @@ export class CarController {
     return await this.testDriveDetailsService.startTestDriveDetails(request, inputParams);
   }
 
+  @Post('test-drive-cancel')
+  async testDriveCancel(@Req() request: Request, @Body() body: TestDriveCancelDto) {
+    const params = body;
+    return await this.testDriveUpdateService.cancelTestDrive(params);
+  }
+
+  @Post('test-drive-cancel-front')
+  async testDriveCancelFront(@Req() request: ExpressRequest, @Body() body: TestDriveCancelDto) {
+    const params = body;
+    return await this.testDriveUpdateFrontService.cancelTestDrive(request, params);
+  }
+
+  @Post('test-drive-reschedule-front')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async TestDriveRescheduleFront(@Req() request: ExpressRequest, @Body() body: TestDriveRescheduleDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+
+    const fileDto = new TestDriveAddAttachmentDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          success: 0,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.testDriveUpdateFrontService.rescheduleTestDrive(request, params);
+  }
+
+  @Post('test-drive-reschedule')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async TestDriveReschedule(@Req() request: Request, @Body() body: TestDriveRescheduleDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+
+    const fileDto = new TestDriveAddAttachmentDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          success: 0,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.testDriveUpdateService.rescheduleTestDrive(params);
+  }
+
+  @Post('test-drive-initiate')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async TestDriveInitiate(@Req() request: Request, @Body() body: TestDriveInitiateDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+
+    const fileDto = new TestDriveAddAttachmentDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          success: 0,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.testDriveUpdateService.initiateTestDrive(params);
+  }
+
+  @Post('test-drive-complete')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async TestDriveComplete(@Req() request: Request, @Body() body: TestDriveCompleteDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+
+    const fileDto = new TestDriveAddAttachmentDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          success: 0,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.testDriveUpdateService.completeTestDrive(params);
+  }
+
+  @Get('car-wishlist')
+  async getCarWishlist(@Req() request: ExpressRequest) {
+    return await this.carWishlistService.getWishlist(request);
+  }
+
   @Post('car-wishlist-add')
   async carWishlistAdd(@Req() request: ExpressRequest, @Body() body: CarWishlistDto) {
     return await this.carWishlistService.addToWishlist(request, body);
@@ -1117,6 +1527,19 @@ export class CarController {
   async carWishlistDelete(@Req() request: ExpressRequest, @Body() body: CarWishlistDto) {
     return await this.carWishlistService.removeFromWishlist(request, body);
   }
+
+  @Post('booking-add')
+  async BookingAdd(@Req() request: Request, @Body() body: BookingAddDto) {
+    const params = body;
+    return await this.bookingAddService.startBookingAdd(request, params);
+  }
+
+  @Put('booking-update')
+  async BookingUpdate(@Req() request: Request, @Body() body: BookingUpdateDto) {
+    const params = body;
+    return await this.bookingAddService.updateBooking(params);
+  }
+
   map_arr(type) {
     try {
       if (typeof type === 'undefined') {
@@ -1125,10 +1548,38 @@ export class CarController {
       const mapping = {
         'color': 'exteriorColorName',
         'brand': 'brandCode',
-        'body': 'body_code',
+        'body': 'bodyType',
         'model': 'modelName',
         'fuel': 'fuelType',
         'transmission': 'transmissionType',
+        'year': 'manufactureYear'
+      };
+
+      let mapped_filter = {};
+      for (const key in type) {
+        if (type.hasOwnProperty(key)) {
+          if (mapping[key]) {
+            mapped_filter[mapping[key]] = type[key];
+          } else {
+            mapped_filter[key] = type[key]
+          }
+        }
+      }
+      return mapped_filter;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  sort_map_arr(type) {
+    try {
+      if (typeof type === 'undefined') {
+        return {};
+      }
+      const mapping = {
+        'oldest': 'added_date',
+        'newest': 'added_date',
+        'distance': 'drivenDistance',
+        'price': 'price',
         'year': 'manufactureYear'
       };
 

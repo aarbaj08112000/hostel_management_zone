@@ -94,7 +94,6 @@ export class TestDriveDetailsService {
         'id',
         'code',
         'type',
-        // 'license_holder_details',
         'car_id',
         'car_name',
         'car_code',
@@ -108,14 +107,17 @@ export class TestDriveDetailsService {
         'slot_date',
         'slot_time',
         'remarks',
-        'add_by_id',
-        'add_by_date',
-        'add_by_name',
-        'updated_by_id',
-        'updated_by_date',
-        'updated_by_name',
+        'added_by',
+        'added_date',
+        'added_name',
+        'updated_by',
+        'updated_date',
+        'updated_name',
         'attachment',
-        'status'
+        'status',
+        'license_holder_details',
+        'sales_executive_details',
+        'sales_executive_id'
       ],
     };
 
