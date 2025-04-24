@@ -29,13 +29,6 @@ import { CarFeaturesService } from './service/car_features.service';
 import { CarDropDownListService } from './service/car_dropdown.service';
 import { CarDocumentAddService } from './service/car_document_add.service';
 import { CarDocumentDeleteService } from './service/car_document_delete.service';
-import { TestDriveDetailsEntity, TestDriveEntity } from './entities/test-drive.entity';
-import { TestDriveListService } from './service/test_drive_list.service';
-import { TestDriveAddService } from './service/test_drive_add.service';
-import { TestDriveAddFrontService } from './service/test_drive_add_front.service';
-import { TestDriveUpdateFrontService } from './service/test_drive_update_front.service';
-import { TestDriveDetailsService } from './service/test_drive_details.service';
-import { TestDriveUpdateService } from './service/test_drive_update.service';
 import { CarWishlistService } from './service/car_wishlist.service';
 import { CarListFrontService } from './service/car_list_front.service';
 import { CarFrontDetailsService } from './service/car_front_details.service';
@@ -43,13 +36,11 @@ import { CarController } from './car.controller';
 import { CarCompareDetailsService } from './service/car_compare.service';
 import { CarPublishUpdateService } from './service/car_publish_update.service';
 import { LocationtimeSlotService } from './service/location_timelot.service';
-import { Booking, BookingCharges, BookingService } from './entities/booking.entity';
-import { BookingAddService } from './service/booking_add.service';
-import { ChargesEntity } from './entities/charges.entity';
-import { Payment } from './entities/payment.entity';
 import { GlobalModule } from '@repo/source/modules/global.module';
 import { CarMicroserviceService } from './service/car_microservice.service';
 import { LookupEntity } from '@repo/source/entities/lookup.entity';
+import { BrandAddService } from './service/brand_add.service';
+import { BrandDetailsService } from './service/brand_details.service';
 @Module({
   imports: [
     GlobalModule,
@@ -66,20 +57,15 @@ import { LookupEntity } from '@repo/source/entities/lookup.entity';
       CarTagEntity,
       CarDocumentEntity,
       CarImagesEntity,
-      TestDriveEntity,
-      TestDriveDetailsEntity,
       CarWishlistEntity,
-      Booking,
-      Payment,
-      ChargesEntity,
-      BookingCharges,
-      BookingService,
       LookupEntity,
     ]),
 
   ],
   controllers: [CarController],
   providers: [
+    BrandAddService,
+    BrandDetailsService,
     CarTagAddService,
     CarTagsAddService,
     CarFeatureAddService,
@@ -100,19 +86,12 @@ import { LookupEntity } from '@repo/source/entities/lookup.entity';
     BodyTypeDetailsService,
     CarDocumentAddService,
     CarDocumentDeleteService,
-    TestDriveListService,
-    TestDriveAddService,
-    TestDriveAddFrontService,
-    TestDriveUpdateFrontService,
-    TestDriveDetailsService,
-    TestDriveUpdateService,
     CarWishlistService,
     CarListFrontService,
     CarFrontDetailsService,
     CarCompareDetailsService,
     CarPublishUpdateService,
     LocationtimeSlotService,
-    BookingAddService,
     GlobalModule,
     CarMicroserviceService
   ],

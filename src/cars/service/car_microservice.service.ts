@@ -277,7 +277,7 @@ export class CarMicroserviceService {
   }
   async getData(inputParams: any) {
     let repoObject = {
-      "car": { entity: this.carEntityRepo, alias: 'c', where: 'c.carId = :id' }
+      "car": { entity: this.carEntityRepo, alias: 'c', where: inputParams.fetch_from ? `c.${inputParams.fetch_from} = :id` :  'c.carId = :id' }
       }
     let currentRepo = repoObject[inputParams['type']];
     this.blockResult = {};
@@ -295,11 +295,14 @@ export class CarMicroserviceService {
       const success = 1;
       const message = 'Records found.';
 
-      const queryResult = {
+      let queryResult : any  = {
         success,
         message,
         data,
       };
+      if('fetch_from' in inputParams){
+        queryResult = {...queryResult ,entityId : data.carId}
+      }
       this.blockResult = queryResult;
     } catch (err) {
       console.log(err)

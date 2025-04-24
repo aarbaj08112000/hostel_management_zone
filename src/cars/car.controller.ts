@@ -46,13 +46,6 @@ import { ElasticService } from '@repo/source/services/elastic.service';
 import { CarDocumentAddService } from './service/car_document_add.service';
 import { CarAddDocumentFileDto, carDocumentDeleteDto, CarDocumentsDto } from './dto/car_documents.dto';
 import { CarDocumentDeleteService } from './service/car_document_delete.service';
-import { TestDriveListService } from './service/test_drive_list.service';
-import { TestDriveAddService } from './service/test_drive_add.service';
-import { TestDriveAddFrontService } from './service/test_drive_add_front.service';
-import { TestDriveUpdateFrontService } from './service/test_drive_update_front.service';
-import { TestDriveDetailsService } from './service/test_drive_details.service';
-import { TestDriveUpdateService } from './service/test_drive_update.service';
-import { TestDriveAddAttachmentDto, TestDriveAddDto, TestDriveAddFrontDto, TestDriveCancelDto, TestDriveCompleteDto, TestDriveDetailsDto, TestDriveInitiateDto, TestDriveRescheduleDto, TestDriveUpdateAttachmentDto, TestDriveUpdateDto } from './dto/test_drive.dto';
 import { CarWishlistService } from './service/car_wishlist.service';
 import { CarWishlistDto } from './dto/car_wishlist.dto';
 import { CarListFrontService } from './service/car_list_front.service';
@@ -61,12 +54,15 @@ import { CarCompareDetailsService } from './service/car_compare.service';
 import { CarPublishUpdateDto } from './dto/car_publish_update.dto';
 import { CarPublishUpdateService } from './service/car_publish_update.service';
 import { LocationtimeSlotService } from './service/location_timelot.service';
-import { BookingAddDto, BookingUpdateDto } from './dto/booking.dto';
-import { BookingAddService } from './service/booking_add.service';
 import { DistanceDto } from './dto/distance.dto';
 import { CarMicroserviceService } from './service/car_microservice.service';
 import { CommonInterceptor } from './service/common_interceptor_service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { BrandAddService } from './service/brand_add.service';
+import { BrandAddDto, BrandUpdateDto, BrandAddImageFileDto, BrandUpdateImageFileDto } from './dto/brand.dto';
+import { BrandDetailsDto } from './dto/brand_details.dto';
+import { BrandDetailsService } from './service/brand_details.service';
+import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -96,20 +92,16 @@ export class CarController {
     private readonly bodyTypeDetailsService: BodyTypeDetailsService,
     private carDocumentAddService: CarDocumentAddService,
     private carDocumentDeleteService: CarDocumentDeleteService,
-    private testDriveListService: TestDriveListService,
-    private testDriveAddService: TestDriveAddService,
-    private testDriveAddFrontService: TestDriveAddFrontService,
-    private testDriveUpdateFrontService: TestDriveUpdateFrontService,
-    private testDriveDetailsService: TestDriveDetailsService,
-    private testDriveUpdateService: TestDriveUpdateService,
     private carWishlistService: CarWishlistService,
     private carFrontListService: CarListFrontService,
     private carFrontDetailService: CarFrontDetailsService,
     private carCompareDetail: CarCompareDetailsService,
     private carPublishUpdateService: CarPublishUpdateService,
     private timeSlotService: LocationtimeSlotService,
-    private bookingAddService: BookingAddService,
-    private carMicroservice : CarMicroserviceService
+    private carMicroservice : CarMicroserviceService,
+    protected brandService: BrandAddService,
+    private readonly brandDetailsService: BrandDetailsService,
+    
   ) { }
   @MessagePattern('get-data')
   async getMasterData( @Req() request: Request, @Payload() payload: any) {
@@ -127,7 +119,264 @@ export class CarController {
       console.log(err)
     }
   }
-  
+  @Get('home-page')
+  async homePage(@Req() request: Request, @Query() params: any) {
+    try {
+      let fileConfig: FileFetchDto;
+      fileConfig = {};
+      fileConfig.source = 'amazon';
+      fileConfig.extensions =
+        await this.general.getConfigItem('allowed_extensions');
+      let final_json = {};
+      let carCount,
+        brandCount = 0;
+      let achievements = [];
+      let title = await this.general.getConfigItem('HEADER_TITLE');
+      let subTitle = await this.general.getConfigItem('HEADER_TITLE_DESCRIPTION');
+      let searchBtn = await this.general.getConfigItem('SEARCH_BUTTON_NAME');
+      let budgetSearchLabel = await this.general.getConfigItem(
+        'BUDGET_SEARCH_LABEL',
+      );
+      let brandSearchLabel =
+        await this.general.getConfigItem('BRAND_SEARCH_LABEL');
+      final_json = {
+        ...final_json,
+        hero: {
+          title,
+          subTitle,
+          searchBtn,
+          budgetSearchLabel,
+          brandSearchLabel,
+        },
+      };
+      params['filters'] = [{ "key": "status", "value": "Active", "operator": "equal" }];
+      params['limit'] = 8;
+      let premiumBrands = await this.brandList(request, params);
+
+      let image_path =
+        process.env.BASE_URL +
+        '/' +
+        this.configService.get('app.upload_url') +
+        'brand_images';
+      if (premiumBrands['data'].length > 0) {
+        brandCount = premiumBrands['settings']['count'];
+        premiumBrands = {
+          title: custom.lang('Premium Brands'),
+          subTitle: custom.lang('Explore Our'),
+          btnName: custom.lang('Show All Brands'),
+          values: Object.values(premiumBrands['data']).map((key) => ({
+            label: key['brand_name'],
+            image: key['brand_image'] ? key['brand_image'] : '',
+            key: key['brand_code'].toLowerCase(),
+          })),
+        };
+
+        final_json = { ...final_json, premiumBrands };
+      }
+      if ('filters' in params) {
+        delete params['filters']
+        delete params['limit']
+      }
+      let trending_tags = JSON.parse(await this.general.getConfigItem('TRENDING_TYPES'));
+      fileConfig.path = `icons`;
+      let trendingCars = {
+        title: custom.lang('Trending Cars'),
+        subTitle: custom.lang('Most'),
+        values: await Promise.all(
+          Object.values(trending_tags)
+            .map(async (key) => {
+              fileConfig.image_name = key['icon'];
+              return {
+                icon: key['icon'] ? await this.general.getFile(fileConfig) : '',
+                label: key['label'],
+                tagName: key['tag_name'].toLowerCase(),
+                type: key['type']
+              };
+            })
+        ),
+      }
+      final_json = { ...final_json, trendingCars };
+      carCount = 200;
+      achievements.push({
+        value: brandCount.toString(),
+        title: "Car <span class='text-primary'>Brands</span>",
+      });
+      achievements.push({
+        value: carCount.toString(),
+        title: "Car <span class='text-primary'>Inventory</span>",
+      });
+      achievements.push({
+        value: '90%',
+        title: "Returning <span class='text-primary'>Customer</span>",
+      });
+      achievements.push({
+        value: '2K+',
+        title: "Happy <span class='text-primary'>Customer</span>",
+      });
+      achievements.push({
+        value: '56',
+        title: "Dealer <span class='text-primary'>Branches</span>",
+      });
+      final_json = { ...final_json, achievements };
+      let benefits = [];
+      benefits.push({
+        value: '150+',
+        title: "Car <span class='text-primary'>Check Points</span>",
+      });
+      benefits.push({
+        value: '12',
+        title: "Months <span class='text-primary'>Warranty</span>",
+      });
+      benefits.push({
+        value: '03',
+        title: "Free <span class='text-primary'>Service</span>",
+      });
+      benefits.push({
+        value: '2000+',
+        title: "Cars <span class='text-primary'>Largest Collection</span>",
+      });
+      final_json = { ...final_json, benefits };
+
+      let badges = await this.general.getConfigItem('FRONT_SLIDES');
+      badges = JSON.parse(badges)
+      final_json = { ...final_json, badges }
+      return final_json;
+    } catch (err) {
+      console.log(err)
+    }
+  }
+  @Post('brand-add')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'brand_image' },
+    ]))
+  async BrandAdd(@Req() request: Request, @Body() body: BrandAddDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+    const fileDto = new BrandAddImageFileDto();
+    fileDto.brand_image = files?.brand_image;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.brandService.startBrandAdd(request, params);
+  }
+
+  @Put('brand-update')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'brand_image' },
+    ]))
+  async BrandUpdate(@Req() request: Request, @Body() body: BrandUpdateDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+
+    const fileDto = new BrandUpdateImageFileDto();
+    fileDto.brand_image = files?.brand_image;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.brandService.startBrandUpdate(request, params);
+  }
+
+  @Delete('brand-delete/:id')
+  async BrandDelete(@Param('id') id: string) {
+    return await this.brandService.DeleteBrand(id);
+  }
+
+  @Post('brand-list')
+  async brandList(@Req() request: Request, @Body() body: CarListDto) {
+    const params = body;
+    return await this.brandListService.startBrand(request, params);
+  }
+
+  @Get('brand-detail')
+  async fetchBrandDetail(
+    @Req() request: Request,
+    @Query() body: BrandDetailsDto,
+  ) {
+    let search_by = 'brandId';
+    let search_key = body.brand_id;
+    const index = 'nest_local_brand';
+    let inputParams = {
+      search_key,
+      index,
+      search_by,
+    };
+    return await this.brandDetailsService.startBrandDetails(request, inputParams);
+  }
+
+  @Get('brand-dropdown')
+  async getBrandDropdown(@Req() request: Request, @Query() params: any) {
+    let brandList = await this.brandList(request, params);
+    return brandList = {
+      settings: brandList['settings'],
+      data: brandList['data'].length > 0 ? Object.values(brandList['data']).map((key) => ({
+        value: key['brand_name'],
+        image: key['brand_image'] ? key['brand_image'] : '',
+        key: key['brand_code'].toLowerCase(),
+      })) : {}
+    }
+  }
   @Get('get-distance')
   async getDistance(@Req() request: Request, @Query() body: DistanceDto) {
     try {
@@ -1119,400 +1368,6 @@ export class CarController {
       })) : {}
     }
   }
-
-  @Post('test-drive-add-front')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'attachment' },
-    ]))
-  async TestDriveAddFront(@Req() request: ExpressRequest, @Body() body: TestDriveAddFrontDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
-    const fileDto = new TestDriveAddAttachmentDto();
-    fileDto.attachment = files?.attachment;
-    const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
-      const errorMessages = errors
-        .map((error) => {
-          if (error.hasOwnProperty('constraints')) {
-            return Object.values(error.constraints);
-          } else {
-            return [];
-          }
-        })
-        .flat();
-      if (errorMessages.length > 0) {
-        const response = {
-          statusCode: 400,
-          success: 0,
-          message: 'Validation failed',
-          errors: errorMessages,
-        };
-        return response;
-      }
-    }
-    const uploadPromises = [];
-    let temp = [];
-    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
-      for (const [key, value] of Object.entries(files)) {
-        const fieldFiles = files[key];
-        for (const file of fieldFiles) {
-          const fileName = await this.general.temporaryUpload(file);
-          uploadPromises.push(fileName);
-          body[key] = fileName;
-        }
-      }
-    }
-    await Promise.all(uploadPromises);
-    const params = body;
-    return await this.testDriveAddFrontService.startTestDriveAdd(request, params);
-  }
-
-  @Post('test-drive-add')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'attachment' },
-    ]))
-  async TestDriveAdd(@Req() request: Request, @Body() body: TestDriveAddDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
-    const fileDto = new TestDriveAddAttachmentDto();
-    fileDto.attachment = files?.attachment;
-    const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
-      const errorMessages = errors
-        .map((error) => {
-          if (error.hasOwnProperty('constraints')) {
-            return Object.values(error.constraints);
-          } else {
-            return [];
-          }
-        })
-        .flat();
-      if (errorMessages.length > 0) {
-        const response = {
-          statusCode: 400,
-          success: 0,
-          message: 'Validation failed',
-          errors: errorMessages,
-        };
-        return response;
-      }
-    }
-    const uploadPromises = [];
-    let temp = [];
-    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
-      for (const [key, value] of Object.entries(files)) {
-        const fieldFiles = files[key];
-        for (const file of fieldFiles) {
-          const fileName = await this.general.temporaryUpload(file);
-          uploadPromises.push(fileName);
-          body[key] = fileName;
-        }
-      }
-    }
-    await Promise.all(uploadPromises);
-
-    let search_key = body.car_id;
-    let search_by = 'id';
-    let server_name = await this.general.getServerName();
-    let index = server_name.toLowerCase() + '_' + 'cars';
-    let car_details = await this.elasticService.getById(
-      search_key,
-      index,
-      search_by,
-    );
-    if (typeof body.sales_executive_id == 'undefined' || body.sales_executive_id == null) {
-      body = { ...body, sales_executive_id: car_details.sales_executive_id };
-    }
-    const params = body;
-    return await this.testDriveAddService.startTestDriveAdd(request, params);
-  }
-
-  @Put('test-drive-update')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'attachment' },
-    ]))
-  async TestDriveUpdate(@Req() request: Request, @Body() body: TestDriveUpdateDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
-
-    const fileDto = new TestDriveUpdateAttachmentDto();
-    fileDto.attachment = files?.attachment;
-    const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
-      const errorMessages = errors
-        .map((error) => {
-          if (error.hasOwnProperty('constraints')) {
-            return Object.values(error.constraints);
-          } else {
-            return [];
-          }
-        })
-        .flat();
-      if (errorMessages.length > 0) {
-        const response = {
-          statusCode: 400,
-          success: 0,
-          message: 'Validation failed',
-          errors: errorMessages,
-        };
-        return response;
-      }
-    }
-    const uploadPromises = [];
-    let temp = [];
-    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
-      for (const [key, value] of Object.entries(files)) {
-        const fieldFiles = files[key];
-        for (const file of fieldFiles) {
-          const fileName = await this.general.temporaryUpload(file);
-          uploadPromises.push(fileName);
-          body[key] = fileName;
-        }
-      }
-    }
-    await Promise.all(uploadPromises);
-    let search_key = body.car_id;
-    let search_by = 'id';
-    let server_name = await this.general.getServerName();
-    let index = server_name.toLowerCase() + '_' + 'cars';
-    let car_details = await this.elasticService.getById(
-      search_key,
-      index,
-      search_by,
-    );
-    if (typeof body.sales_executive_id == 'undefined' || body.sales_executive_id == null) {
-      body = { ...body, sales_executive_id: car_details.sales_executive_id };
-    }
-    const params = body;
-    return await this.testDriveAddService.startTestDriveUpdate(request, params);
-  }
-
-  @Post('test-drive-list')
-  async testDriveList(@Req() request: Request, @Body() body: CarListDto) {
-    const params = body;
-    return await this.testDriveListService.startTestDriveList(request, params);
-  }
-
-  @Get('test-drive-detail')
-  async fetchTestDriveDetail(
-    @Req() request: Request,
-    @Query() body: TestDriveDetailsDto,
-  ) {
-    let search_by = 'id';
-    let search_key = body.id;
-    const index = 'nest_local_test_drive_list';
-    let inputParams = {
-      search_key,
-      index,
-      search_by,
-    };
-    return await this.testDriveDetailsService.startTestDriveDetails(request, inputParams);
-  }
-
-  @Post('test-drive-cancel')
-  async testDriveCancel(@Req() request: Request, @Body() body: TestDriveCancelDto) {
-    const params = body;
-    return await this.testDriveUpdateService.cancelTestDrive(params);
-  }
-
-  @Post('test-drive-cancel-front')
-  async testDriveCancelFront(@Req() request: ExpressRequest, @Body() body: TestDriveCancelDto) {
-    const params = body;
-    return await this.testDriveUpdateFrontService.cancelTestDrive(request, params);
-  }
-
-  @Post('test-drive-reschedule-front')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'attachment' },
-    ]))
-  async TestDriveRescheduleFront(@Req() request: ExpressRequest, @Body() body: TestDriveRescheduleDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
-
-    const fileDto = new TestDriveAddAttachmentDto();
-    fileDto.attachment = files?.attachment;
-    const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
-      const errorMessages = errors
-        .map((error) => {
-          if (error.hasOwnProperty('constraints')) {
-            return Object.values(error.constraints);
-          } else {
-            return [];
-          }
-        })
-        .flat();
-      if (errorMessages.length > 0) {
-        const response = {
-          statusCode: 400,
-          success: 0,
-          message: 'Validation failed',
-          errors: errorMessages,
-        };
-        return response;
-      }
-    }
-    const uploadPromises = [];
-    let temp = [];
-    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
-      for (const [key, value] of Object.entries(files)) {
-        const fieldFiles = files[key];
-        for (const file of fieldFiles) {
-          const fileName = await this.general.temporaryUpload(file);
-          uploadPromises.push(fileName);
-          body[key] = fileName;
-        }
-      }
-    }
-    await Promise.all(uploadPromises);
-    const params = body;
-    return await this.testDriveUpdateFrontService.rescheduleTestDrive(request, params);
-  }
-
-  @Post('test-drive-reschedule')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'attachment' },
-    ]))
-  async TestDriveReschedule(@Req() request: Request, @Body() body: TestDriveRescheduleDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
-
-    const fileDto = new TestDriveAddAttachmentDto();
-    fileDto.attachment = files?.attachment;
-    const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
-      const errorMessages = errors
-        .map((error) => {
-          if (error.hasOwnProperty('constraints')) {
-            return Object.values(error.constraints);
-          } else {
-            return [];
-          }
-        })
-        .flat();
-      if (errorMessages.length > 0) {
-        const response = {
-          statusCode: 400,
-          success: 0,
-          message: 'Validation failed',
-          errors: errorMessages,
-        };
-        return response;
-      }
-    }
-    const uploadPromises = [];
-    let temp = [];
-    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
-      for (const [key, value] of Object.entries(files)) {
-        const fieldFiles = files[key];
-        for (const file of fieldFiles) {
-          const fileName = await this.general.temporaryUpload(file);
-          uploadPromises.push(fileName);
-          body[key] = fileName;
-        }
-      }
-    }
-    await Promise.all(uploadPromises);
-    const params = body;
-    return await this.testDriveUpdateService.rescheduleTestDrive(params);
-  }
-
-  @Post('test-drive-initiate')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'attachment' },
-    ]))
-  async TestDriveInitiate(@Req() request: Request, @Body() body: TestDriveInitiateDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
-
-    const fileDto = new TestDriveAddAttachmentDto();
-    fileDto.attachment = files?.attachment;
-    const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
-      const errorMessages = errors
-        .map((error) => {
-          if (error.hasOwnProperty('constraints')) {
-            return Object.values(error.constraints);
-          } else {
-            return [];
-          }
-        })
-        .flat();
-      if (errorMessages.length > 0) {
-        const response = {
-          statusCode: 400,
-          success: 0,
-          message: 'Validation failed',
-          errors: errorMessages,
-        };
-        return response;
-      }
-    }
-    const uploadPromises = [];
-    let temp = [];
-    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
-      for (const [key, value] of Object.entries(files)) {
-        const fieldFiles = files[key];
-        for (const file of fieldFiles) {
-          const fileName = await this.general.temporaryUpload(file);
-          uploadPromises.push(fileName);
-          body[key] = fileName;
-        }
-      }
-    }
-    await Promise.all(uploadPromises);
-    const params = body;
-    return await this.testDriveUpdateService.initiateTestDrive(params);
-  }
-
-  @Post('test-drive-complete')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'attachment' },
-    ]))
-  async TestDriveComplete(@Req() request: Request, @Body() body: TestDriveCompleteDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
-
-    const fileDto = new TestDriveAddAttachmentDto();
-    fileDto.attachment = files?.attachment;
-    const errors = await validate(fileDto, { whitelist: true });
-
-    if (errors.length > 0) {
-      const errorMessages = errors
-        .map((error) => {
-          if (error.hasOwnProperty('constraints')) {
-            return Object.values(error.constraints);
-          } else {
-            return [];
-          }
-        })
-        .flat();
-      if (errorMessages.length > 0) {
-        const response = {
-          statusCode: 400,
-          success: 0,
-          message: 'Validation failed',
-          errors: errorMessages,
-        };
-        return response;
-      }
-    }
-    const uploadPromises = [];
-    let temp = [];
-    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
-      for (const [key, value] of Object.entries(files)) {
-        const fieldFiles = files[key];
-        for (const file of fieldFiles) {
-          const fileName = await this.general.temporaryUpload(file);
-          uploadPromises.push(fileName);
-          body[key] = fileName;
-        }
-      }
-    }
-    await Promise.all(uploadPromises);
-    const params = body;
-    return await this.testDriveUpdateService.completeTestDrive(params);
-  }
-
   @Get('car-wishlist')
   async getCarWishlist(@Req() request: ExpressRequest) {
     return await this.carWishlistService.getWishlist(request);
@@ -1527,19 +1382,6 @@ export class CarController {
   async carWishlistDelete(@Req() request: ExpressRequest, @Body() body: CarWishlistDto) {
     return await this.carWishlistService.removeFromWishlist(request, body);
   }
-
-  @Post('booking-add')
-  async BookingAdd(@Req() request: Request, @Body() body: BookingAddDto) {
-    const params = body;
-    return await this.bookingAddService.startBookingAdd(request, params);
-  }
-
-  @Put('booking-update')
-  async BookingUpdate(@Req() request: Request, @Body() body: BookingUpdateDto) {
-    const params = body;
-    return await this.bookingAddService.updateBooking(params);
-  }
-
   map_arr(type) {
     try {
       if (typeof type === 'undefined') {
