@@ -193,7 +193,7 @@ export class CarMicroserviceService {
   
       const existedData = await this.fetchExistingData(entityType, entityId);
       const queryColumns = {
-        entityId,
+        entityId : payload.fetch_from ? response.entityId : entityId,
         entityName: payload.type,
         entityJson: response.data,
         remarks: response.message,
@@ -259,7 +259,7 @@ export class CarMicroserviceService {
                 const existingData = await this.fetchExistingData(subType, id , fetch_from);
                 
                 if (_.isEmpty(existingData)) {
-                  const payload = { id, ...(subType && { type: subType }), selFields };
+                  const payload = { id, ...(subType && { type: subType }), selFields ,fetch_from};
                   console.log(payload)
                   const result = await this.sendAndStoreData(payload, entityType);
                   console.log(`Processed entity [${entityType}] (subType: ${subType || 'N/A'}) with ID ${id}:`, result.message);
