@@ -21,6 +21,7 @@ import {
 } from '../entities/cars.entity';
 import { CarDetailsEntity } from '../entities/cars-detail.entity';
 import { BaseService } from '@repo/source/services/base.service';
+import { CarMicroserviceService } from './car_microservice.service';
 @Injectable()
 export class CarsAddService extends BaseService {
   protected readonly log = new LoggerHandler(CarsAddService.name).getInstance();
@@ -41,6 +42,8 @@ export class CarsAddService extends BaseService {
   protected readonly response: ResponseLibrary;
   @Inject()
   protected readonly moduleService: ModuleService;
+  @Inject()
+  protected readonly carMicroService : CarMicroserviceService;
   @InjectRepository(CarEntity)
   protected carEntityRepo: Repository<CarEntity>;
   @InjectRepository(CarDetailsEntity)
@@ -109,6 +112,23 @@ export class CarsAddService extends BaseService {
               ...inputParams,
               message,
             };
+            if('car_data' in inputParams){
+              let send_data : any = inputParams.car_data;
+              if (
+                inputParams.hasOwnProperty('car_tags') &&
+                inputParams.car_tags.hasOwnProperty('tag_ids') &&
+                inputParams.car_tags.tag_ids.length > 0
+              ) {
+                send_data = {...send_data,tag_ids : inputParams.car_tags.tag_ids}
+              }
+              let micro_data : any = {
+                id : car_id,
+                mode : this.moduleAPI,
+                data : send_data,
+                module : 'car',
+              }
+              await this.carMicroService.sendData(micro_data)
+            }
             outputResponse = this.carsFinishSuccess(inputParams);
             let value_json = {
               "CAR_NAME": inputParams.car_data.car_name,

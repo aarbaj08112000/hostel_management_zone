@@ -62,7 +62,7 @@ export class BrandDetailsService {
       fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
 
       let { search_key, search_by, index } = inputParams;
-      // const data = await this.elasticService.getById(search_key, index, search_by);
+      const data = await this.elasticService.getById(search_key, index, search_by);
       const queryObject = this.brandEntityRepo.createQueryBuilder('brand');
 
 
@@ -85,7 +85,7 @@ export class BrandDetailsService {
 
       queryObject.where('brand.brandId = :search_key', { search_key });
 
-      const data = await queryObject.getRawOne();
+      // const data = await queryObject.getRawOne();
 
       if (data?.brand_image != '') {
         fileConfig.image_name = data['brand_image'];

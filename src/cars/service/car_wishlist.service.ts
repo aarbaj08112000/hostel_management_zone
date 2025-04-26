@@ -13,7 +13,7 @@ import { BodyEntity } from '../entities/body.entity';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import _ from 'lodash';
-
+import { CarMicroserviceService } from './car_microservice.service';
 @Injectable()
 export class CarWishlistService {
   private keycloakUrl: string;
@@ -36,6 +36,8 @@ export class CarWishlistService {
     private readonly carDetailsRepo: Repository<CarDetailsEntity>,
     @InjectRepository(BodyEntity)
     private readonly bodyRepo: Repository<BodyEntity>,
+    @Inject()
+    private readonly carMicroService : CarMicroserviceService
   ) {
     this.keycloakUrl = this.configService.get<string>('KEYCLOAK_BASE_URL');
     this.keycloakRealm = this.configService.get<string>('KEYCLOAK_REALM');
@@ -56,7 +58,7 @@ export class CarWishlistService {
     if (!userInfo?.email) {
       throw new UnauthorizedException('Invalid access token.');
     }
-
+    await this.carMicroService.processLookupDataFromBody({phone:userInfo.preferred_username})
     // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
     const user = await this.modCustomerRepo
     .createQueryBuilder('mod_customer')
