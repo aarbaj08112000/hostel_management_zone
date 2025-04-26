@@ -20,6 +20,7 @@ type LookupFieldConfig = {
   field: string;
   subType?: string;
   selFields?: Record<string, string>;
+  fetch_from? : string
 };
 @Injectable()
 export class CarMicroserviceService {
@@ -42,7 +43,8 @@ export class CarMicroserviceService {
 
   private lookup_mapping: Record<string, LookupFieldConfig[]> = {
     customer : [
-      {field : 'customer_id' , subType : 'customer' , selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}}
+      {field : 'customer_id' , subType : 'customer' , selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}},
+      {field : 'phone' , subType : 'customer' ,fetch_from : "phoneNumber",selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}}
     ],
     user: [
       { field: 'added_by', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email' } },
@@ -229,7 +231,7 @@ export class CarMicroserviceService {
       const sections = ['car_data', 'car_details', 'car_history', 'car_tags'];
 
       for (const [entityType, fieldConfigs] of Object.entries(this.lookup_mapping)) {
-        for (const { field, subType, selFields } of fieldConfigs) {
+        for (const { field, subType, fetch_from , selFields } of fieldConfigs) {
           let rawValue: any = null;
   
           rawValue = body?.[field];
@@ -254,7 +256,7 @@ export class CarMicroserviceService {
                   id = typeof item === 'object' ? item.id : item;
                 }
               
-                const existingData = await this.fetchExistingData(subType, id);
+                const existingData = await this.fetchExistingData(subType, id , fetch_from);
                 
                 if (_.isEmpty(existingData)) {
                   const payload = { id, ...(subType && { type: subType }), selFields };
@@ -270,10 +272,24 @@ export class CarMicroserviceService {
     }
   }
 
-  async fetchExistingData(type: string, master_id: any) {
-    return this.lookupEntityRepo.findOne({
-      where: { entityId: master_id, entityName: type },
-    });
+  async fetchExistingData(type: string, master_id: any, fetch_from?: string) {
+    const qb = this.lookupEntityRepo
+      .createQueryBuilder('lookup')
+      .where('lookup.entityName = :entityName', { entityName: type });
+  
+    if (fetch_from) {
+      qb.andWhere(
+        `JSON_UNQUOTE(JSON_EXTRACT(lookup.entityJson, :jsonPath)) = :masterId`,
+        {
+          jsonPath: `$.${fetch_from}`,
+          masterId: String(master_id), 
+        }
+      );
+    } else {
+      qb.andWhere('lookup.entityId = :masterId', { masterId: master_id });
+    }
+  
+    return await qb.getOne();
   }
   async getData(inputParams: any) {
     let repoObject = {
@@ -347,7 +363,7 @@ export class CarMicroserviceService {
           const deleteResult = await this.lookupEntityRepo.delete({ entityId, entityName: inputParams.entity });
           return {
             success: 1,
-            message: deleteResult.affected ? 'Record deleted.' : 'No record found to delete.',
+            message: deleteResult.affected ? 'Record deleteemaild.' : 'No record found to delete.',
             data: { affected_rows: deleteResult.affected },
           };
         }
