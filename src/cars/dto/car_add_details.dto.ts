@@ -74,29 +74,28 @@ export class CarDetailsDto {
   })
   manufacture_month: number;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  serial_number: string;
 
   @Transform(({ value }) => Number(value))
 
   @IsOptional()
   country_id: number;
 
-  @IsIn(['Manual', 'Automatic'])
+  
   @RequiredIfNotDraft()
+  @IsIn(['Manual', 'Automatic'])
   @IsNotEmpty({
     message: () => custom.lang('Please select a valid transmissionType.'),
   })
   transmission_type: string;
 
-  @IsIn(['ICE', 'EV', 'HEV', 'PHEV'])
+  @RequiredIfNotDraft()
+  @IsIn(['RWD', 'FWD', 'AWD'])
   @RequiredIfNotDraft()
   @IsNotEmpty({
-    message: () => custom.lang('Please select a valid carCategory.'),
+    message: () => custom.lang('Please select a valid drive type.'),
   })
-  car_category: string;
+  drive_type: string;
+
 
   @Transform(({ value }) => Number(value))
 
@@ -107,18 +106,9 @@ export class CarDetailsDto {
   })
   engine_capacity: number;
 
+  @RequiredIfNotDraft()
   @IsString()
   @MaxLength(255)
-  @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the engineType field.'),
-  })
-  engine_type: string;
-
-  @IsString()
-  @MaxLength(255)
-  @RequiredIfNotDraft()
   @IsNotEmpty({
     message: () =>
       custom.lang('Please enter a value for the engineSize field.'),
@@ -177,22 +167,24 @@ export class CarDetailsDto {
   })
   driven_distance: number;
 
-  @IsString()
-  @IsIn(['Yes', 'No'])
+ @IsOptional()
+  // @IsString()
+  // @IsIn(['Yes', 'No'])
   // @IsNotEmpty({
   //   message: () =>
   //     custom.lang('Please enter a value for the negotiable field.'),
   // })
-  @IsOptional()
+ 
   negotiable: string;
 
-  @IsString()
-  @IsIn(['High', 'Medium', 'Low'])
+  @IsOptional()
+  // @IsString()
+  // @IsIn(['High', 'Medium', 'Low'])
   // @IsNotEmpty({
   //   message: () =>
   //     custom.lang('Please enter a value for the negotiableRange field.'),
   // })
-  @IsOptional()
+
   negotiable_range: string;
 
   @IsOptional()
