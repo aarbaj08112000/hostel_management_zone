@@ -42,8 +42,6 @@ export class CarsAddService extends BaseService {
   protected readonly response: ResponseLibrary;
   @Inject()
   protected readonly moduleService: ModuleService;
-  @Inject()
-  protected readonly carMicroService : CarMicroserviceService;
   @InjectRepository(CarEntity)
   protected carEntityRepo: Repository<CarEntity>;
   @InjectRepository(CarDetailsEntity)
@@ -112,23 +110,6 @@ export class CarsAddService extends BaseService {
               ...inputParams,
               message,
             };
-            if('car_data' in inputParams){
-              let send_data : any = inputParams.car_data;
-              if (
-                inputParams.hasOwnProperty('car_tags') &&
-                inputParams.car_tags.hasOwnProperty('tag_ids') &&
-                inputParams.car_tags.tag_ids.length > 0
-              ) {
-                send_data = {...send_data,tag_ids : inputParams.car_tags.tag_ids}
-              }
-              let micro_data : any = {
-                id : car_id,
-                mode : this.moduleAPI,
-                data : send_data,
-                module : 'car',
-              }
-              await this.carMicroService.sendData(micro_data)
-            }
             outputResponse = this.carsFinishSuccess(inputParams);
             let value_json = {
               "CAR_NAME": inputParams.car_data.car_name,
@@ -278,16 +259,15 @@ export class CarsAddService extends BaseService {
             type: 'or',
             fields: {
               vin_number: 'vinNumber',
-              chassis_number: 'chassisNumber',
-              serial_number: 'serialNumber'
+              chassis_number: 'chassisNumber'
             },
             message:
-              'Record already exists with these details of vin_number , chassis_number or serial_number.',
+              'Record already exists with these details of vin_number or chassis_number.',
           },
           expRefer: {},
           topRefer: {},
         };
-        let car_details_result = await this.checkUniqueCondition(car_details);
+        let car_details_result = await this.checkUniqueCondition(car_details, 'Yes');
         result['car_details_result'] = car_details_result;
       }
       if (car_history) {
@@ -299,12 +279,13 @@ export class CarsAddService extends BaseService {
           primary_key: 'carId',
           primary_alias: 'ch_id',
           unique_fields: {
-            type: 'and',
-            fields: {
-              registration_number: 'registrationNumber',
-            },
-            message:
-              'Record already exists with these details of Car Id or Car Registration Number',
+            // commented by utkarsha reason: as per instruntion from admin team to make registration_number optional
+            // type: 'and',
+            // fields: {
+            // registration_number: 'registrationNumber',
+            // },
+            // message:
+            //   'Record already exists with these details of Car Id or Car Registration Number',
           },
           expRefer: {},
           topRefer: {},
@@ -362,9 +343,7 @@ export class CarsAddService extends BaseService {
       if ('price' in inputParams) {
         queryColumns.price = inputParams.price;
       }
-      if ('car_condition' in inputParams) {
-        queryColumns.carCondition = inputParams.car_condition;
-      }
+
       if ('slug' in inputParams) {
         queryColumns.slug = inputParams.slug;
       }
@@ -458,7 +437,6 @@ export class CarsAddService extends BaseService {
         car_name: 'carName',
         car_description: 'carDescription',
         price: 'price',
-        car_condition: 'carCondition',
         car_image: 'carImage',
         remarks: 'remarks',
         status: 'status',
@@ -480,12 +458,10 @@ export class CarsAddService extends BaseService {
         vin_number: 'vinNumber',
         manufacture_year: 'manufactureYear',
         manufacture_month: 'manufactureMonth',
-        serial_number: 'serialNumber',
         country_id: 'countryId',
         transmission_type: 'transmissionType',
-        car_category: 'carCategory',
+        drive_type: 'driveType',
         engine_capacity: 'engineCapacity',
-        engine_type: 'engineType',
         engine_size: 'engineSize',
         horse_power: 'horsePower',
         exterior_colorId: 'exteriorColorId',
@@ -692,24 +668,22 @@ export class CarsAddService extends BaseService {
       if ('manufacture_month' in inputParams) {
         queryColumns.manufactureMonth = inputParams.manufacture_month;
       }
-      if ('serial_number' in inputParams) {
-        queryColumns.serialNumber = inputParams.serial_number;
-      }
+
       if ('country_id' in inputParams) {
         queryColumns.countryId = inputParams.country_id;
       }
       if ('transmission_type' in inputParams) {
         queryColumns.transmissionType = inputParams.transmission_type;
       }
-      if ('car_category' in inputParams) {
-        queryColumns.carCategory = inputParams.car_category;
+
+      if ('drive_type' in inputParams) {
+        queryColumns.driveType = inputParams.drive_type;
       }
+
       if ('engine_capacity' in inputParams) {
         queryColumns.engineCapacity = inputParams.engine_capacity;
       }
-      if ('engine_type' in inputParams) {
-        queryColumns.engineType = inputParams.engine_type;
-      }
+
       if ('engine_size' in inputParams) {
         queryColumns.engineSize = inputParams.engine_size;
       }
@@ -1117,5 +1091,74 @@ export class CarsAddService extends BaseService {
     ]);
 
     return uploadInfo;
+  }
+  async checkUniqueCondition(inputParams: any, is_empty?: string) {
+    const uniqueFields = this.serviceConfig.unique_fields?.fields;
+    const uniqueType = this.serviceConfig.unique_fields?.type;
+
+    let uniqueStatus = 0;
+    let uniqueMessage = '';
+
+    if (_.isObject(uniqueFields) && !_.isEmpty(uniqueFields)) {
+      const queryConfig: any = {};
+      queryConfig.table_name = this.serviceConfig.table_name;
+      queryConfig.select_type = 'count';
+      queryConfig.where_type = uniqueType;
+      queryConfig.where_fields = [];
+      if (uniqueType === 'or' && this.moduleAPI === 'update') {
+        queryConfig.where_type = 'raw';
+        const whereClauses = [];
+        const whereBindings = {};
+        Object.keys(uniqueFields).forEach((key) => {
+          const whereKey = uniqueFields[key];
+          const whereVal = inputParams[key];
+          if (is_empty == 'Yes') {
+            whereClauses.push(`(${whereKey} = :${whereKey} AND :${whereKey} != '')`);
+          } else {
+            whereClauses.push(`${whereKey} = :${whereKey}`);
+          }
+          console.log(whereClauses)
+          whereBindings[whereKey] = whereVal;
+        });
+        const primaryKey = this.serviceConfig.primary_key;
+        const primaryVal = inputParams.id;
+        whereBindings[primaryKey] = primaryVal;
+        const whereCondition = `(${whereClauses.join(
+          ' OR ',
+        )}) AND ${primaryKey} <> :${primaryKey}`;
+        console.log(whereCondition)
+        queryConfig.where_condition = whereCondition;
+        queryConfig.where_bindings = whereBindings;
+      } else {
+        Object.keys(uniqueFields).forEach((key) => {
+          if (typeof inputParams[key] != 'undefined' && inputParams[key] != '') {
+            queryConfig.where_fields.push({
+              field: uniqueFields[key],
+              value: inputParams[key],
+              oper: 'eq',
+            });
+          }
+        });
+        if (this.moduleAPI === 'update') {
+          queryConfig.where_fields.push({
+            field: this.serviceConfig.primary_key,
+            value: inputParams.id,
+            oper: 'ne',
+          });
+        }
+      }
+      const queryResult = await this.executeSelect(queryConfig);
+      if (_.isArray(queryResult.data) && queryResult.data.length > 0) {
+        if (queryResult.data[0].numrows > 0) {
+          uniqueStatus = 1;
+          uniqueMessage = this.serviceConfig.unique_fields?.message;
+        }
+      }
+    }
+
+    return {
+      unique_status: uniqueStatus,
+      unique_message: uniqueMessage,
+    };
   }
 }

@@ -3,29 +3,48 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { CarEntity } from '../entities/cars.entity';
-
+import { ElasticService } from '@repo/source/services/elastic.service';
 @Injectable()
 export class CarPublishUpdateService {
   @Inject()
   protected readonly general: CitGeneralLibrary;
+  @Inject()
+  protected readonly elasticService: ElasticService;
   constructor(
     @InjectRepository(CarEntity)
     private readonly carRepository: Repository<CarEntity>,
   ) { }
 
   async updateCarStatus(inputParams) {
-    let data = await this.startUpdate(inputParams)
-    if (data.success) {
-      let value_json = {
-        "CAR_NAME": inputParams.car_id,
-        "STATUS": inputParams.is_listed == 'Yes' ? 'Published' : 'Unpublished',
-        "CAR_ID": inputParams.car_id,
-        "UPDATED_BY": await this.general.getAdminName(inputParams.updated_by),
-        "UPDATED_BY_ID": inputParams.updated_by
+    try {
+      let data = await this.startUpdate(inputParams)
+      const fetch_existing = await this.elasticService.getById(
+        inputParams.car_id,
+        'nest_local_cars',
+        'id',
+      );
+      let res = this.getMissingRequiredFields(fetch_existing)
+      if (res.length > 0) {
+        return {
+          success: 0,
+          data: res
+        }
       }
-      await this.general.addActivity('car', 'publish', inputParams.updated_by, value_json, inputParams.car_id);
+      let car_name = fetch_existing.carName;
+      if (data.success) {
+        let value_json = {
+          "CAR_NAME": car_name,
+          "STATUS": inputParams.is_listed == 'Yes' ? 'Published' : 'Unpublished',
+          "CAR_ID": inputParams.car_id,
+          "UPDATED_BY": await this.general.getAdminName(inputParams.updated_by),
+          "UPDATED_BY_ID": inputParams.updated_by
+        }
+        await this.general.addActivity('car', 'publish', inputParams.updated_by, value_json, inputParams.car_id);
+      }
+      return data;
+    } catch (err) {
+      console.log(err)
     }
-    return data;
   }
   async startUpdate(inputParams) {
     try {
@@ -65,4 +84,51 @@ export class CarPublishUpdateService {
       };
     }
   }
+  getMissingRequiredFields(data: any) {
+    const requiredFields: Record<string, { key: string; label: string }> = {
+      // CarAddDto
+      location_id: { key: 'location_id', label: 'Location ID' },
+      export_status: { key: 'export_status', label: 'Export Status' },
+      car_name: { key: 'carName', label: 'Car Name' },
+      price: { key: 'price', label: 'Price' },
+      slug: { key: 'car_slug', label: 'Slug' },
+
+      // CarDetailsDto
+      brand_id: { key: 'brand_id', label: 'Brand ID' },
+      model_id: { key: 'car_model', label: 'Model ID' },
+      body_id: { key: 'bodyId', label: 'Body ID' },
+      fuel_type: { key: 'fuelType', label: 'Fuel Type' },
+      manufacture_year: { key: 'manufactureYear', label: 'Manufacture Year' },
+      manufacture_month: { key: 'manufactureMonth', label: 'Manufacture Month' },
+      transmission_type: { key: 'transmissionType', label: 'Transmission Type' },
+      car_category: { key: 'carCategory', label: 'Car Category' },
+      engine_capacity: { key: 'engineCapacity', label: 'Engine Capacity' },
+      engine_type: { key: 'engineType', label: 'Engine Type' },
+      engine_size: { key: 'engineSize', label: 'Engine Size' },
+      horse_power: { key: 'horsePower', label: 'Horse Power' },
+      exterior_colorId: { key: 'exterior_color', label: 'Exterior Color ID' },
+      interior_colorId: { key: 'interior_color', label: 'Interior Color ID' },
+      steering_side: { key: 'steeringSide', label: 'Steering Side' },
+      regional_specsId: { key: 'regionalSpecsId', label: 'Regional Specs ID' },
+      driven_distance: { key: 'drivenDistance', label: 'Driven Distance' },
+    };
+
+    const missingFields: { field: string; message: string }[] = [];
+
+    for (const [fieldName, { key, label }] of Object.entries(requiredFields)) {
+      const value = data[key];
+      const isEmpty = value === null || value === undefined || value === '';
+
+      if (isEmpty) {
+        missingFields.push({
+          field: key,
+          message: `Please Add Data for ${label} field. Before Publishing`,
+        });
+      }
+    }
+
+    return missingFields;
+  }
+
 }
+

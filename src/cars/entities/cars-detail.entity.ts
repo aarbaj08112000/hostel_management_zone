@@ -54,6 +54,12 @@ enum NegotiableRange {
   Medium = 'Medium',
   Low = 'Low',
 }
+enum DriveType {
+  RWD = 'RWD',
+  FWD = 'FWD',
+  AWD = 'AWD'
+}
+
 
 @Entity('cars_details')
 export class CarDetailsEntity extends UserBase {
@@ -87,23 +93,17 @@ export class CarDetailsEntity extends UserBase {
   @Column({ type: 'int' })
   manufactureMonth: number;
 
-  @Column({ type: 'varchar', length: 255 })
-  serialNumber: string;
-
   @Column({ type: 'int' })
   countryId: number;
 
   @Column({ type: 'enum', enum: TransmissionType })
   transmissionType: TransmissionType;
 
-  @Column({ type: 'enum', enum: CarCategory })
-  carCategory: CarCategory;
+  @Column({ type: 'enum', enum: DriveType })
+  driveType: DriveType;
 
   @Column({ type: 'double' })
   engineCapacity: number;
-
-  @Column({ type: 'varchar', length: 255 })
-  engineType: string;
 
   @Column({ type: 'varchar', length: 255 })
   engineSize: string;
