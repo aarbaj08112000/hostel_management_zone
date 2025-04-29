@@ -146,7 +146,8 @@ export class CarSlideService {
                         'added_date',
                         'body_code',
                         'analytics',
-                        'status'
+                        'status',
+                        "display_title"
                       ],
                       sort: [
                         {
@@ -184,7 +185,8 @@ export class CarSlideService {
                       'added_date',
                       'body_code',
                       'analytics',
-                      'status'
+                      'status',
+                      "display_title"
                     ],
                     sort: [
                       {
@@ -425,7 +427,8 @@ export class CarSlideService {
       'analytics',
       'isWishlist',
       'distanceSuffix',
-      'status'
+      'status',
+      "display_title"
     ];
     const outputData: any = {};
     outputData.settings = { ...settingFields, ...this.settingsParams };

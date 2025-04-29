@@ -95,7 +95,8 @@ export class CarCompareDetailsService {
         "model_name",
         "brandName",
         "status",
-        "isListed"
+        "isListed",
+        "display_title"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -202,7 +203,8 @@ export class CarCompareDetailsService {
       "noOfCylinders",
       "modelName",
       "brandName",
-      "status"
+      "status",
+      "display_title"
     ];
     const outputKeys = ['car_details'];
 

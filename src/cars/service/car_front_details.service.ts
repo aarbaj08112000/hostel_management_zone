@@ -117,7 +117,8 @@ export class CarFrontDetailsService {
         "model_name",
         "location_id",
         "operating_hours",
-        "status"
+        "status",
+        "display_title"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -324,7 +325,8 @@ export class CarFrontDetailsService {
       "brandName",
       "modelName",
       "status",
-      "added_date"
+      "added_date",
+      "display_title"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')

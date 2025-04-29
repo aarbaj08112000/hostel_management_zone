@@ -104,7 +104,8 @@ export class CarListFrontService {
         "added_date",
         "body_code",
         "analytics",
-        "status"
+        "status",
+        "display_title"
       ]
       search_params['_source'] = _source;
       let pageIndex = 1;
@@ -307,7 +308,8 @@ export class CarListFrontService {
       'interiorColorName',
       'isWishlist',
       'distanceSuffix',
-      "status"
+      "status",
+      "display_title"
     ];
     const outputKeys = ['get_car_list'];
 
