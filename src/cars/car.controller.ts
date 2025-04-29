@@ -17,7 +17,11 @@ import { ModelAddService } from './service/model_add.service';
 import { ModelAddDto, ModelUpdateDto } from './dto/model.dto';
 import { BodyAddService } from './service/body_add.service';
 import { BodyAddDto, BodyUpdateDto } from './dto/body.dto';
-
+import { VariantMasterAddService } from './service/variant_master_add.service';
+import { VariantMasterAddDto, VariantMasterUpdateDto } from './dto/variant_master.dto';
+import { VariantDetailsDto } from './dto/variant_details.dto';
+import { VariantDetailsService } from './service/variant_details.service';
+import { VariantListService } from './service/variant_list.service';
 // Details imports
 import { CarModelDetailsDto } from './dto/car_model_details.dto';
 import { CarModelDetailsService } from './service/car_model_details.service';
@@ -101,7 +105,9 @@ export class CarController {
     private carMicroservice : CarMicroserviceService,
     protected brandService: BrandAddService,
     private readonly brandDetailsService: BrandDetailsService,
-    
+    protected variantMasterService: VariantMasterAddService,
+    private readonly variantDetailsService: VariantDetailsService,
+    private variantListService: VariantListService,
   ) { }
   @MessagePattern('get-data')
   async getMasterData( @Req() request: Request, @Payload() payload: any) {
@@ -118,6 +124,44 @@ export class CarController {
     }catch(err){
       console.log(err)
     }
+  }
+  @Post('variant-master-add')
+  async VariantMasterAdd(@Req() request: Request, @Body() body: VariantMasterAddDto) {
+    const params = body;
+    return await this.variantMasterService.startVariantMasterAdd(request, params);
+  }
+
+  @Put('variant-master-update')
+  async VariantMasterUpdate(@Req() request: Request, @Body() body: VariantMasterUpdateDto) {
+    const params = body;
+    return await this.variantMasterService.startVariantMasterUpdate(request, params);
+  }
+
+  @Delete('variant-master-delete/:id')
+  async VariantMasterDelete(@Param('id') id: string) {
+    return await this.variantMasterService.DeleteVariantMaster(id);
+  }
+
+  @Post('variant-list')
+  async variantList(@Req() request: Request, @Body() body: CarListDto) {
+    const params = body;
+    return await this.variantListService.startVariantList(request, params);
+  }
+
+  @Get('variant-detail')
+  async fetchVariantDetail(
+    @Req() request: Request,
+    @Query() body: VariantDetailsDto,
+  ) {
+    let search_by = 'variantId';
+    let search_key = body.variant_id;
+    const index = 'nest_local_variant_list';
+    let inputParams = {
+      search_key,
+      index,
+      search_by,
+    };
+    return await this.variantDetailsService.startVariantDetails(request, inputParams);
   }
   @Get('home-page')
   async homePage(@Req() request: Request, @Query() params: any) {

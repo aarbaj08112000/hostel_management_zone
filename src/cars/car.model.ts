@@ -41,6 +41,10 @@ import { CarMicroserviceService } from './service/car_microservice.service';
 import { LookupEntity } from '@repo/source/entities/lookup.entity';
 import { BrandAddService } from './service/brand_add.service';
 import { BrandDetailsService } from './service/brand_details.service';
+import { VariantMasterAddService } from './service/variant_master_add.service';
+import { VariantMasterEntity } from './entities/variant-master.entity';
+import { VariantDetailsService } from './service/variant_details.service';
+import { VariantListService } from './service/variant_list.service';
 @Module({
   imports: [
     GlobalModule,
@@ -59,6 +63,7 @@ import { BrandDetailsService } from './service/brand_details.service';
       CarImagesEntity,
       CarWishlistEntity,
       LookupEntity,
+      VariantMasterEntity,
     ]),
 
   ],
@@ -93,7 +98,10 @@ import { BrandDetailsService } from './service/brand_details.service';
     CarPublishUpdateService,
     LocationtimeSlotService,
     GlobalModule,
-    CarMicroserviceService
+    CarMicroserviceService,
+    VariantMasterAddService,
+    VariantDetailsService,
+    VariantListService,
   ],
 })
 export class CarModule { }
