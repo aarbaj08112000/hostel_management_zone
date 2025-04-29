@@ -140,8 +140,6 @@ export class CarTagAddService extends BaseService {
       const existingTagIds = existingTags.map((tag) => tag.carId);
       const newTagIds = car_ids.filter((id) => !existingTagIds.includes(id));
       const removeTagIds = existingTagIds.filter((id) => !car_ids.includes(id));
-
-
       if (removeTagIds.length > 0) {
         await this.carTagRepo.delete({
           tagId: tag_id,
@@ -163,34 +161,44 @@ export class CarTagAddService extends BaseService {
       return {
         success: 1,
         message: 'Car(s) updated successfully.',
-        updated_car_tags: { added: newTagIds, removed: removeTagIds },
+        updated_car_tags: { tag_id :tag_id, added: newTagIds, removed: removeTagIds },
       };
     } catch (err) {
+      console.log(err)
       return { success: 0, message: err, updated_car_tags: [] };
     }
   }
 
 
   async tagFinishSuccess(inputParams: any, type: string) {
-    let car_ids = inputParams.inserted_car_tags.map((data) => data.carId)
+    let tag_id = inputParams?.updated_car_tags?.tag_id ?? inputParams.inserted_car_tags[0]['tagId']
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'tag_list',
-        data: inputParams.inserted_car_tags[0]['tagId']
+        data: tag_id
       },
     };
     await this.general.submitGearmanJob(job_data);
+    let car_ids = inputParams.inserted_car_tags?.map((data) => data.carId) || [];
+    if (inputParams.updated_car_tags?.added?.length) {
+      car_ids.push(...inputParams.updated_car_tags.added);
+    }
 
-    let car_job_data = {
-      job_function: 'sync_elastic_data',
-      job_params: {
-        module: 'car_list',
-        data: car_ids
-      },
-    };
-    await this.general.submitGearmanJob(car_job_data);
+    if (inputParams.updated_car_tags?.removed?.length) {
+      car_ids = car_ids.filter(id => !inputParams.updated_car_tags.removed.includes(id));
+    }
 
+    if(car_ids.length > 0){
+      let car_job_data = {
+        job_function: 'sync_elastic_data',
+        job_params: {
+          module: 'car_list',
+          data: car_ids
+        },
+      };
+      await this.general.submitGearmanJob(car_job_data);
+    }
     return this.response.outputResponse(
       {
         settings: {

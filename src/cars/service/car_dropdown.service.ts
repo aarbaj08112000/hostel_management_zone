@@ -125,11 +125,15 @@ export class CarDropDownListService {
           fileConfigCopy.image_name = hit._source['car_image'];
           fileConfigCopy.path = `car_images_${aws_folder}/${hit._source['carId']}`;
           return {
-            key: hit.fields.carId[0],
-            slug: hit.fields.car_slug[0],
-            value: hit.fields.carName[0],
+            key: Array.isArray(hit.fields.carId) ? hit.fields.carId[0] : '',
+            slug: Array.isArray(hit.fields.car_slug) ? hit.fields.car_slug[0] : '',
+            value: Array.isArray(hit.fields.carName) ? hit.fields.carName[0] : '',
+            display_title: Array.isArray(hit.fields.display_title) ? hit.fields.display_title[0] : '',
             car_image: hit._source['car_image']
               ? await this.general.getFile(fileConfigCopy, inputParams)
+              : '',
+            sales_executive_id: Array.isArray(hit.fields.sales_executive_id)
+              ? hit.fields.sales_executive_id[0]
               : ''
           };
         })
@@ -165,7 +169,8 @@ export class CarDropDownListService {
       'key',
       'slug',
       'value',
-      'car_image'
+      'car_image',
+      "display_title"
     ];
     const outputKeys = ['get_car_list'];
 
