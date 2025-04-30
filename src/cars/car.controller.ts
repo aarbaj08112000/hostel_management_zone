@@ -67,7 +67,8 @@ import { BrandAddDto, BrandUpdateDto, BrandAddImageFileDto, BrandUpdateImageFile
 import { BrandDetailsDto } from './dto/brand_details.dto';
 import { BrandDetailsService } from './service/brand_details.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
-
+import { TagMasterDetailsDto } from './dto/tag_master_details.dto';
+import { TagMasterDetailsService } from './service/tag_master_details.service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -109,6 +110,7 @@ export class CarController {
     protected variantMasterService: VariantMasterAddService,
     private readonly variantDetailsService: VariantDetailsService,
     private variantListService: VariantListService,
+    private carTagDetails : TagMasterDetailsService
   ) { }
   @MessagePattern('get-data')
   async getMasterData( @Req() request: Request, @Payload() payload: any) {
@@ -125,6 +127,21 @@ export class CarController {
     }catch(err){
       console.log(err)
     }
+  }
+  @Get('car-tag-detail')
+  async fetchTagMasterDetail(
+    @Req() request: Request,
+    @Query() body: TagMasterDetailsDto,
+  ) {
+    let search_by = 'tagMasterId';
+    let search_key = body.tag_id;
+    const index = 'nest_local_tag_car_list';
+    let inputParams = {
+      search_key,
+      index,
+      search_by,
+    };
+    return await this.carTagDetails.startTagMasterDetails(request, inputParams);
   }
   @Post('variant-master-add')
   async VariantMasterAdd(@Req() request: Request, @Body() body: VariantMasterAddDto) {
