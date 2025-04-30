@@ -128,6 +128,11 @@ export class CarController {
       console.log(err)
     }
   }
+  @Get('sync-elastic-data')
+  async syncElasticData(@Query('index') index: string, @Query('dev') dev?: string) {
+    return this.elasticService.syncElasticData(index, dev);
+  }
+
   @Get('car-tag-detail')
   async fetchTagMasterDetail(
     @Req() request: Request,
