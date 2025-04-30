@@ -67,6 +67,7 @@ import { BrandAddDto, BrandUpdateDto, BrandAddImageFileDto, BrandUpdateImageFile
 import { BrandDetailsDto } from './dto/brand_details.dto';
 import { BrandDetailsService } from './service/brand_details.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
+
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
