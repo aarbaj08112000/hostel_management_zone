@@ -57,6 +57,13 @@ export class CarDocumentAddService {
           // Return success if documents already exist for the given car_id
           return this.carDocumentFinishSuccess(inputParams);
         } else {
+          return {
+            settings: {
+              success: 1,
+              message: 'No Document to upload',
+            },
+            data: {},
+          };
           // Throw an error if no documents are found
           throw new Error('No documents uploaded and no existing documents found. Please upload documents.');
         }
