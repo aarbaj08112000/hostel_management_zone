@@ -12,6 +12,7 @@ import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ModuleService } from '@repo/source/services/module.service';
 import { ElasticService } from '@repo/source/services/elastic.service';
+import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 @Injectable()
 export class BodyListService {
   protected readonly log = new LoggerHandler(
@@ -52,6 +53,11 @@ export class BodyListService {
     return outputResponse;
   }
   async getBodyList(inputParams: any) {
+    let fileConfig: FileFetchDto;
+    fileConfig = {};
+    fileConfig.source = 'amazon';
+    fileConfig.extensions =
+    await this.general.getConfigItem('allowed_extensions');
     this.blockResult = {};
     try {
       let index = 'nest_local_body';
@@ -86,9 +92,17 @@ export class BodyListService {
         throw new Error('No records found.');
       }
 
-      const data = results.hits.map((hit) => {
-        return hit._source;
-      });
+      const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+      const data = await Promise.all(
+        results.hits.map(async (hit) => {
+          fileConfig.image_name = hit._source['body_image'];
+          fileConfig.path = `body_${aws_folder}`;
+          if (hit._source['body_image']) {
+            hit._source['body_image'] = await this.general.getFile(fileConfig, inputParams);
+          }
+          return hit._source;
+        })
+      );
       if (_.isObject(data) && data.length > 0) {
         const success = 1;
         const message = 'Records found.';
@@ -117,7 +131,7 @@ export class BodyListService {
       message: custom.lang('body list found.'),
       fields: [],
     };
-    settingFields.fields = ['body_type', 'body_code', 'body_type_id', 'status', 'added_date', 'updated_by', 'added_by', 'updated_date', 'added_name', 'updated_name'];
+    settingFields.fields = ['body_type', 'body_code', 'body_image', 'body_type_id', 'status', 'added_date', 'updated_by', 'added_by', 'updated_date', 'added_name', 'updated_name'];
     const outputKeys = ['body_list'];
 
     const outputData: any = {};

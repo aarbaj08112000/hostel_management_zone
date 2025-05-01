@@ -1,6 +1,8 @@
-import { IsString, IsNotEmpty, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsIn, IsArray, ValidateNested } from 'class-validator';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
+import { IsFileMimeType, MaxFileSize } from '@repo/source/decorators/file.decorators';
 export class BodyAddDto {
   @IsString()
   @IsNotEmpty({
@@ -28,6 +30,29 @@ export class BodyAddDto {
   // })
   added_by: string;
 }
+
+class UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+}
+
+export class BodyAddImageFileDto {
+  // @IsOptional()
+  @IsNotEmpty({
+    message: () => custom.lang('Please enter a value for the body_image field.'),
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UploadedFile)
+  @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp'])
+  @MaxFileSize(10485760)
+  body_image: Express.Multer.File[];
+}
+
+export class BodyUpdateImageFileDto extends PartialType(BodyAddImageFileDto) {}
 
 export class BodyUpdateDto extends PartialType(BodyAddDto) {
   @IsString()

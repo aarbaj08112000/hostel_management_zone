@@ -8,6 +8,7 @@ import { BlockResultDto } from '@repo/source/common/dto/common.dto';
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ElasticService } from '@repo/source/services/elastic.service';
+import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 
 @Injectable()
 export class BodyTypeDetailsService {
@@ -49,8 +50,18 @@ export class BodyTypeDetailsService {
   async getBodyTypeDetails(inputParams: any) {
     this.blockResult = {};
     try {
+      let fileConfig: FileFetchDto;
+      const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+      fileConfig = {};
+      fileConfig.source = 'amazon';
+      fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
       let { search_key, search_by, index } = inputParams;
       const data = await this.elasticService.getById(search_key, index, search_by);
+      if (data?.body_image != '') {
+        fileConfig.image_name = data['body_image'];
+        fileConfig.path = `body_${aws_folder}`;
+        data.body_image = await this.general.getFile(fileConfig, inputParams);
+      }
       if (_.isObject(data) && !_.isEmpty(data)) {
         this.blockResult = {
           success: 1,
@@ -76,7 +87,7 @@ export class BodyTypeDetailsService {
       status: 200,
       success: 1,
       message: custom.lang('Body types found.'),
-      fields: ['body_type_id', 'body_type', 'body_code', 'added_by', 'added_date', 'updated_by', 'updated_date', 'added_name', 'updated_name', 'status'],
+      fields: ['body_type_id', 'body_type', 'body_code', 'body_image', 'added_by', 'added_date', 'updated_by', 'updated_date', 'added_name', 'updated_name', 'status'],
     };
 
     const outputData: any = {
