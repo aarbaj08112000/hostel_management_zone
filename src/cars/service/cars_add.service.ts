@@ -1136,7 +1136,6 @@ export class CarsAddService extends BaseService {
           } else {
             whereClauses.push(`${whereKey} = :${whereKey}`);
           }
-          console.log(whereClauses)
           whereBindings[whereKey] = whereVal;
         });
         const primaryKey = this.serviceConfig.primary_key;

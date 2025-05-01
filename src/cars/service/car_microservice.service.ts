@@ -397,14 +397,15 @@ export class CarMicroserviceService {
                 } else {
                   id = typeof item === 'object' ? item.id : item;
                 }
-              
-                const existingData = await this.fetchExistingData(subType, id , fetch_from);
+                if(id != '' && typeof id != 'undefined' && id != null){
+                  const existingData = await this.fetchExistingData(subType, id , fetch_from);
                 
-                if (_.isEmpty(existingData)) {
-                  const payload = { id, ...(subType && { type: subType }), selFields ,fetch_from};
-                  console.log(payload)
-                  const result = await this.sendAndStoreData(payload, entityType);
-                  console.log(`Processed entity [${entityType}] (subType: ${subType || 'N/A'}) with ID ${id}:`, result.message);
+                  if (_.isEmpty(existingData)) {
+                    const payload = { id, ...(subType && { type: subType }), selFields ,fetch_from};
+                    console.log(payload)
+                    const result = await this.sendAndStoreData(payload, entityType);
+                    console.log(`Processed entity [${entityType}] (subType: ${subType || 'N/A'}) with ID ${id}:`, result.message);
+                  }
                 }
               }
         }
