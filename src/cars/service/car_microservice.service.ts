@@ -117,6 +117,16 @@ export class CarMicroserviceService {
       selFields: Record<string, string>;
       fetch_from?: string;
     }>> = {
+  car_tags : {
+    tag_ids : {
+      actualField: 'tagId',
+      subType: 'tag',
+      type : 'master',
+      selFields: {
+        tagId: 'tag_id', tagName: 'tag_name', tagCode: 'tag_code'
+      },
+    }
+  },
   cars: {
     contact_person_id: {
       actualField: 'contactPersonId',
@@ -544,6 +554,7 @@ export class CarMicroserviceService {
       car_feature: this.dataSource.getRepository('car_feature'),
       car_history: this.dataSource.getRepository('car_history'),
       car_wishlist: this.dataSource.getRepository('car_wishlist'),
+      car_tags: this.dataSource.getRepository('car_tags'),
     };
   
     for (const [table, fields] of Object.entries(this.tableFieldLookup)) {

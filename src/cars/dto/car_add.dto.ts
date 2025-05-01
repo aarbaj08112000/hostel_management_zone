@@ -215,14 +215,8 @@ export class CarHistoryAddDto {
       custom.lang('Please enter a value for the registration Expiry field.'),
   })
   registration_expiry: Date;
-
-  @IsString()
-  @IsIn(['ThirdParty', 'Comprehensible', 'NotAvailable'])
-  @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the insurance Type field.'),
-  })
+ 
+  @IsOptional()
   insurance_type: string;
 
   @IsOptional()
