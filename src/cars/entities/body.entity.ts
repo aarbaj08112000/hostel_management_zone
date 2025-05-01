@@ -17,6 +17,9 @@ export class BodyEntity extends UserBase {
   @Column({ type: 'char', unique: true })
   bodyCode: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  bodyImage: string;
+
   @Column({ type: 'enum', nullable: true, enum: STATUS })
   status: STATUS;
 }

@@ -16,7 +16,7 @@ import { CarFeatureAddDto, CarFeatureUpdateDto } from './dto/car_feature.dto';
 import { ModelAddService } from './service/model_add.service';
 import { ModelAddDto, ModelUpdateDto } from './dto/model.dto';
 import { BodyAddService } from './service/body_add.service';
-import { BodyAddDto, BodyUpdateDto } from './dto/body.dto';
+import { BodyAddDto, BodyAddImageFileDto, BodyUpdateDto, BodyUpdateImageFileDto } from './dto/body.dto';
 import { VariantMasterAddService } from './service/variant_master_add.service';
 import { VariantMasterAddDto, VariantMasterUpdateDto } from './dto/variant_master.dto';
 import { VariantDetailsDto } from './dto/variant_details.dto';
@@ -1350,13 +1350,93 @@ export class CarController {
   }
 
   @Post('body-add')
-  async BodyAdd(@Req() request: Request, @Body() body: BodyAddDto) {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'body_image' },
+    ]))
+  async BodyAdd(@Req() request: Request, @Body() body: BodyAddDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>) {
+    const fileDto = new BodyAddImageFileDto();
+    fileDto.body_image = files?.body_image;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
     const params = body;
     return await this.bodyService.startBodyAdd(request, params);
   }
 
   @Put('body-update')
-  async BodyUpdate(@Req() request: Request, @Body() body: BodyUpdateDto) {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'body_image' },
+    ]))
+  async BodyUpdate(@Req() request: Request, @Body() body: BodyUpdateDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>) {
+    const fileDto = new BodyUpdateImageFileDto();
+    fileDto.body_image = files?.body_image;
+    const errors = await validate(fileDto, { whitelist: true });
+
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
     const params = body;
     return await this.bodyService.startBodyUpdate(request, params);
   }
