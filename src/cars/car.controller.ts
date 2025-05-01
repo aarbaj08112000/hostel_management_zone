@@ -128,11 +128,18 @@ export class CarController {
       console.log(err)
     }
   }
+  @Get('first-time-lookup')
+  async firstTimeSync(){
+    return await this.carMicroservice.firstTimeSyncLookup()
+  }
   @Get('sync-elastic-data')
   async syncElasticData(@Query('index') index: string, @Query('dev') dev?: string) {
     return this.elasticService.syncElasticData(index, dev);
   }
-
+  @Get('delete-elastic-data')
+  async deleteElasticData(@Query('index') index: string, @Query('dev') dev?: string) {
+    return this.elasticService.deleteAllDocumentsFromIndices(index);
+  }
   @Get('car-tag-detail')
   async fetchTagMasterDetail(
     @Req() request: Request,

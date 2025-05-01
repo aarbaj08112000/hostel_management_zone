@@ -16,6 +16,7 @@ import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { CarEntity } from '../entities/cars.entity';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { forEach } from 'mathjs';
+import { sub } from 'date-fns';
 type LookupFieldConfig = {
   field: string;
   subType?: string;
@@ -35,6 +36,7 @@ export class CarMicroserviceService {
   @InjectDataSource() protected dataSource: DataSource;
   @InjectRepository(LookupEntity) protected lookupEntityRepo: Repository<LookupEntity>;
   @InjectRepository(CarEntity) protected carEntityRepo: Repository<CarEntity>;
+
   constructor(protected readonly elasticService: ElasticService) {}
 
   @Client({ transport: Transport.TCP, options: { port: 6002 } }) public customerClient: ClientTCP;
@@ -50,24 +52,6 @@ export class CarMicroserviceService {
       { field: 'added_by', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email' } },
       { field: 'updated_by', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email' } },
       { field: 'contact_person_id', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email' } },
-    ],
-    location: [
-      {
-        field: 'country_id', subType: 'country', selFields: {
-          id: 'mc_id', country: 'country', countryCode: 'country_code',
-        }
-      },
-      {
-        field: 'location_id', subType: 'location', selFields: {
-          locationId: 'location_id', locationName: 'location_name', locationCode: 'location_code',
-          latitude: 'latitude', longitude: 'longitude', address: 'address',
-        }
-      },
-      {
-        field: 'state_id', subType: 'state', selFields: {
-          id: 'ms_id', state: 'country', stateCode: 'country_code',
-        }
-      }
     ],
     master: [
       {
@@ -124,20 +108,169 @@ export class CarMicroserviceService {
         }
       }
     ],
-  };
-
+  };  
+  private tableFieldLookup: Record<string,Record<string,
+    {
+      actualField: string;
+      subType: string;
+      type? : string;
+      selFields: Record<string, string>;
+      fetch_from?: string;
+    }>> = {
+  cars: {
+    contact_person_id: {
+      actualField: 'contactPersonId',
+      subType: 'user',
+      type : 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+    location_id: {
+      actualField: 'locationId',
+      subType: 'location',
+      type : 'master',
+      selFields: {
+        locationId: 'location_id',
+        locationName: 'location_name',
+        locationCode: 'location_code',
+        latitude: 'latitude',
+        longitude: 'longitude',
+        address: 'address',
+      },
+    },
+    added_by: {
+      actualField: 'addedBy',
+      subType: 'user',
+      type : 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+    updated_by: {
+      actualField: 'updatedBy',
+      subType: 'user',
+      type : 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+  },
+  cars_details: {
+    exterior_colorId: {
+      actualField: 'exteriorColorId',
+      subType: 'color',
+      type : 'master',
+      selFields: {
+        colorId: 'id',
+        colorName: 'color_name',
+        colorCode: 'color_code',
+      },
+    },
+    interior_colorId: {
+      actualField: 'interiorColorId',
+      subType: 'color',
+      type : 'master',
+      selFields: {
+        colorId: 'id',
+        colorName: 'color_name',
+        colorCode: 'color_code',
+      },
+    },
+    regional_specsId: {
+      actualField: 'regionalSpecsId',
+      subType: 'regional',
+      type : 'master',
+      selFields: {
+        regionalSpecsId: 'region_id',
+        regionName: 'region_name',
+        regionCode: 'region_code',
+      },
+    },
+    added_by: {
+      actualField: 'addedBy',
+      type : 'user',
+      subType: 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+    updated_by: {
+      actualField: 'updatedBy',
+      type : 'user',
+      subType: 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+  },
+  car_feature: {
+    feature_id: {
+      actualField: 'featureId',
+      subType: 'feature',
+      type : 'master',
+      selFields: {
+        featureId: 'feature_id',
+        featureName: 'feature_name',
+        featureCode: 'feature_code',
+        featureType: 'feature_type',
+        featureValues: 'feature_values',
+        featureCategoryId: 'feature_category_id',
+      },
+    },
+    added_by: {
+      actualField: 'addedBy',
+      subType: 'user',
+      type : 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+    updated_by: {
+      actualField: 'updatedBy',
+      subType: 'user',
+      type : 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+  },
+  car_history: {
+    insurance_provider_id: {
+      actualField: 'insuranceProvideId',
+      subType: 'insurance',
+      type : 'master',
+      selFields: {
+        insuranceProviderId: 'insurance_provider_id',
+        providerName: 'provider_name',
+        providerCode: 'provider_code',
+      },
+    },
+    added_by: {
+      actualField: 'addedBy',
+      subType: 'user',
+      type : 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+    updated_by: {
+      actualField: 'updatedBy',
+      subType: 'user',
+      type : 'user',
+      selFields: { id: 'id', name: 'name', email: 'email' },
+    },
+  },
+  car_wishlist: {
+    customer_id: {
+      actualField: 'userId', 
+      subType: 'customer',
+      type : 'customer',
+      selFields: {
+        id: 'id',
+        firstName: 'first_name',
+        middleName: 'middle_name',
+        lastName: 'last_name',
+        email: 'email',
+        phoneNumber: 'phoneNumber',
+      },
+    },
+  },
+};
   private clients = [
     { code: 'customer', instance: () => this.customerClient, pattern: 'get-data' },
     { code: 'master', instance: () => this.masterClient, pattern: 'get-data' },
     { code: 'user', instance: () => this.userClient, pattern: 'get-data' },
   ];
-
   async onModuleInit() {
     for (const { code, instance } of this.clients) {
       await this.connectWithRetry(code, instance());
     }
   }
-
   private async connectWithRetry(name: string, client: ClientTCP, retries = 5) {
     while (retries) {
       try {
@@ -153,8 +286,8 @@ export class CarMicroserviceService {
       }
     }
   }
-
   async sendAndStoreData(payload: any, entityType: string, subType?: string) {
+    console.log(entityType)
     const clientConfig = this.clients.find(c => c.code === entityType);
     if (!clientConfig) {
       return { success: 0, message: `No client configured for entity type: ${entityType}`, data: [] };
@@ -224,7 +357,6 @@ export class CarMicroserviceService {
       };
     }
   }
-  
   async processLookupDataFromBody(body: any) {
     try{
      
@@ -271,7 +403,6 @@ export class CarMicroserviceService {
       console.log(err)
     }
   }
-
   async fetchExistingData(type: string, master_id: any, fetch_from?: string) {
     const qb = this.lookupEntityRepo
       .createQueryBuilder('lookup')
@@ -363,7 +494,7 @@ export class CarMicroserviceService {
           const deleteResult = await this.lookupEntityRepo.delete({ entityId, entityName: inputParams.entity });
           return {
             success: 1,
-            message: deleteResult.affected ? 'Record deleteemaild.' : 'No record found to delete.',
+            message: deleteResult.affected ? 'Record delete emaild.' : 'No record found to delete.',
             data: { affected_rows: deleteResult.affected },
           };
         }
@@ -406,4 +537,79 @@ export class CarMicroserviceService {
       } 
     }
   }
+  async firstTimeSyncLookup() {
+    const tableToRepo: Record<string, Repository<any>> = {
+      cars: this.carEntityRepo,
+      cars_details: this.dataSource.getRepository('cars_details'),
+      car_feature: this.dataSource.getRepository('car_feature'),
+      car_history: this.dataSource.getRepository('car_history'),
+      car_wishlist: this.dataSource.getRepository('car_wishlist'),
+    };
+  
+    for (const [table, fields] of Object.entries(this.tableFieldLookup)) {
+      const repo = tableToRepo[table];
+      if (!repo) {
+        this.log.warn(`No repository found for table: ${table}`);
+        continue;
+      }
+  
+      for (const [logicalField, config] of Object.entries(fields)) {
+        const { actualField, subType, selFields, fetch_from } = config;
+  
+        const alias = 't';
+        let rows: { id: any }[];
+  
+        try {
+          rows = await repo
+            .createQueryBuilder(alias)
+            .select(`DISTINCT ${alias}.${actualField}`, 'id')
+            .where(`${alias}.${actualField} IS NOT NULL`)
+            .getRawMany();
+        } catch (error) {
+          this.log.error(`Error querying ${table}.${actualField}: ${error}`);
+          continue;
+        }
+  
+        this.log.log(`Processing ${rows.length} values for ${actualField} in ${table}`);
+  
+        for (const row of rows) {
+          const id = row.id;
+  
+          try {
+            const existing = await this.fetchExistingData(subType, id, fetch_from);
+            if (!existing) {
+              const payload = {
+                id,
+                type: subType,
+                selFields,
+                fetch_from,
+              };
+              const result = await this.sendAndStoreData(
+                payload,
+                this.getClientTypeForSubType(subType)
+              );
+  
+              this.log.log(`Synced ${subType} [ID=${id}]: ${result.message}`);
+            }
+          } catch (err) {
+            this.log.error(`Failed to sync ${subType} [ID=${id}]: ${err.message}`);
+          }
+        }
+      }
+    }
+    return {
+      message : 'Processing done'
+    }
+  }
+  private getClientTypeForSubType(subType: string): string {
+    for (const [entityType, fields] of Object.entries(this.tableFieldLookup)) {
+      for (const fieldConfig of Object.values(fields)) {
+        if (fieldConfig.subType === subType) {
+          return fieldConfig.type
+        }
+      }
+    }
+    return '';
+  }  
+  
 } 

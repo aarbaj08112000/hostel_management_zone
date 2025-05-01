@@ -15,6 +15,7 @@ import {
       try{
         const request = context.switchToHttp().getRequest();
         let params = {...request.body,...request.query,...request.params};
+        console.log(params)
         this.carMicroService.processLookupDataFromBody(params);
         return next.handle();
       }catch(err){
