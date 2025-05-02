@@ -1,6 +1,7 @@
 interface AuthObject {
   user: any;
 }
+require('dotenv').config();
 const CUSTOMER_URL = process.env.CUSTOMER_URL || '127.0.0.1';
 const CUSTOMER_PORT = parseInt(process.env.CUSTOMER_PORT || '6002', 10);
 
@@ -49,9 +50,9 @@ export class CarMicroserviceService {
   constructor(protected readonly elasticService: ElasticService) {
   }
 
-  @Client({ transport: Transport.TCP, options: { host :CUSTOMER_URL ,port: CUSTOMER_PORT } }) public customerClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { host :MASTER_URL ,port: MASTER_PORT} }) public masterClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { host :USER_URL ,port: USER_PORT } }) public userClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: CUSTOMER_PORT } }) public customerClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: MASTER_PORT} }) public masterClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: USER_PORT } }) public userClient: ClientTCP;
 
   private lookup_mapping: Record<string, LookupFieldConfig[]> = {
     customer : [
@@ -312,8 +313,8 @@ export class CarMicroserviceService {
       return { success: 0, message: `No client configured for entity type: ${entityType}`, data: [] };
     }
     const client = clientConfig.instance();
+    console.log(client)
     const pattern = clientConfig.pattern;
-    console.log(this.userClient)
     if (!client['isConnected']) {
       await client.connect();
     }
