@@ -331,7 +331,7 @@ export class CarController {
     const fileDto = new BrandAddImageFileDto();
     fileDto.brand_image = files?.brand_image;
     const errors = await validate(fileDto, { whitelist: true });
-
+    await this.carMicroservice.processLookupDataFromBody(body)
     if (errors.length > 0) {
       const errorMessages = errors
         .map((error) => {
@@ -1362,7 +1362,7 @@ export class CarController {
     const fileDto = new BodyAddImageFileDto();
     fileDto.body_image = files?.body_image;
     const errors = await validate(fileDto, { whitelist: true });
-
+    await this.carMicroservice.processLookupDataFromBody(body)
     if (errors.length > 0) {
       const errorMessages = errors
         .map((error) => {
