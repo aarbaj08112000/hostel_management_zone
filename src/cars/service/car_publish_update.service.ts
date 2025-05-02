@@ -2,8 +2,10 @@ import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
-import { CarEntity } from '../entities/cars.entity';
+import { CarEntity, Status } from '../entities/cars.entity';
 import { ElasticService } from '@repo/source/services/elastic.service';
+import { error } from 'console';
+
 @Injectable()
 export class CarPublishUpdateService {
   @Inject()
@@ -17,19 +19,22 @@ export class CarPublishUpdateService {
 
   async updateCarStatus(inputParams) {
     try {
-      let data = await this.startUpdate(inputParams)
+      
       const fetch_existing = await this.elasticService.getById(
         inputParams.car_id,
         'nest_local_cars',
         'id',
       );
       let res = this.getMissingRequiredFields(fetch_existing)
+      console.log(res)
       if (res.length > 0) {
         return {
           success: 0,
           data: res
         }
       }
+      let data = await this.startUpdate(inputParams)
+      console.log(data)
       let car_name = fetch_existing.carName;
       if (data.success) {
         let value_json = {
@@ -55,6 +60,9 @@ export class CarPublishUpdateService {
 
       if (!car) {
         throw new HttpException('No car found with the provided details.', HttpStatus.NOT_FOUND);
+      }
+      if(car.status == Status.Draft){
+        throw error('')
       }
       car.isListed = is_listed;
       car.updatedBy = updated_by;

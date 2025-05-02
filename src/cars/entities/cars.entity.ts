@@ -8,7 +8,7 @@ enum CarCondition {
   Satisfactory = 'Satisfactory',
 }
 
-enum Status {
+export enum Status {
   Available = 'Available',
   UnAvailable = 'UnAvailable',
   Booked = 'Booked',
