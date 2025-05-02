@@ -90,11 +90,17 @@ export class BodyAddService extends BaseService {
     return outputResponse;
   }
   async updateBodyData(inputParams: any) {
+    let fileInfo: any = {};
+    let uploadResult: any = {};
+    fileInfo = await this.processFiles(inputParams);
     this.blockResult = {};
     try {
       const queryColumns: any = {};
       if ('body_type' in inputParams) {
         queryColumns.bodyType = inputParams.body_type;
+      }
+      if ('body_image' in inputParams) {
+        queryColumns.bodyImage = inputParams.body_image;
       }
 
       if ('updated_by' in inputParams) {
@@ -245,6 +251,9 @@ export class BodyAddService extends BaseService {
   }
 
   async insertBodyData(inputParams: any) {
+    let fileInfo: any = {};
+    let uploadResult: any = {};
+    fileInfo = await this.processFiles(inputParams);
     this.blockResult = {};
     try {
       const queryColumns: any = {};
@@ -253,6 +262,9 @@ export class BodyAddService extends BaseService {
       }
       if ('body_code' in inputParams) {
         queryColumns.bodyCode = inputParams.body_code;
+      }
+      if ('body_image' in inputParams) {
+        queryColumns.bodyImage = inputParams.body_image;
       }
       if ('status' in inputParams) {
         queryColumns.status = inputParams.status;
@@ -345,4 +357,65 @@ export class BodyAddService extends BaseService {
       },
     );
   }
+
+  async uploadFiles(uploadInfo, params, id?) {
+      let uploadResults = {};
+      const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+      for (const key in uploadInfo) {
+        if ('name' in uploadInfo[key]) {
+          const uploadConfig = {
+            source: 'amazon',
+            upload_path: `body_${aws_folder}/`,
+            extensions: uploadInfo[key].extensions,
+            file_type: uploadInfo[key].file_type,
+            file_size: uploadInfo[key].file_size,
+            max_size: uploadInfo[key].max_size,
+            src_file: uploadInfo[key].file_path,
+            dst_file: uploadInfo[key].name,
+          };
+  
+          uploadResults[key] = await this.general.uploadFile(
+            uploadConfig,
+            params,
+          );
+        }
+      }
+      return uploadResults;
+    }
+    async processFile(paramKey, uploadInfo, params) {
+      if (paramKey in params && !custom.isEmpty(params[paramKey])) {
+        const tmpUploadPath =
+          await this.general.getConfigItem('upload_temp_path');
+        const filePath = `${tmpUploadPath}${params[paramKey]}`;
+  
+        if (this.general.isFile(filePath)) {
+          const fileInfo = {
+            name: params[paramKey],
+            file_name: params[paramKey],
+            file_path: filePath,
+            file_type: this.general.getFileMime(filePath),
+            file_size: this.general.getFileSize(filePath),
+            max_size: paramKey === 'car_document' ? 512000 : 102400, // Larger limit for documents
+            extensions:
+              paramKey === 'car_document'
+                ? 'pdf,doc,docx'
+                : 'gif,png,jpg,jpeg,jpe,bmp,ico,webp',
+          };
+  
+          uploadInfo[paramKey] = fileInfo;
+          return fileInfo;
+        }
+      }
+      return null;
+    }
+  
+    async processFiles(params) {
+      let uploadInfo = {};
+  
+      await Promise.all([
+        this.processFile.call(this, 'body_image', uploadInfo, params)
+      ]);
+  
+      return uploadInfo;
+    }
 }

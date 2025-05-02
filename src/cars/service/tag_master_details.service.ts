@@ -11,8 +11,8 @@ import { ElasticService } from '@repo/source/services/elastic.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 
 @Injectable()
-export class BodyTypeDetailsService {
-  protected readonly log = new LoggerHandler(BodyTypeDetailsService.name).getInstance();
+export class TagMasterDetailsService {
+  protected readonly log = new LoggerHandler(TagMasterDetailsService.name).getInstance();
   protected inputParams: object = {};
   protected blockResult: BlockResultDto;
   protected requestObj: any = {};
@@ -28,26 +28,26 @@ export class BodyTypeDetailsService {
 
   constructor(protected readonly elasticService: ElasticService) { }
 
-  async startBodyTypeDetails(reqObject, reqParams) {
+  async startTagMasterDetails(reqObject, reqParams) {
     let outputResponse = {};
     try {
       this.requestObj = reqObject;
       this.inputParams = reqParams;
       let inputParams = reqParams;
-      inputParams = await this.getBodyTypeDetails(inputParams);
+      inputParams = await this.getTagMasterDetails(inputParams);
 
-      if (!_.isEmpty(inputParams.body_type_details)) {
-        outputResponse = this.bodyTypeDetailsFinishedSuccess(inputParams);
+      if (!_.isEmpty(inputParams.tag_master_details)) {
+        outputResponse = this.tagMasterDetailsFinishedSuccess(inputParams);
       } else {
-        outputResponse = this.bodyTypeDetailsFinishedFailure(inputParams);
+        outputResponse = this.tagMasterDetailsFinishedFailure(inputParams);
       }
     } catch (err) {
-      this.log.error('API Error >> body_type_details >>', err);
+      this.log.error('API Error >> tag_master_details >>', err);
     }
     return outputResponse;
   }
 
-  async getBodyTypeDetails(inputParams: any) {
+  async getTagMasterDetails(inputParams: any) {
     this.blockResult = {};
     try {
       let fileConfig: FileFetchDto;
@@ -55,13 +55,15 @@ export class BodyTypeDetailsService {
       fileConfig = {};
       fileConfig.source = 'amazon';
       fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
+
       let { search_key, search_by, index } = inputParams;
       const data = await this.elasticService.getById(search_key, index, search_by);
-      if (data?.body_image != '') {
-        fileConfig.image_name = data['body_image'];
-        fileConfig.path = `body_${aws_folder}`;
-        data.body_image = await this.general.getFile(fileConfig, inputParams);
+      if (data?.tag_icon != '') {
+        fileConfig.image_name = data['tag_icon'];
+        fileConfig.path = `icons`;
+        data.tag_icon = await this.general.getFile(fileConfig, inputParams);
       }
+
       if (_.isObject(data) && !_.isEmpty(data)) {
         this.blockResult = {
           success: 1,
@@ -78,16 +80,16 @@ export class BodyTypeDetailsService {
         data: [],
       };
     }
-    inputParams.body_type_details = this.blockResult.data;
+    inputParams.tag_master_details = this.blockResult.data;
     return inputParams;
   }
 
-  bodyTypeDetailsFinishedSuccess(inputParams: any) {
+  tagMasterDetailsFinishedSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 1,
-      message: custom.lang('Body types found.'),
-      fields: ['body_type_id', 'body_type', 'body_code', 'body_image', 'added_by', 'added_date', 'updated_by', 'updated_date', 'added_name', 'updated_name', 'status'],
+      message: custom.lang('Tags found.'),
+      fields: ['tag_id', 'tag_name', 'tag_code', 'status', 'is_trending', 'tag_icon', 'added_by', 'added_date', 'updated_by', 'updated_date', 'added_name', 'updated_name', 'car_details'],
     };
 
     const outputData: any = {
@@ -96,18 +98,18 @@ export class BodyTypeDetailsService {
     };
 
     const funcData: any = {
-      name: 'body_type_details',
-      output_keys: ['body_type_details'],
+      name: 'tag_master_details',
+      output_keys: ['tag_master_details'],
     };
 
     return this.response.outputResponse(outputData, funcData);
   }
 
-  bodyTypeDetailsFinishedFailure(inputParams: any) {
+  tagMasterDetailsFinishedFailure(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 0,
-      message: custom.lang('Body types not found.'),
+      message: custom.lang('car tag details not found.'),
       fields: [],
     };
     return this.response.outputResponse(
@@ -116,7 +118,7 @@ export class BodyTypeDetailsService {
         data: inputParams,
       },
       {
-        name: 'body_type_details',
+        name: 'tag_master_details',
       },
     );
   }

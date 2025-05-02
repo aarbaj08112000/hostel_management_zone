@@ -1,10 +1,8 @@
-interface AuthObject {
-  user: any;
-}
+interface AuthObject { user: any; }
 import { Inject, Injectable, HttpStatus, Logger } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-
+import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { LoggerHandler } from '@repo/source/utilities/logger-handler';
@@ -13,15 +11,13 @@ import { BlockResultDto, SettingsParamsDto } from '@repo/source/common/dto/commo
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ModuleService } from '@repo/source/services/module.service';
-import {
-  CarEntity,
-  CarHistoryEntity,
-  CarTagEntity,
-  CarDocumentEntity,
-} from '../entities/cars.entity';
+import { CarEntity, CarHistoryEntity, CarTagEntity, CarDocumentEntity } from '../entities/cars.entity';
 import { CarDetailsEntity } from '../entities/cars-detail.entity';
 import { BaseService } from '@repo/source/services/base.service';
 import { CarMicroserviceService } from './car_microservice.service';
+import { BrandEntity } from '../entities/brand.entity';
+import { ModelEntity } from '../entities/model.entity';
+
 @Injectable()
 export class CarsAddService extends BaseService {
   protected readonly log = new LoggerHandler(CarsAddService.name).getInstance();
@@ -54,6 +50,10 @@ export class CarsAddService extends BaseService {
   protected carTagEntityRepo: Repository<CarTagEntity>;
   @InjectRepository(CarDocumentEntity)
   protected carDocumentRepo: Repository<CarDocumentEntity>;
+  @InjectRepository(BrandEntity)
+  protected brandRepo: Repository<BrandEntity>;
+  @InjectRepository(ModelEntity)
+  protected modelRepo: Repository<ModelEntity>;
   constructor() {
     super();
     this.moduleName = 'car';
@@ -362,10 +362,9 @@ export class CarsAddService extends BaseService {
       if ('price' in inputParams) {
         queryColumns.price = inputParams.price;
       }
-
-      if ('slug' in inputParams) {
-        queryColumns.slug = inputParams.slug;
-      }
+      // if ('slug' in inputParams) {
+      //   queryColumns.slug = inputParams.slug;
+      // }
       if ('remarks' in inputParams) {
         queryColumns.remarks = inputParams.remarks;
       }
@@ -433,6 +432,7 @@ export class CarsAddService extends BaseService {
 
     return inputParams;
   }
+
   async updateCarData(inputParams: any, car_id: any) {
     try {
       let uploadResult: any = {};
@@ -483,6 +483,9 @@ export class CarsAddService extends BaseService {
         engine_capacity: 'engineCapacity',
         engine_size: 'engineSize',
         horse_power: 'horsePower',
+        battery_capacity: 'batteryCapacity',
+        charging_time: 'chargingTime',
+        range: 'range',
         exterior_colorId: 'exteriorColorId',
         interior_colorId: 'interiorColorId',
         steering_side: 'steeringSide',
@@ -625,6 +628,30 @@ export class CarsAddService extends BaseService {
           };
         }
       }
+
+      if (car_details?.brand_id && car_details?.model_id && car_details?.manufacture_year) {
+        const brand = await this.brandRepo.findOne({ where: { brandId: car_details.brand_id } });
+        const model = await this.modelRepo.findOne({ where: { carModelId: car_details.model_id } });
+      
+        if (brand?.brandName && model?.modelName) {
+          const formattedBrand = brand.brandName.toLowerCase().replace(/\s+/g, '-');
+          const formattedModel = model.modelName.toLowerCase().replace(/\s+/g, '-');
+          const year = car_details.manufacture_year;
+          let slug: string;
+          let isUnique = false;
+          
+          while (!isUnique) {
+            const uniqueNumber = Math.floor(10000000 + Math.random() * 90000000);
+            slug = `${formattedBrand}-${formattedModel}-${year}-${uniqueNumber}`;
+            const existingCar = await this.carEntityRepo.findOne({ where: { slug } });
+            if (!existingCar) {
+              isUnique = true;
+            }
+          }
+          await this.carEntityRepo.update({ carId: car_id }, { slug });
+        }
+      }
+
       const success = 1;
       const message = 'Car updated successfully';
 
@@ -687,27 +714,32 @@ export class CarsAddService extends BaseService {
       if ('manufacture_month' in inputParams) {
         queryColumns.manufactureMonth = inputParams.manufacture_month;
       }
-
       if ('country_id' in inputParams) {
         queryColumns.countryId = inputParams.country_id;
       }
       if ('transmission_type' in inputParams) {
         queryColumns.transmissionType = inputParams.transmission_type;
       }
-
       if ('drive_type' in inputParams) {
         queryColumns.driveType = inputParams.drive_type;
       }
-
       if ('engine_capacity' in inputParams) {
         queryColumns.engineCapacity = inputParams.engine_capacity;
       }
-
       if ('engine_size' in inputParams) {
         queryColumns.engineSize = inputParams.engine_size;
       }
       if ('horse_power' in inputParams) {
         queryColumns.horsePower = inputParams.horse_power;
+      }
+      if ('battery_capacity' in inputParams) {
+        queryColumns.batteryCapacity = inputParams.battery_capacity;
+      }
+      if ('charging_time' in inputParams) {
+        queryColumns.chargingTime = inputParams.charging_time;
+      }
+      if ('range' in inputParams) {
+        queryColumns.range = inputParams.range;
       }
       if ('exterior_colorId' in inputParams) {
         queryColumns.exteriorColorId = inputParams.exterior_colorId;
@@ -1136,7 +1168,6 @@ export class CarsAddService extends BaseService {
           } else {
             whereClauses.push(`${whereKey} = :${whereKey}`);
           }
-          console.log(whereClauses)
           whereBindings[whereKey] = whereVal;
         });
         const primaryKey = this.serviceConfig.primary_key;

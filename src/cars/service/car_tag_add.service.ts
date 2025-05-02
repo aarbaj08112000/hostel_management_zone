@@ -6,7 +6,7 @@ import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { CarTagsEntity } from '../entities/car-tag.entity';
 import { BaseService } from '@repo/source/services/base.service';
 import * as _ from 'lodash';
-
+import { CarEntity } from '../entities/cars.entity';
 interface AuthObject {
   user: any;
 }
@@ -25,6 +25,9 @@ export class CarTagAddService extends BaseService {
 
   @InjectRepository(CarTagsEntity)
   protected carTagRepo: Repository<CarTagsEntity>;
+  
+  @InjectRepository(CarEntity)
+  protected carEntity : Repository<CarEntity>;
 
   constructor() {
     super();
@@ -75,6 +78,7 @@ export class CarTagAddService extends BaseService {
 
   async insertCarTags(inputParams: any) {
     try {
+      this.moduleAPI = 'add';
       const { tag_id, car_ids, added_by } = inputParams;
       const addedDate = () => 'NOW()';
       const insertData = car_ids.map((carId) => ({
@@ -98,6 +102,7 @@ export class CarTagAddService extends BaseService {
     let outputResponse = {};
 
     try {
+      this.moduleAPI = 'delete';
       this.setModuleAPI('update');
       const inputParams = await this.deleteCarTagData(id);
 
@@ -135,7 +140,7 @@ export class CarTagAddService extends BaseService {
     try {
       const { car_ids, tag_id, updated_by } = inputParams;
       const updatedDate = () => 'NOW()';
-
+      this.moduleAPI = 'update';
       const existingTags = await this.carTagRepo.find({ where: { tagId: tag_id } });
       const existingTagIds = existingTags.map((tag) => tag.carId);
       const newTagIds = car_ids.filter((id) => !existingTagIds.includes(id));
@@ -175,7 +180,7 @@ export class CarTagAddService extends BaseService {
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
-        module: 'tag_list',
+        module: 'tag_car_list',
         data: tag_id
       },
     };
@@ -188,7 +193,7 @@ export class CarTagAddService extends BaseService {
     if (inputParams.updated_car_tags?.removed?.length) {
       car_ids = car_ids.filter(id => !inputParams.updated_car_tags.removed.includes(id));
     }
-
+    
     if(car_ids.length > 0){
       let car_job_data = {
         job_function: 'sync_elastic_data',

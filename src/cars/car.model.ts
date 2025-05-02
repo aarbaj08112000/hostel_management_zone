@@ -45,6 +45,7 @@ import { VariantMasterAddService } from './service/variant_master_add.service';
 import { VariantMasterEntity } from './entities/variant-master.entity';
 import { VariantDetailsService } from './service/variant_details.service';
 import { VariantListService } from './service/variant_list.service';
+import { TagMasterDetailsService } from './service/tag_master_details.service';
 @Module({
   imports: [
     GlobalModule,
@@ -102,6 +103,7 @@ import { VariantListService } from './service/variant_list.service';
     VariantMasterAddService,
     VariantDetailsService,
     VariantListService,
+    TagMasterDetailsService
   ],
 })
 export class CarModule { }
