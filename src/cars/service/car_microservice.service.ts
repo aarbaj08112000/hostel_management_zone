@@ -1,6 +1,15 @@
 interface AuthObject {
   user: any;
 }
+const CUSTOMER_URL = process.env.CUSTOMER_URL || '127.0.0.1';
+const CUSTOMER_PORT = parseInt(process.env.CUSTOMER_PORT || '6002', 10);
+
+const USER_URL = process.env.USER_URL || '127.0.0.1';
+const USER_PORT = parseInt(process.env.USER_PORT || '6005', 10);
+
+const MASTER_URL = process.env.MASTER_URL || '127.0.0.1';
+const MASTER_PORT = parseInt(process.env.MASTER_PORT || '6003', 10);
+
 import { Inject, Injectable} from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -37,11 +46,12 @@ export class CarMicroserviceService {
   @InjectRepository(LookupEntity) protected lookupEntityRepo: Repository<LookupEntity>;
   @InjectRepository(CarEntity) protected carEntityRepo: Repository<CarEntity>;
 
-  constructor(protected readonly elasticService: ElasticService) {}
+  constructor(protected readonly elasticService: ElasticService) {
+  }
 
-  @Client({ transport: Transport.TCP, options: { port: 6002 } }) public customerClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { port: 6003 } }) public masterClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { port: 6005 } }) public userClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { host :CUSTOMER_URL ,port: CUSTOMER_PORT } }) public customerClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { host :MASTER_URL ,port: MASTER_PORT} }) public masterClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { host :USER_URL ,port: USER_PORT } }) public userClient: ClientTCP;
 
   private lookup_mapping: Record<string, LookupFieldConfig[]> = {
     customer : [
@@ -277,9 +287,9 @@ export class CarMicroserviceService {
     { code: 'user', instance: () => this.userClient, pattern: 'get-data' },
   ];
   async onModuleInit() {
-    for (const { code, instance } of this.clients) {
-      await this.connectWithRetry(code, instance());
-    }
+    // for (const { code, instance } of this.clients) {
+    //   await this.connectWithRetry(code, instance());
+    // }
   }
   private async connectWithRetry(name: string, client: ClientTCP, retries = 5) {
     while (retries) {
@@ -297,14 +307,13 @@ export class CarMicroserviceService {
     }
   }
   async sendAndStoreData(payload: any, entityType: string, subType?: string) {
-    console.log(entityType)
     const clientConfig = this.clients.find(c => c.code === entityType);
     if (!clientConfig) {
       return { success: 0, message: `No client configured for entity type: ${entityType}`, data: [] };
     }
     const client = clientConfig.instance();
     const pattern = clientConfig.pattern;
-  
+    console.log(this.userClient)
     if (!client['isConnected']) {
       await client.connect();
     }
