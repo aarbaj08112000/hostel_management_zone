@@ -123,7 +123,10 @@ export class CarController {
   @MessagePattern('set-data')
   async setCarData( @Req() request: Request, @Payload() payload: any) {
     try{
-      return this.carMicroservice.setData(payload);
+    
+      await this.carMicroservice.setData(payload);
+      await this.elasticService.syncElasticData('car_list')
+      return {success : 1 , message : 'data set success'}
     }catch(err){
       console.log(err)
     }
@@ -847,6 +850,7 @@ export class CarController {
     @UploadedFiles() files: Record<string, Express.Multer.File[]>,
   ) {
     try {
+      await this.carMicroservice.processLookupDataFromBody(body)
       if (body.carId !== undefined && body.carId !== '' && body.carId !== null) {
         if (body.car_data === undefined || body.car_data === null) {
           body.car_data = {} as CarAddDto | UpdateCarDTO;
