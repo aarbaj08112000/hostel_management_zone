@@ -130,7 +130,7 @@ export class CarFrontDetailsService {
         _source
       );
       if (data['isListed'] == 'No') {
-        if (inputParams?.dev_publish != 'Yes') {
+        if (inputParams?.dev_publish.toLowerCase() != 'yes') {
           throw new Error('No records found.');
         }
       }
