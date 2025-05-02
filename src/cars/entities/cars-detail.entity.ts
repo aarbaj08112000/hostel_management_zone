@@ -111,6 +111,15 @@ export class CarDetailsEntity extends UserBase {
   @Column({ type: 'int' })
   horsePower: number;
 
+  @Column({ type: 'varchar', length: 255 })
+  batteryCapacity: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  chargingTime: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  range: string;
+
   @Column({ type: 'int' })
   exteriorColorId: number;
 
