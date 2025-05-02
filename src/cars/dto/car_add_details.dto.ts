@@ -100,30 +100,16 @@ export class CarDetailsDto {
   @Transform(({ value }) => Number(value))
 
   @RequiredIfNotDraft()
-  // @IsNotEmpty({
-  //   message: () =>
-  //     custom.lang('Please enter a value for the engineCapacity field.'),
-  // })
   @IsOptional()
   engine_capacity: number;
 
-  @RequiredIfNotDraft()
-  @IsString()
-  @MaxLength(255)
-  // @IsNotEmpty({
-  //   message: () =>
-  //     custom.lang('Please enter a value for the engineSize field.'),
-  // })
+
   @IsOptional()
   engine_size: string;
 
   @Transform(({ value }) => Number(value))
 
-  @RequiredIfNotDraft()
-  // @IsNotEmpty({
-  //   message: () =>
-  //     custom.lang('Please enter a value for the horsePower field.'),
-  // })
+
   @IsOptional()
   horse_power: number;
 
