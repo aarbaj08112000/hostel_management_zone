@@ -1157,19 +1157,32 @@ export class CarController {
       }
       parameters.filters = this.map_arr(parameters.filters);
       params.filters = { status: 'Active' };
-      // let exteriorColor = await this.colorListService.startColor(request, params);
-      // exteriorColor = {
-      //   searchParam: 'color',
-      //   searchType: 'eq',
-      //   label: custom.lang('Color'),
-      //   values: exteriorColor['data'].length > 0 ? Object.values(exteriorColor['data']).map((key) => ({
-      //     key: key['color_name'].toLowerCase(),
-      //     value: key['color_code'],
-      //     label: key['color_name'],
-      //   })) : [],
-      // };
 
-      // filter_arr = { ...filter_arr, exteriorColor };
+      let color_index = 'nest_local_color'
+      let search_params = this.general.createElasticSearchQuery(params);
+      const result = await this.elasticService.search(
+        color_index,
+        search_params,
+      );
+      const totalCount = result['total']['value'];
+      if (totalCount > 0) {
+        let exteriorColor : any 
+        const data = result.hits.map((hit) => {
+          return hit._source;
+        });
+        exteriorColor = {
+          searchParam: 'color',
+          searchType: 'eq',
+          label: custom.lang('Color'),
+          values:data.length > 0 ? data.map((key) => ({
+            key: key['color_name'].toLowerCase(),
+            value: key['color_code'],
+            label: key['color_name'],
+          })) : [],
+        };
+  
+        filter_arr = { ...filter_arr, exteriorColor };
+      }
       params = { ...params, skip_brand: 'Yes' }
       let brandName = await this.brandListService.startBrand(request, params);
       brandName = {
@@ -1216,7 +1229,7 @@ export class CarController {
         values: modelName['data'].length > 0 ? Object.values(modelName['data']).map((key) => ({
           key: key['model_code'].toLowerCase(),
           value: key['model_name'],
-          brandCode: key['brand_code']
+          brandCode: key['brand_code'].toLowerCase()
         })) : [],
       };
 
@@ -1251,19 +1264,19 @@ export class CarController {
         label: custom.lang('Fuel Type'),
         values: [
           {
-            key: 'Petrol',
+            key: 'petrol',
             value: 'Petrol',
           },
           {
-            key: 'Diesel',
+            key: 'diesel',
             value: 'Diesel',
           },
           {
-            key: 'Hybrid',
+            key: 'hybrid',
             value: 'Hybrid',
           },
           {
-            key: 'Electric',
+            key: 'electric',
             value: 'Electric',
           },
         ],
@@ -1275,11 +1288,11 @@ export class CarController {
         label: custom.lang('Transmission'),
         values: [
           {
-            key: 'Manual',
+            key: 'manual',
             value: 'Manual',
           },
           {
-            key: 'Automatic',
+            key: 'automatic',
             value: 'Automatic',
           },
           {
