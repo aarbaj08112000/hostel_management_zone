@@ -40,11 +40,7 @@ class UploadedFile {
 }
 
 export class BodyAddImageFileDto {
-  // @IsOptional()
-  @IsNotEmpty({
-    message: () => custom.lang('Please enter a value for the body_image field.'),
-  })
-  @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => UploadedFile)
   @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp'])
