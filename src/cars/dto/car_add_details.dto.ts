@@ -100,29 +100,56 @@ export class CarDetailsDto {
   @Transform(({ value }) => Number(value))
 
   @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the engineCapacity field.'),
-  })
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the engineCapacity field.'),
+  // })
+  @IsOptional()
   engine_capacity: number;
 
   @RequiredIfNotDraft()
   @IsString()
   @MaxLength(255)
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the engineSize field.'),
-  })
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the engineSize field.'),
+  // })
+  @IsOptional()
   engine_size: string;
 
   @Transform(({ value }) => Number(value))
 
   @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the horsePower field.'),
-  })
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the horsePower field.'),
+  // })
+  @IsOptional()
   horse_power: number;
+
+  // @RequiredIfNotDraft()
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the battery_capacity field.'),
+  // })
+  @IsOptional()
+  battery_capacity: number;
+
+  // @RequiredIfNotDraft()
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the charging_time field.'),
+  // })
+  @IsOptional()
+  charging_time: number;
+
+  // @RequiredIfNotDraft()
+  // @IsNotEmpty({
+  //   message: () =>
+  //     custom.lang('Please enter a value for the range field.'),
+  // })
+  @IsOptional()
+  range: number;
 
   @Transform(({ value }) => Number(value))
 

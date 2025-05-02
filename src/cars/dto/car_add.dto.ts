@@ -62,12 +62,12 @@ export class CarAddDto {
   car_condition: string;
 
 
-  @IsString()
-  @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () => custom.lang('Please enter a value for the slug field.'),
-  })
-  slug: string;
+  // @IsString()
+  // @RequiredIfNotDraft()
+  // @IsNotEmpty({
+  //   message: () => custom.lang('Please enter a value for the slug field.'),
+  // })
+  // slug: string;
 
   @IsOptional()
   @IsString()
