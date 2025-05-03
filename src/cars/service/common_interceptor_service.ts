@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { CarMicroserviceService } from './car_microservice.service';
-
+import { from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 @Injectable()
 export class CommonInterceptor implements NestInterceptor {
   constructor(
@@ -26,14 +27,9 @@ export class CommonInterceptor implements NestInterceptor {
     if (method === 'POST' && skipPaths.includes(path)) {
       return next.handle();
     }
-
-    try {
-      const params = { ...request.body, ...request.query, ...request.params };
-      this.carMicroService.processLookupDataFromBody(params);
-    } catch (err) {
-      console.log(err);
-    }
-
-    return next.handle();
+    const params = { ...request.body, ...request.query, ...request.params };
+    return from(this.carMicroService.processLookupDataFromBody(params)).pipe(
+      switchMap(() => next.handle())
+    );
   }
 }
