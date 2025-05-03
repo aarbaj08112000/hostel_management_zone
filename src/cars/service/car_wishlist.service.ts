@@ -45,7 +45,6 @@ export class CarWishlistService {
     private readonly modCustomerRepo: Repository<LookupEntity>,
     @InjectRepository(CarEntity)
     private readonly carRepo: Repository<CarEntity>,
-    @InjectRepository(CarDetailsEntity)
     @Inject()
     private readonly carMicroService : CarMicroserviceService
   ) {
