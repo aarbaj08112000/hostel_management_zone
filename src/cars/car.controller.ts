@@ -169,13 +169,13 @@ export class CarController {
           
           })),
         };
-        return buyCars
     }else{
       buyCars = {
         success : 0,
         message : 'No Data found'
       }
     }
+    return buyCars
   }
   @Get('global-data')
   async getFooterData(@Req() request: Request, @Query() params: any) {
