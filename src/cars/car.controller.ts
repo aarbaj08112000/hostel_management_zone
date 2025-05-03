@@ -131,6 +131,102 @@ export class CarController {
       console.log(err)
     }
   }
+  @Get('buy-cars')
+  async buyCars(@Req() request: Request, @Query() params: any){
+    params['is_global'] = 'Yes';
+    params['is_front'] = 'Yes';
+    params['filters'] = { is_trending: "Yes"}
+    let car_index = 'nest_local_tag_car_list'
+    let search_params = this.general.createElasticSearchQuery(params);
+    let buyCars : any = {};
+    const result = await this.elasticService.search(
+      car_index,
+      search_params,
+    );
+    const totalCount = result['total']['value'];
+    if (totalCount > 0) { 
+    const data = result.hits.map((hit) => {
+      return hit._source;
+    })
+    buyCars = {
+          values: data.map((key) => ({
+            label: key['tag_name'],
+            tag: key['tag_code'] ?? '',
+            data: key['car_details']
+            ? key['car_details']
+                .filter(
+                  (val) =>
+                    (val?.status === 'Available' || val?.status === 'Booked') &&
+                    val?.isListed === 'Yes'
+                )
+                .map((val) => ({
+                  car_id: val?.car_id,
+                  car_name: val?.car_name,
+                  car_slug: val?.car_slug,
+                  display_title : val?.display_title,
+                }))
+            : []
+          
+          })),
+        };
+        return buyCars
+    }else{
+      buyCars = {
+        success : 0,
+        message : 'No Data found'
+      }
+    }
+  }
+  @Get('global-data')
+  async getFooterData(@Req() request: Request, @Query() params: any) {
+
+    let final_data = {};
+
+    let facebook = await this.general.getConfigItem('COMPANY_FACEBOOK_URL');
+    let instagram = await this.general.getConfigItem('COMPANY_INSTAGRAM_URL');
+    let twitter = await this.general.getConfigItem('COMPANY_TWITTER_URL');
+    let youtube = await this.general.getConfigItem('COMPANY_YOUTUBE_URL');
+    let linkedin = await this.general.getConfigItem('COMPANY_LINKEDIN_URL');
+    let threads = await this.general.getConfigItem('COMPANY_THREADS_URL');
+    let whatsapp = await this.general.getConfigItem('COMPANY_WHATSAPP_URL');
+    let google = await this.general.getConfigItem('COMPANY_GOOGLE_URL');
+    final_data = {
+      facebook, instagram, twitter, youtube, linkedin, threads, whatsapp, google
+    }
+    let return_data = {
+      "header":
+      {
+      },
+      "footer": {
+        "socialMedia": final_data,
+        "officeAddresses": [
+          {
+            "address": "Block-1 Unit-4 Al Hail Business Centre, <br>Next to KM Traiding, Behind Emirates, <br>Motors M4, Mussafah, Abu Dhabi, UAE",
+            "city": "MUSSAFAH",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image1.png"
+          },
+          {
+            "address": "Deerfields Mall, Hypermarket Entrance, <br>Kisosk Ground Floor, 99 - Al Rubban St, <br>- Al Bahyah Abu Dhabi, UAE",
+            "city": "SHAHAMA",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image2.png"
+          },
+          {
+            "address": "Al Mutakamela Vehicle Testing and Registration <br>Centre, Dubai shop, 32 - next to Permagard, <br>- Al Quoz Industrial Area 2, Dubai, UAE",
+            "city": "AL QUOZ 2, DUBAI",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image3.png"
+          },
+          {
+            "address": "Egyptian Court Gate Entrance, Ground Floor, <br>Sheikh Zayed Rd, Jebel Ali Village, <br>Dubai, UAE",
+            "city": "IBN BATTUTA",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image4.png"
+          }
+        ],
+      }
+    }
+
+    return return_data
+  }
+
   @Get('first-time-lookup')
   async firstTimeSync(){
     return await this.carMicroservice.firstTimeSyncLookup()
