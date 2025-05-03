@@ -1636,8 +1636,8 @@ export class CarController {
     }
   }
   @Get('car-wishlist')
-  async getCarWishlist(@Req() request: ExpressRequest) {
-    return await this.carWishlistService.getWishlist(request);
+  async getCarWishlist(@Req() request: ExpressRequest, @Body() body: CarListDto) {
+    return await this.carWishlistService.startCarWishlist(request, body);
   }
 
   @Post('car-wishlist-add')
