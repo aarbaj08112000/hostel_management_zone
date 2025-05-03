@@ -34,6 +34,8 @@ export class CarWishlistService {
   private readonly dataSource: DataSource;
   @Inject()
   protected readonly response: ResponseLibrary;
+  @Inject()
+  private readonly carMicroService : CarMicroserviceService
 
   constructor(
     protected readonly elasticService: ElasticService,
@@ -45,9 +47,6 @@ export class CarWishlistService {
     private readonly modCustomerRepo: Repository<LookupEntity>,
     @InjectRepository(CarEntity)
     private readonly carRepo: Repository<CarEntity>,
-    @InjectRepository(CarDetailsEntity)
-    @Inject()
-    private readonly carMicroService : CarMicroserviceService
   ) {
     this.keycloakUrl = this.configService.get<string>('KEYCLOAK_BASE_URL');
     this.keycloakRealm = this.configService.get<string>('KEYCLOAK_REALM');
