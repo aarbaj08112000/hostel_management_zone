@@ -240,7 +240,7 @@ export class CarTagAddService extends BaseService {
         settings: {
           status: 200,
           success: 0,
-          message: 'Something went wrong, Please try again.',
+          message: inputParams?.message ?? 'Something went wrong, Please try again.',
           fields: [],
         },
         data: inputParams,
