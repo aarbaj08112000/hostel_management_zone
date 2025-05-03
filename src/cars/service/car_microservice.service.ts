@@ -77,7 +77,7 @@ export class CarMicroserviceService {
       },
       {
         field: 'tag_ids', subType: 'tag', selFields: {
-          tagId: 'tag_id', tagName: 'tag_name', tagCode: 'tag_code'
+          tagId: 'tag_id', tagName: 'tag_name', tagCode: 'tag_code' , isTrending : 'is_trending'
         }
       },
       {
