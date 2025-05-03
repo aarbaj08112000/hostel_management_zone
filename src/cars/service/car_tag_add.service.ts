@@ -107,7 +107,7 @@ export class CarTagAddService extends BaseService {
       const inputParams = await this.deleteCarTagData(id);
 
       if (inputParams.deleted_car_tag) {
-        outputResponse = this.tagFinishSuccess(inputParams, 'update');
+        outputResponse = this.tagFinishSuccess(inputParams, 'delete');
       } else {
         outputResponse = this.tagFinishFailure(inputParams);
       }
@@ -120,6 +120,8 @@ export class CarTagAddService extends BaseService {
   async deleteCarTagData(id: any) {
     try {
       let carTagId = id;
+      let data = await this.carTagRepo.findOne({ where: { carTagId: carTagId } });
+      
       const deleteResult = await this.carTagRepo.delete({ carTagId });
 
       if (deleteResult.affected === 0) {
@@ -129,7 +131,8 @@ export class CarTagAddService extends BaseService {
       return {
         success: 1,
         message: 'Car(s) deleted successfully.',
-        deleted_car_tag: deleteResult.affected
+        deleted_car_tag: deleteResult.affected,
+        sync_tag : data
       };
     } catch (err) {
       return { success: 0, message: err.message };
@@ -176,7 +179,17 @@ export class CarTagAddService extends BaseService {
 
 
   async tagFinishSuccess(inputParams: any, type: string) {
-    let tag_id = inputParams?.updated_car_tags?.tag_id ?? inputParams.inserted_car_tags[0]['tagId']
+    let tag_id;
+    let car_ids = inputParams.inserted_car_tags?.map((data) => data.carId) || [];
+    if (type === 'delete') {
+      tag_id = inputParams?.sync_tag?.tagId;
+      if (inputParams?.sync_tag?.carId) {
+        car_ids.push(inputParams.sync_tag.carId);
+      }
+    } else {
+      tag_id = inputParams?.updated_car_tags?.tag_id 
+             ?? inputParams?.inserted_car_tags?.[0]?.tagId;
+    }
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
@@ -185,15 +198,15 @@ export class CarTagAddService extends BaseService {
       },
     };
     await this.general.submitGearmanJob(job_data);
-    let car_ids = inputParams.inserted_car_tags?.map((data) => data.carId) || [];
+   
     if (inputParams.updated_car_tags?.added?.length) {
       car_ids.push(...inputParams.updated_car_tags.added);
     }
 
     if (inputParams.updated_car_tags?.removed?.length) {
-      car_ids = car_ids.filter(id => !inputParams.updated_car_tags.removed.includes(id));
+      // car_ids = car_ids.filter(id => !inputParams.updated_car_tags.removed.includes(id));
+      car_ids.push(...inputParams.updated_car_tags.removed);
     }
-    
     if(car_ids.length > 0){
       let car_job_data = {
         job_function: 'sync_elastic_data',
