@@ -194,26 +194,13 @@ export class CarsDetailsDto {
 }
 
 export class CarHistoryAddDto {
-  @IsString()
-  @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the registration Number field.'),
-  })
+  @IsOptional()
   registration_number: string;
 
-  @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the registration Date field.'),
-  })
+  @IsOptional()
   registration_date: Date;
 
-  @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () =>
-      custom.lang('Please enter a value for the registration Expiry field.'),
-  })
+  @IsOptional()
   registration_expiry: Date;
  
   @IsOptional()

@@ -85,7 +85,7 @@ export class CarPublishUpdateService {
     }
   }
   getMissingRequiredFields(data: any) {
-    const requiredFields: Record<string, { key: string; label: string }> = {
+    let requiredFields: Record<string, { key: string; label: string }> = {
       // CarAddDto
       location_id: { key: 'location_id', label: 'Location ID' },
       export_status: { key: 'export_status', label: 'Export Status' },
@@ -101,16 +101,17 @@ export class CarPublishUpdateService {
       manufacture_year: { key: 'manufactureYear', label: 'Manufacture Year' },
       manufacture_month: { key: 'manufactureMonth', label: 'Manufacture Month' },
       transmission_type: { key: 'transmissionType', label: 'Transmission Type' },
-      engine_capacity: { key: 'engineCapacity', label: 'Engine Capacity' },
-      engine_size: { key: 'engineSize', label: 'Engine Size' },
-      horse_power: { key: 'horsePower', label: 'Horse Power' },
       exterior_colorId: { key: 'exterior_color', label: 'Exterior Color ID' },
       interior_colorId: { key: 'interior_color', label: 'Interior Color ID' },
       steering_side: { key: 'steeringSide', label: 'Steering Side' },
       regional_specsId: { key: 'regionalSpecsId', label: 'Regional Specs ID' },
-      driven_distance: { key: 'drivenDistance', label: 'Driven Distance' },
+      // driven_distance: { key: 'drivenDistance', label: 'Driven Distance' },
     };
-
+    if('fuelType' in data && data?.fuelType == 'Electric'){
+      requiredFields = {...requiredFields, battery_capacity: { key: 'batteryCapacity', label: 'Battery Capacity' }, charging_time: { key: 'chargingTime', label: 'Charging Time' }, range: { key: 'range', label: 'Range' },}
+    }else{
+      requiredFields = {...requiredFields, engine_capacity: { key: 'engineCapacity', label: 'Engine Capacity' }, engine_size: { key: 'engineSize', label: 'Engine Size' }, horse_power: { key: 'horsePower', label: 'Horse Power' },}
+    }
     const missingFields: { field: string; message: string }[] = [];
 
     for (const [fieldName, { key, label }] of Object.entries(requiredFields)) {
