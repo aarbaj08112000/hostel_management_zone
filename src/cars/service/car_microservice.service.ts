@@ -11,6 +11,9 @@ const USER_PORT = parseInt(process.env.USER_PORT || '6005', 10);
 const MASTER_URL = process.env.MASTER_URL || '127.0.0.1';
 const MASTER_PORT = parseInt(process.env.MASTER_PORT || '6003', 10);
 
+const TRANSACTION_URL = process.env.TRANSACTION_URL || '127.0.0.1';
+const TRANSACTION_PORT = parseInt(process.env.TRANSACTION_PORT || '6004', 10);
+
 import { Inject, Injectable} from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -53,7 +56,7 @@ export class CarMicroserviceService {
   @Client({ transport: Transport.TCP, options: { port: CUSTOMER_PORT } }) public customerClient: ClientTCP;
   @Client({ transport: Transport.TCP, options: { port: MASTER_PORT} }) public masterClient: ClientTCP;
   @Client({ transport: Transport.TCP, options: { port: USER_PORT } }) public userClient: ClientTCP;
-
+  @Client({ transport: Transport.TCP, options: { port: TRANSACTION_PORT } }) public tranClient: ClientTCP;
   private lookup_mapping: Record<string, LookupFieldConfig[]> = {
     customer : [
       {field : 'customer_id' , subType : 'customer' , selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}},
@@ -286,6 +289,7 @@ export class CarMicroserviceService {
     { code: 'customer', instance: () => this.customerClient, pattern: 'get-data' },
     { code: 'master', instance: () => this.masterClient, pattern: 'get-data' },
     { code: 'user', instance: () => this.userClient, pattern: 'get-data' },
+    { code: 'transaction', instance: () => this.tranClient, pattern: 'get-data' },
   ];
   async onModuleInit() {
     // for (const { code, instance } of this.clients) {
@@ -482,6 +486,7 @@ export class CarMicroserviceService {
     return this.blockResult;
   }
   async sendData(inputParams: any) {
+
     let set_delete = false;
     if ('mode' in inputParams && inputParams.mode === 'delete') {
       set_delete = true;
@@ -497,7 +502,7 @@ export class CarMicroserviceService {
     for (const clientConfig of this.clients) {
       const clientInstance = clientConfig.instance();
       const pattern = clientConfig.pattern;
-  
+      console.log(JSON.stringify(clientInstance,null,2))
       if (clientInstance && typeof clientInstance.emit === 'function') {
         clientInstance.emit('set-data', payload);
       } else {
