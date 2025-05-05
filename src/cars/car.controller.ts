@@ -657,6 +657,7 @@ export class CarController {
           params.filters = {};
         }
         params.filters = this.map_arr(params.filters)
+        console.log(JSON.stringify(params,null,2))
         Object.assign(params.filters, {
           ...(params.brand && { brandName: params.brand }),
           ...(params.model && { modelName: params.model }),
@@ -1655,12 +1656,12 @@ export class CarController {
         return {};
       }
       const mapping = {
-        'color': 'exteriorColorName',
+        'color': 'color',
         'brand': 'brandCode',
         'body': 'bodyType',
         'model': 'modelName',
-        'fuel': 'fuelType',
-        'transmission': 'transmissionType',
+        'fuel': 'fuel',
+        'transmission': 'transmission',
         'year': 'manufactureYear'
       };
 
