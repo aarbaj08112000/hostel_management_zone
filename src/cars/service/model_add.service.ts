@@ -327,19 +327,19 @@ export class ModelAddService extends BaseService {
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
-        module: 'model_list',
+        module: '',
         data: inputParams.insert_id ? inputParams.insert_id : inputParams.id
       },
     };
     await this.general.submitGearmanJob(job_data);
-    job_data = {
-      job_function: 'sync_elastic_data',
-      job_params: {
-        module: 'brand_list',
-        data: ''
-      },
-    };
-    await this.general.submitGearmanJob(job_data);
+    // job_data = {
+    //   job_function: 'sync_elastic_data',
+    //   job_params: {
+    //     module: 'brand_list',
+    //     data: ''
+    //   },
+    // };
+    // await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(outputData, funcData);
   }
 
