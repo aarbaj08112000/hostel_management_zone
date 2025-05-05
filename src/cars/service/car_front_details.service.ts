@@ -81,12 +81,12 @@ export class CarFrontDetailsService {
       fileConfig.extensions =
         await this.general.getConfigItem('allowed_extensions');
       let _source = [
+        "tag_information",
         "carId",
         "carName",
         "price",
         "drivenDistance",
         "car_slug",
-        "fuelType",
         "transmissionType",
         "car_image",
         "added_date",
@@ -118,7 +118,10 @@ export class CarFrontDetailsService {
         "location_id",
         "operating_hours",
         "status",
-        "display_title"
+        "display_title",
+        "batteryCapacity",
+        "chargingTime",
+        "range",
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -197,8 +200,8 @@ export class CarFrontDetailsService {
       if (data?.tag_information) {
         const pairs = data.tag_information.split(",");
         const tags = pairs.map(pair => {
-          const [tag_id, tag_code] = pair.split(":");
-          return { tag_id: Number(tag_id), tag_code };
+          const [tag_id, tag_code , tag_name] = pair.split(":");
+          return { tag_code  , tag_name};
         });
         data.tag_information = tags;
       }
@@ -254,6 +257,11 @@ export class CarFrontDetailsService {
       data.engineSuffix = 'CC';
       data.noOfCylinders = '6';
       data.added_date = this.general.timeAgo(data.added_date)
+
+      if(data['fuelType'] == 'Electric'){
+        data.vehicleType = 'ev';
+      }
+
       if (_.isObject(data) && !_.isEmpty(data)) {
         const success = 1;
         const message = 'Records found.';
@@ -293,7 +301,6 @@ export class CarFrontDetailsService {
       "analytics",
       "interiorImages",
       "exteriorImages",
-      "fuelType",
       "engineCapacity",
       "manufactureYear",
       "seatingCapacity",
@@ -326,7 +333,12 @@ export class CarFrontDetailsService {
       "modelName",
       "status",
       "added_date",
-      "display_title"
+      "display_title",
+      "batteryCapacity",
+      "chargingTime",
+      "range",
+      "vehicleType",
+      "tag_information",
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
