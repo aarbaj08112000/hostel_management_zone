@@ -323,7 +323,7 @@ export class VariantMasterAddService extends BaseService {
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
-        module: 'variant_list',
+        module: '',
         data: inputParams.insert_id ? inputParams.insert_id : inputParams.id
       },
     };
