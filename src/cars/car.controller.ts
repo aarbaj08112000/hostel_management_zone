@@ -125,7 +125,7 @@ export class CarController {
     try{
     
       await this.carMicroservice.setData(payload);
-      await this.elasticService.syncElasticData('car_list')
+      await this.elasticService.syncElasticData()
       return {success : 1 , message : 'data set success'}
     }catch(err){
       console.log(err)
@@ -1635,7 +1635,7 @@ export class CarController {
       })) : {}
     }
   }
-  @Post('car-wishlist')
+  @Get('car-wishlist')
   async getCarWishlist(@Req() request: ExpressRequest, @Body() body: CarListDto) {
     return await this.carWishlistService.startCarWishlist(request, body);
   }

@@ -200,23 +200,6 @@ export class CarsAddService extends BaseService {
                   tagDetailOutput,
                 };
               }
-              if('car_data' in inputParams){
-                let send_data : any = inputParams.car_data;
-                if (
-                  inputParams.hasOwnProperty('car_tags') &&
-                  inputParams.car_tags.hasOwnProperty('tag_ids') &&
-                  inputParams.car_tags.tag_ids.length > 0
-                ) {
-                  send_data = {...send_data,tag_ids : inputParams.car_tags.tag_ids}
-                }
-                let micro_data : any = {
-                  id : car_id,
-                  mode : this.moduleAPI,
-                  data : send_data,
-                  module : 'car',
-                }
-                await this.carMicroService.sendData(micro_data)
-              }
             }
             outputResponse = this.carsFinishSuccess(response);
             let value_json = {
@@ -554,6 +537,21 @@ export class CarsAddService extends BaseService {
               affected_rows: res.affected,
             },
           };
+          const selObject = this.carEntityRepo.createQueryBuilder('car');
+          selObject.select('car.carId', 'carId');
+          selObject.addSelect('car.locationId', 'locationId');
+          selObject.addSelect('car.contactPersonId', 'contactPersonId');
+          selObject.addSelect('car.slug', 'slug');
+          selObject.addSelect('car.carName', 'name');
+          selObject.where('carId = :id', { id: car_id });
+          const sel_data = await selObject.getRawOne();
+          let micro_data : any = {
+            id : car_id,
+            mode : 'update',
+            data : sel_data,
+            module : 'car',
+          }
+          await this.carMicroService.sendData(micro_data)
           uploadResult = await this.uploadFiles(fileInfo, inputParams, car_id);
         }
       }
