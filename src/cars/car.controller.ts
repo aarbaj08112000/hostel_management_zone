@@ -657,7 +657,6 @@ export class CarController {
           params.filters = {};
         }
         params.filters = this.map_arr(params.filters)
-        console.log(JSON.stringify(params,null,2))
         Object.assign(params.filters, {
           ...(params.brand && { brandName: params.brand }),
           ...(params.model && { modelName: params.model }),
