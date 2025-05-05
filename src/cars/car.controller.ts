@@ -123,11 +123,110 @@ export class CarController {
   @MessagePattern('set-data')
   async setCarData( @Req() request: Request, @Payload() payload: any) {
     try{
-      return this.carMicroservice.setData(payload);
+    
+      await this.carMicroservice.setData(payload);
+      await this.elasticService.syncElasticData('car_list')
+      return {success : 1 , message : 'data set success'}
     }catch(err){
       console.log(err)
     }
   }
+  @Get('buy-cars')
+  async buyCars(@Req() request: Request, @Query() params: any){
+    params['is_global'] = 'Yes';
+    params['is_front'] = 'Yes';
+    params['filters'] = { is_trending: "Yes"}
+    let car_index = 'nest_local_tag_car_list'
+    let search_params = this.general.createElasticSearchQuery(params);
+    let buyCars : any = {};
+    const result = await this.elasticService.search(
+      car_index,
+      search_params,
+    );
+    const totalCount = result['total']['value'];
+    if (totalCount > 0) { 
+    const data = result.hits.map((hit) => {
+      return hit._source;
+    })
+    buyCars = {
+          values: data.map((key) => ({
+            label: key['tag_name'],
+            tag: key['tag_code'] ?? '',
+            data: key['car_details']
+            ? key['car_details']
+                .filter(
+                  (val) =>
+                    (val?.status === 'Available' || val?.status === 'Booked') &&
+                    val?.isListed === 'Yes'
+                )
+                .map((val) => ({
+                  car_id: val?.car_id,
+                  car_name: val?.car_name,
+                  car_slug: val?.car_slug,
+                  display_title : val?.display_title,
+                }))
+            : []
+          
+          })),
+        };
+    }else{
+      buyCars = {
+        success : 0,
+        message : 'No Data found'
+      }
+    }
+    return buyCars
+  }
+  @Get('global-data')
+  async getFooterData(@Req() request: Request, @Query() params: any) {
+
+    let final_data = {};
+
+    let facebook = await this.general.getConfigItem('COMPANY_FACEBOOK_URL');
+    let instagram = await this.general.getConfigItem('COMPANY_INSTAGRAM_URL');
+    let twitter = await this.general.getConfigItem('COMPANY_TWITTER_URL');
+    let youtube = await this.general.getConfigItem('COMPANY_YOUTUBE_URL');
+    let linkedin = await this.general.getConfigItem('COMPANY_LINKEDIN_URL');
+    let threads = await this.general.getConfigItem('COMPANY_THREADS_URL');
+    let whatsapp = await this.general.getConfigItem('COMPANY_WHATSAPP_URL');
+    let google = await this.general.getConfigItem('COMPANY_GOOGLE_URL');
+    final_data = {
+      facebook, instagram, twitter, youtube, linkedin, threads, whatsapp, google
+    }
+    let return_data = {
+      "header":
+      {
+      },
+      "footer": {
+        "socialMedia": final_data,
+        "officeAddresses": [
+          {
+            "address": "Block-1 Unit-4 Al Hail Business Centre, <br>Next to KM Traiding, Behind Emirates, <br>Motors M4, Mussafah, Abu Dhabi, UAE",
+            "city": "MUSSAFAH",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image1.png"
+          },
+          {
+            "address": "Deerfields Mall, Hypermarket Entrance, <br>Kisosk Ground Floor, 99 - Al Rubban St, <br>- Al Bahyah Abu Dhabi, UAE",
+            "city": "SHAHAMA",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image2.png"
+          },
+          {
+            "address": "Al Mutakamela Vehicle Testing and Registration <br>Centre, Dubai shop, 32 - next to Permagard, <br>- Al Quoz Industrial Area 2, Dubai, UAE",
+            "city": "AL QUOZ 2, DUBAI",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image3.png"
+          },
+          {
+            "address": "Egyptian Court Gate Entrance, Ground Floor, <br>Sheikh Zayed Rd, Jebel Ali Village, <br>Dubai, UAE",
+            "city": "IBN BATTUTA",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image4.png"
+          }
+        ],
+      }
+    }
+
+    return return_data
+  }
+
   @Get('first-time-lookup')
   async firstTimeSync(){
     return await this.carMicroservice.firstTimeSyncLookup()
@@ -328,7 +427,7 @@ export class CarController {
     const fileDto = new BrandAddImageFileDto();
     fileDto.brand_image = files?.brand_image;
     const errors = await validate(fileDto, { whitelist: true });
-
+    await this.carMicroservice.processLookupDataFromBody(body)
     if (errors.length > 0) {
       const errorMessages = errors
         .map((error) => {
@@ -847,6 +946,7 @@ export class CarController {
     @UploadedFiles() files: Record<string, Express.Multer.File[]>,
   ) {
     try {
+      await this.carMicroservice.processLookupDataFromBody(body)
       if (body.carId !== undefined && body.carId !== '' && body.carId !== null) {
         if (body.car_data === undefined || body.car_data === null) {
           body.car_data = {} as CarAddDto | UpdateCarDTO;
@@ -1153,19 +1253,32 @@ export class CarController {
       }
       parameters.filters = this.map_arr(parameters.filters);
       params.filters = { status: 'Active' };
-      // let exteriorColor = await this.colorListService.startColor(request, params);
-      // exteriorColor = {
-      //   searchParam: 'color',
-      //   searchType: 'eq',
-      //   label: custom.lang('Color'),
-      //   values: exteriorColor['data'].length > 0 ? Object.values(exteriorColor['data']).map((key) => ({
-      //     key: key['color_name'].toLowerCase(),
-      //     value: key['color_code'],
-      //     label: key['color_name'],
-      //   })) : [],
-      // };
 
-      // filter_arr = { ...filter_arr, exteriorColor };
+      let color_index = 'nest_local_color'
+      let search_params = this.general.createElasticSearchQuery(params);
+      const result = await this.elasticService.search(
+        color_index,
+        search_params,
+      );
+      const totalCount = result['total']['value'];
+      if (totalCount > 0) {
+        let exteriorColor : any 
+        const data = result.hits.map((hit) => {
+          return hit._source;
+        });
+        exteriorColor = {
+          searchParam: 'color',
+          searchType: 'eq',
+          label: custom.lang('Color'),
+          values:data.length > 0 ? data.map((key) => ({
+            key: key['color_name'].toLowerCase(),
+            value: key['color_code'],
+            label: key['color_name'],
+          })) : [],
+        };
+  
+        filter_arr = { ...filter_arr, exteriorColor };
+      }
       params = { ...params, skip_brand: 'Yes' }
       let brandName = await this.brandListService.startBrand(request, params);
       brandName = {
@@ -1212,7 +1325,7 @@ export class CarController {
         values: modelName['data'].length > 0 ? Object.values(modelName['data']).map((key) => ({
           key: key['model_code'].toLowerCase(),
           value: key['model_name'],
-          brandCode: key['brand_code']
+          brandCode: key['brand_code'].toLowerCase()
         })) : [],
       };
 
@@ -1247,19 +1360,19 @@ export class CarController {
         label: custom.lang('Fuel Type'),
         values: [
           {
-            key: 'Petrol',
+            key: 'petrol',
             value: 'Petrol',
           },
           {
-            key: 'Diesel',
+            key: 'diesel',
             value: 'Diesel',
           },
           {
-            key: 'Hybrid',
+            key: 'hybrid',
             value: 'Hybrid',
           },
           {
-            key: 'Electric',
+            key: 'electric',
             value: 'Electric',
           },
         ],
@@ -1271,11 +1384,11 @@ export class CarController {
         label: custom.lang('Transmission'),
         values: [
           {
-            key: 'Manual',
+            key: 'manual',
             value: 'Manual',
           },
           {
-            key: 'Automatic',
+            key: 'automatic',
             value: 'Automatic',
           },
           {
@@ -1358,7 +1471,7 @@ export class CarController {
     const fileDto = new BodyAddImageFileDto();
     fileDto.body_image = files?.body_image;
     const errors = await validate(fileDto, { whitelist: true });
-
+    await this.carMicroservice.processLookupDataFromBody(body)
     if (errors.length > 0) {
       const errorMessages = errors
         .map((error) => {
@@ -1523,8 +1636,8 @@ export class CarController {
     }
   }
   @Get('car-wishlist')
-  async getCarWishlist(@Req() request: ExpressRequest) {
-    return await this.carWishlistService.getWishlist(request);
+  async getCarWishlist(@Req() request: ExpressRequest, @Body() body: CarListDto) {
+    return await this.carWishlistService.startCarWishlist(request, body);
   }
 
   @Post('car-wishlist-add')

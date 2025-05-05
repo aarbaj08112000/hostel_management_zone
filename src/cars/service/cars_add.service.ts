@@ -264,7 +264,10 @@ export class CarsAddService extends BaseService {
           topRefer: {},
         };
         let car_result = await this.checkUniqueCondition(car_data);
-        result['car_result'] = car_result;
+        // result['car_result'] = car_result;
+        result['car_result'] =  {
+          car_result : {unique_status : 0}
+        }
       }
       if (car_details) {
         car_details = { ...car_details, id: car_id, carId: car_id }

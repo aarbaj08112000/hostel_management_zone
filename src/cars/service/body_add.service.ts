@@ -123,7 +123,10 @@ export class BodyAddService extends BaseService {
       const data = {
         affected_rows: res.affected,
       };
-
+      uploadResult = await this.uploadFiles(
+        fileInfo,
+        inputParams,
+      );
       const success = 1;
       const message = 'Record(s) updated.';
 
@@ -278,7 +281,10 @@ export class BodyAddService extends BaseService {
       const data = {
         insert_id: res.raw.insertId,
       };
-
+      uploadResult = await this.uploadFiles(
+        fileInfo,
+        inputParams,
+      );
       const success = 1;
       const message = 'Body Added Successfully.';
 
