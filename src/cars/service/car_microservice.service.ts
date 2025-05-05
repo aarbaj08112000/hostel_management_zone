@@ -1,7 +1,7 @@
+require('dotenv').config();
 interface AuthObject {
   user: any;
 }
-require('dotenv').config();
 const CUSTOMER_URL = process.env.CUSTOMER_URL || '127.0.0.1';
 const CUSTOMER_PORT = parseInt(process.env.CUSTOMER_PORT || '6002', 10);
 
@@ -53,10 +53,10 @@ export class CarMicroserviceService {
   constructor(protected readonly elasticService: ElasticService) {
   }
 
-  @Client({ transport: Transport.TCP, options: { port: CUSTOMER_PORT } }) public customerClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { port: MASTER_PORT} }) public masterClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { port: USER_PORT } }) public userClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { port: TRANSACTION_PORT } }) public tranClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: CUSTOMER_PORT , host : CUSTOMER_URL} }) public customerClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: MASTER_PORT , host : MASTER_URL} }) public masterClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: USER_PORT , host : USER_URL } }) public userClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: TRANSACTION_PORT  , host : TRANSACTION_URL} }) public tranClient: ClientTCP;
   private lookup_mapping: Record<string, LookupFieldConfig[]> = {
     customer : [
       {field : 'customer_id' , subType : 'customer' , selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}},
@@ -317,7 +317,6 @@ export class CarMicroserviceService {
       return { success: 0, message: `No client configured for entity type: ${entityType}`, data: [] };
     }
     const client = clientConfig.instance();
-    console.log(client)
     const pattern = clientConfig.pattern;
     if (!client['isConnected']) {
       await client.connect();
@@ -416,7 +415,6 @@ export class CarMicroserviceService {
                 
                   if (_.isEmpty(existingData)) {
                     const payload = { id, ...(subType && { type: subType }), selFields ,fetch_from};
-                    console.log(payload)
                     const result = await this.sendAndStoreData(payload, entityType);
                     console.log(`Processed entity [${entityType}] (subType: ${subType || 'N/A'}) with ID ${id}:`, result.message);
                   }
@@ -502,7 +500,7 @@ export class CarMicroserviceService {
     for (const clientConfig of this.clients) {
       const clientInstance = clientConfig.instance();
       const pattern = clientConfig.pattern;
-      console.log(JSON.stringify(clientInstance,null,2))
+  
       if (clientInstance && typeof clientInstance.emit === 'function') {
         clientInstance.emit('set-data', payload);
       } else {
