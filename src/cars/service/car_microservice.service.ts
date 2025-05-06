@@ -410,7 +410,7 @@ export class CarMicroserviceService {
                 } else {
                   id = typeof item === 'object' ? item.id : item;
                 }
-                if(id != '' && typeof id != 'undefined' && id != null){
+                if(id != '' && typeof id != 'undefined' && id != null && id > 0){
                   const existingData = await this.fetchExistingData(subType, id , fetch_from);
                 
                   if (_.isEmpty(existingData)) {
