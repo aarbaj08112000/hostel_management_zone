@@ -1333,7 +1333,7 @@ export class CarController {
           searchType: 'eq',
           label: custom.lang('Badges'),
           values:data.length > 0 ? data.map((key) => ({
-            key: key['tag_code'],
+            key: key['tag_code'].toLowerCase(),
             value: key['tag_name'],
           })) : [],
         };
