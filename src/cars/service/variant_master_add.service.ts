@@ -82,6 +82,13 @@ export class VariantMasterAddService extends BaseService {
         inputParams = await this.updateVariantMasterData(inputParams);
         if (!_.isEmpty(inputParams.update_variant_master_data)) {
           outputResponse = this.variantMasterFinishSuccess(inputParams, 'Trim Updated successfully.');
+          let value_json = {
+            "VARIANT_NAME": inputParams.variant_name,
+            "VARIANT_ID": inputParams.id,
+            "UPDATED_BY": await this.general.getAdminName(inputParams.updated_by),
+            "UPDATED_BY_ID": inputParams.updated_by
+          }
+          await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.updated_by, value_json, inputParams.id);
         } else {
           outputResponse = this.variantMasterFinishFailure(inputParams);
         }
@@ -204,7 +211,15 @@ export class VariantMasterAddService extends BaseService {
       } else {
         inputParams = await this.insertVariantMasterData(inputParams);
         if (!_.isEmpty(inputParams.insert_variant_master_data)) {
-          outputResponse = this.variantMasterFinishSuccess(inputParams, 'Trim Added successfully.');
+          outputResponse = this.variantMasterFinishSuccess(inputParams, 'Trim Added successfully.');  
+
+      let value_json = {
+        "VARIANT_NAME": inputParams.variant_name,
+        "VARIANT_ID": inputParams.insert_id,
+        "ADDED_BY": await this.general.getAdminName(inputParams.added_by),
+        "ADDED_BY_ID": inputParams.added_by
+      }
+      await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.added_by, value_json, inputParams.insert_id);
         } else {
           outputResponse = this.variantMasterFinishFailure(inputParams);
         }

@@ -3,6 +3,8 @@ import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { SettingEntity } from '@repo/source/entities/setting.entity';
 import {LookupEntity}  from '@repo/source/entities/lookup.entity';
+import { ActivityMasterEntity } from '@repo/source/entities/activity-master.entity';
+import { ActivityLogEntity } from '@repo/source/entities/activity-log.entity';
 import { SyncElasticEntity } from '@repo/source/entities/elastic_sync.entity';
 import { ActivityLogEntity } from '@repo/source/entities/activity-log.entity';
 import { ActivityMasterEntity } from '@repo/source/entities/activity-master.entity';

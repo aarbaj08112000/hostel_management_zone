@@ -81,6 +81,14 @@ export class ModelAddService extends BaseService {
         inputParams = await this.updateModelData(inputParams);
         if (!_.isEmpty(inputParams.update_model_data)) {
           outputResponse = this.modelFinishSuccess(inputParams, 'Model Updated successfully.');
+          let value_json = {
+            "MODEL_NAME": inputParams.model_name,
+            "MODEL_ID": inputParams.id,
+            "UPDATED_BY": await this.general.getAdminName(inputParams.updated_by),
+            "UPDATED_BY_ID": inputParams.updated_by
+          }
+          await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.updated_by, value_json, inputParams.id);
+          
         } else {
           outputResponse = this.modelFinishFailure(inputParams);
         }
@@ -160,6 +168,14 @@ export class ModelAddService extends BaseService {
         inputParams = await this.insertModelData(inputParams);
         if (!_.isEmpty(inputParams.insert_model_data)) {
           outputResponse = this.modelFinishSuccess(inputParams, 'Model Added successfully.');
+          let value_json = {
+            "MODEL_NAME": inputParams.model_name,
+            "MODEL_ID": inputParams.insert_model_data.insert_id,
+            "ADDED_BY": await this.general.getAdminName(inputParams.added_by),
+            "ADDED_BY_ID": inputParams.added_by
+          }
+          await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.added_by, value_json, inputParams.insert_model_data.insert_id);
+       
         } else {
           outputResponse = this.modelFinishFailure(inputParams);
         }
