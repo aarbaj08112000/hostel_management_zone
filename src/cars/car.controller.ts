@@ -575,13 +575,19 @@ export class CarController {
   @Get('brand-dropdown')
   async getBrandDropdown(@Req() request: Request, @Query() params: any) {
     let brandList = await this.brandList(request, params);
-    return brandList = {
+    let data  = await this.carAddService.fetchBrandModelPresentCar()
+    const brandIds = data.map(item => item.brandId);
+    return brandList ={
       settings: brandList['settings'],
-      data: brandList['data'].length > 0 ? Object.values(brandList['data']).map((key) => ({
-        value: key['brand_name'],
-        image: key['brand_image'] ? key['brand_image'] : '',
-        key: key['brand_code'].toLowerCase(),
-      })) : {}
+      data: Array.isArray(brandList['data']) && brandList['data'].length > 0
+        ? brandList['data']
+            .filter(item => brandIds.includes(item['brand_id']))
+            .map(item => ({
+              value: item['brand_name'],
+              image: item['brand_image'] || '',
+              key: item['brand_code'].toLowerCase(),
+            }))
+        : []
     }
   }
   @Get('get-distance')
@@ -1687,10 +1693,13 @@ export class CarController {
       params['filters'] = [{ "key": "brand_code", "value": params['brandName'], "operator": "contain" }]
     }
     let modelList = await this.modelList(request, params);
-
+    let data  = await this.carAddService.fetchBrandModelPresentCar()
+    const modelIds = data.map(item => item.carModelId);
     return modelList = {
       settings: modelList['settings'],
-      data: modelList['data'].length > 0 ? Object.values(modelList['data']).map((key) => ({
+      data: modelList['data'].length > 0 ? Object.values(modelList['data'])
+      .filter(item => modelIds.includes(item['model_id']))
+      .map((key) => ({
         value: key['model_name'],
         key: key['model_code'].toLowerCase(),
       })) : {}
