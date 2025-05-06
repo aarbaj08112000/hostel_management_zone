@@ -225,7 +225,29 @@ export class VariantMasterAddService extends BaseService {
     }
     return inputParams;
   }
-
+   async checkUniqueCondition(inputParams: any) {
+     let uniqueStatus = 0;
+     let uniqueMessage = '';
+     let variantCode = inputParams.variant_code;
+     const variantQuery = this.variantMasterEntityRepo.createQueryBuilder('v')
+     .select([
+       'v.variantCode AS variantCode',
+     ])
+     .leftJoin('car_model', 'm', 'v.modedId = m.carModelId')
+     .leftJoin('brand', 'b', 'm.brandId = b.brandId')
+     .where('v.variantCode = :variantCode', { variantCode: variantCode });
+     const queryResult = await variantQuery.getRawMany();
+    if (_.isArray(queryResult) && queryResult.length > 0) {
+          if (queryResult.length > 0) {
+            uniqueStatus = 1;
+            uniqueMessage = this.serviceConfig.unique_fields?.message;
+          }
+        }
+     return {
+       unique_status: uniqueStatus,
+       unique_message: uniqueMessage,
+     };
+   }
   variantMasterUniqueFailure(inputParams: any) {
     const settingFields = {
       status: 200,

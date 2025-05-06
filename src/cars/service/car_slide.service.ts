@@ -250,7 +250,8 @@ export class CarSlideService {
                         where: { carId: hit['carId'], userId: user.entityId }
                       });
           
-                      data['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
+                      // data['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
+                      hit._source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
                     }
                   }
                 }

@@ -56,6 +56,7 @@ export class ModelAddService extends BaseService {
         type: 'and',
         fields: {
           model_code: 'modelCode',
+          brand_id : 'brandId'
         },
         message: 'Record already exists with this Model Code',
       },
