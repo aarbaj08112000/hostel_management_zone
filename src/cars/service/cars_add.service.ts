@@ -546,12 +546,12 @@ export class CarsAddService extends BaseService {
             'c.price as price',
             'c.locationId as locationId',
             'c.contactPersonId as contactPersonId',
-            'cd.manufactureYear as manufactureYear',
-            'cd.drivenDistance as drivenDistance',
-            'cd.fuelType as fuelType',
-            'cd.transmissionType as transmissionType',
+            // 'cd.manufactureYear as manufactureYear',
+            // 'cd.drivenDistance as drivenDistance',
+            // 'cd.fuelType as fuelType',
+            // 'cd.transmissionType as transmissionType',
           ])
-          .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
+          // .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
           selObject.where('c.carId = :id', { id: car_id });
           const sel_data = await selObject.getRawOne();
           let micro_data : any = {
@@ -585,6 +585,22 @@ export class CarsAddService extends BaseService {
           data['car_details'] = {
             affected_rows: res.affected,
           };
+          const selObject = this.carEntityDetailsRepo.createQueryBuilder('cd');
+          selObject.select([
+            'cd.manufactureYear as manufactureYear',
+            'cd.drivenDistance as drivenDistance',
+            'cd.fuelType as fuelType',
+            'cd.transmissionType as transmissionType',
+          ])
+          selObject.where('cd.carId = :id', { id: car_id });
+          const sel_data = await selObject.getRawOne();
+          let micro_data : any = {
+            id : car_id,
+            mode : 'update',
+            data : sel_data,
+            module : 'car',
+          }
+          await this.carMicroService.sendData(micro_data)
         } else {
           const res = this.insertCarDetails(car_details, car_id);
         }
