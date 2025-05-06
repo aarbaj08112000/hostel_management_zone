@@ -454,7 +454,29 @@ export class CarMicroserviceService {
     try {
       let selFields = inputParams['selFields']
       const queryObject = currentRepo.entity.createQueryBuilder(currentRepo.alias);
-      await this.general.applyDynamicSelectsFromLookup(queryObject, selFields, currentRepo.alias);
+      // await this.general.applyDynamicSelectsFromLookup(queryObject, selFields, currentRepo.alias);
+      switch(inputParams['type']){
+        case 'car' : 
+        queryObject
+        .select([
+          'c.carId as carId',
+          'c.carName as name',
+          'c.slug as slug',
+          'c.carImage as carImage',
+          'c.price as price',
+          'c.locationId as locationId',
+          'c.contactPersonId as contactPersonId',
+          'cd.manufactureYear as manufactureYear',
+          'cd.drivenDistance as drivenDistance',
+          'cd.fuelType as fuelType',
+          'cd.transmissionType as transmissionType',
+        ])
+        .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
+        break;
+        default:
+          await this.general.applyDynamicSelectsFromLookup(queryObject, selFields, currentRepo.alias);
+        break;
+      }
       if (!custom.isEmpty(inputParams.id)) {
         queryObject.andWhere(currentRepo.where, { id: inputParams.id });
       }
