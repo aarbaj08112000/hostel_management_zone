@@ -80,6 +80,13 @@ export class BodyAddService extends BaseService {
         inputParams = await this.updateBodyData(inputParams);
         if (!_.isEmpty(inputParams.update_body_data)) {
           outputResponse = this.bodyFinishSuccess(inputParams, 'Body Updated successfully.');
+          let value_json = {
+            "BODY_TYPE": inputParams.body_type,
+            "BODY_ID": inputParams.id,
+            "UPDATED_BY": await this.general.getAdminName(inputParams.updated_by),
+            "UPDATED_BY_ID": inputParams.updated_by
+          }
+          await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.updated_by, value_json, inputParams.id);
         } else {
           outputResponse = this.bodyFinishFailure(inputParams);
         }
@@ -165,6 +172,13 @@ export class BodyAddService extends BaseService {
         inputParams = await this.insertBodyData(inputParams);
         if (!_.isEmpty(inputParams.insert_body_data)) {
           outputResponse = this.bodyFinishSuccess(inputParams, 'Body Added successfully.');
+          let value_json = {
+            "BODY_TYPE": inputParams.body_type,
+            "BODY_ID": inputParams.insert_id,
+            "ADDED_BY": await this.general.getAdminName(inputParams.added_by),
+            "ADDED_BY_ID": inputParams.added_by
+          }
+          await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.added_by, value_json, inputParams.insert_id);
         } else {
           outputResponse = this.bodyFinishFailure(inputParams);
         }

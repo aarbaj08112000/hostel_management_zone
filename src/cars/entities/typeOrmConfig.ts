@@ -3,6 +3,8 @@ import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { SettingEntity } from '@repo/source/entities/setting.entity';
 import {LookupEntity}  from '@repo/source/entities/lookup.entity';
+import { ActivityMasterEntity } from '@repo/source/entities/activity-master.entity';
+import { ActivityLogEntity } from '@repo/source/entities/activity-log.entity';
 import { SyncElasticEntity } from '@repo/source/entities/elastic_sync.entity';
 dotenv.config();
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -12,7 +14,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   username: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  entities: [SettingEntity, SyncElasticEntity,LookupEntity,join(__dirname, '*.entity{.ts,.js}')],
+  entities: [SettingEntity,ActivityMasterEntity,ActivityLogEntity, SyncElasticEntity,LookupEntity,join(__dirname, '*.entity{.ts,.js}')],
   synchronize: false,
   migrationsRun: false,
   logging: false,
