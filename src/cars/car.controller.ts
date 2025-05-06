@@ -131,6 +131,40 @@ export class CarController {
       console.log(err)
     }
   }
+  @Post('user-data')
+  async addUserDataasync(@Req() request: Request, @Body() body) {
+    try {
+      const params = body;
+      let sync_params = {
+        "syn_vUniqueKey": "user-navigate-log",
+        "syn_iBulkUploadLimit": 100,
+        "syn_vUniqueIndex": "user_navigate"
+      }
+      let { urlPath } = body
+      if (typeof urlPath != 'undefined') {
+        if (urlPath.includes('car-detail')) {
+          let slug = urlPath.split('/car-detail/')[1]
+          body['slug'] = slug
+        }
+      }
+      let response = await this.elasticService.createSyncData(sync_params, [body])
+      if (typeof body['slug'] != 'undefined' && body['slug'] != '') {
+        let job_data = {
+          job_function: 'process_car_data',
+          job_params: {
+            module: 'nest_local_user_navigate',
+            data: body['slug']
+          },
+          path: 'api/car/process-car-data'
+        };
+        // await this.general.submitGearmanJob(job_data);
+       await  this.processCarData('nest_local_user_navigate',body['slug'])
+      }
+      return response[0]['items'][0].index.status == 201 ? { success: 1, message: "Data added Successfully" } : { success: 0, message: "Something went wrong" }
+    } catch (err) {
+      console.log(err)
+    }
+  }
   @Get('buy-cars')
   async buyCars(@Req() request: Request, @Query() params: any){
     params['is_global'] = 'Yes';

@@ -122,6 +122,8 @@ export class CarFrontDetailsService {
         "batteryCapacity",
         "chargingTime",
         "range",
+        "locationName",
+        "zipCode"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -339,6 +341,8 @@ export class CarFrontDetailsService {
       "range",
       "vehicleType",
       "tag_information",
+       "locationName",
+        "zipCode"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
