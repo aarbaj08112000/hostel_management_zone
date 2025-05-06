@@ -1328,7 +1328,6 @@ export class CarController {
         const data = tag_result.hits.map((hit) => {
           return hit._source;
         });
-        console.log(data)
         badges = {
           searchParam: 'car_tag',
           searchType: 'eq',
