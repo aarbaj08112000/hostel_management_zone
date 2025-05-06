@@ -537,13 +537,22 @@ export class CarsAddService extends BaseService {
               affected_rows: res.affected,
             },
           };
-          const selObject = this.carEntityRepo.createQueryBuilder('car');
-          selObject.select('car.carId', 'carId');
-          selObject.addSelect('car.locationId', 'locationId');
-          selObject.addSelect('car.contactPersonId', 'contactPersonId');
-          selObject.addSelect('car.slug', 'slug');
-          selObject.addSelect('car.carName', 'name');
-          selObject.where('carId = :id', { id: car_id });
+          const selObject = this.carEntityRepo.createQueryBuilder('c');
+          selObject.select([
+            'c.carId as carId',
+            'c.carName as name',
+            'c.slug as slug',
+            'c.carImage as carImage',
+            'c.price as price',
+            'c.locationId as locationId',
+            'c.contactPersonId as contactPersonId',
+            'cd.manufactureYear as manufactureYear',
+            'cd.drivenDistance as drivenDistance',
+            'cd.fuelType as fuelType',
+            'cd.transmissionType as transmissionType',
+          ])
+          .leftJoin('cars_details', 'cd', 'c.carId = cd.car_id')
+          selObject.where('c.carId = :id', { id: car_id });
           const sel_data = await selObject.getRawOne();
           let micro_data : any = {
             id : car_id,
