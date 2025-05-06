@@ -56,8 +56,10 @@ export class VariantMasterAddService extends BaseService {
         type: 'and',
         fields: {
           variant_code: 'variantCode',
+          model_id : 'modedId',
+          brand_id : 'brandId'
         },
-        message: 'Record already exists with this Trim Code',
+        message: 'Record already exists with this Trim code for selected Brand and Model',
       },
       expRefer: {},
       topRefer: {},
@@ -104,6 +106,9 @@ export class VariantMasterAddService extends BaseService {
       }
       if ('model_id' in inputParams) {
         queryColumns.modedId = inputParams.model_id;
+      }
+      if ('brand_id' in inputParams) {
+        queryColumns.brandId = inputParams.brand_id;
       }
       queryColumns.updatedDate = () => 'NOW()';
       const queryObject = this.variantMasterEntityRepo
@@ -225,34 +230,11 @@ export class VariantMasterAddService extends BaseService {
     }
     return inputParams;
   }
-   async checkUniqueCondition(inputParams: any) {
-     let uniqueStatus = 0;
-     let uniqueMessage = '';
-     let variantCode = inputParams.variant_code;
-     const variantQuery = this.variantMasterEntityRepo.createQueryBuilder('v')
-     .select([
-       'v.variantCode AS variantCode',
-     ])
-     .leftJoin('car_model', 'm', 'v.modedId = m.carModelId')
-     .leftJoin('brand', 'b', 'm.brandId = b.brandId')
-     .where('v.variantCode = :variantCode', { variantCode: variantCode });
-     const queryResult = await variantQuery.getRawMany();
-    if (_.isArray(queryResult) && queryResult.length > 0) {
-          if (queryResult.length > 0) {
-            uniqueStatus = 1;
-            uniqueMessage = this.serviceConfig.unique_fields?.message;
-          }
-        }
-     return {
-       unique_status: uniqueStatus,
-       unique_message: uniqueMessage,
-     };
-   }
   variantMasterUniqueFailure(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 0,
-      message: custom.lang('Record already exists with this Trim Code'),
+      message: custom.lang('Record already exists with this Trim code for selected Brand and Model.'),
       fields: [],
     };
     return this.response.outputResponse(
@@ -285,7 +267,9 @@ export class VariantMasterAddService extends BaseService {
       if ('model_id' in inputParams) {
         queryColumns.modedId = inputParams.model_id;
       }
-
+      if ('brand_id' in inputParams) {
+        queryColumns.brandId = inputParams.brand_id;
+      }
       queryColumns.addedDate = () => 'NOW()';
       const queryObject = this.variantMasterEntityRepo;
       const res = await queryObject.insert(queryColumns);

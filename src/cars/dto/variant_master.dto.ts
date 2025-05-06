@@ -30,6 +30,9 @@ export class VariantMasterAddDto {
 
   @IsString()
   model_id: string;
+
+  @IsString()
+  brand_id: string;
 }
 
 export class VariantMasterUpdateDto extends PartialType(VariantMasterAddDto) {

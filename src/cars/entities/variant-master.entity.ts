@@ -22,6 +22,9 @@ export class VariantMasterEntity extends UserBase {
 
   @Column({ type: 'int', unsigned: true })
   modedId: number;
+
+  @Column({ type: 'int', unsigned: true })
+  brandId: number;
 }
 
 
