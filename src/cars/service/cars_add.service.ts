@@ -551,7 +551,7 @@ export class CarsAddService extends BaseService {
             'cd.fuelType as fuelType',
             'cd.transmissionType as transmissionType',
           ])
-          .leftJoin('cars_details', 'cd', 'c.carId = cd.car_id')
+          .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
           selObject.where('c.carId = :id', { id: car_id });
           const sel_data = await selObject.getRawOne();
           let micro_data : any = {
