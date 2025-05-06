@@ -1,7 +1,7 @@
+require('dotenv').config();
 interface AuthObject {
   user: any;
 }
-require('dotenv').config();
 const CUSTOMER_URL = process.env.CUSTOMER_URL || '127.0.0.1';
 const CUSTOMER_PORT = parseInt(process.env.CUSTOMER_PORT || '6002', 10);
 
@@ -10,6 +10,9 @@ const USER_PORT = parseInt(process.env.USER_PORT || '6005', 10);
 
 const MASTER_URL = process.env.MASTER_URL || '127.0.0.1';
 const MASTER_PORT = parseInt(process.env.MASTER_PORT || '6003', 10);
+
+const TRANSACTION_URL = process.env.TRANSACTION_URL || '127.0.0.1';
+const TRANSACTION_PORT = parseInt(process.env.TRANSACTION_PORT || '6004', 10);
 
 import { Inject, Injectable} from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
@@ -50,10 +53,10 @@ export class CarMicroserviceService {
   constructor(protected readonly elasticService: ElasticService) {
   }
 
-  @Client({ transport: Transport.TCP, options: { port: CUSTOMER_PORT } }) public customerClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { port: MASTER_PORT} }) public masterClient: ClientTCP;
-  @Client({ transport: Transport.TCP, options: { port: USER_PORT } }) public userClient: ClientTCP;
-
+  @Client({ transport: Transport.TCP, options: { port: CUSTOMER_PORT , host : CUSTOMER_URL} }) public customerClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: MASTER_PORT , host : MASTER_URL} }) public masterClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: USER_PORT , host : USER_URL } }) public userClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: TRANSACTION_PORT  , host : TRANSACTION_URL} }) public tranClient: ClientTCP;
   private lookup_mapping: Record<string, LookupFieldConfig[]> = {
     customer : [
       {field : 'customer_id' , subType : 'customer' , selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}},
@@ -286,6 +289,7 @@ export class CarMicroserviceService {
     { code: 'customer', instance: () => this.customerClient, pattern: 'get-data' },
     { code: 'master', instance: () => this.masterClient, pattern: 'get-data' },
     { code: 'user', instance: () => this.userClient, pattern: 'get-data' },
+    { code: 'transaction', instance: () => this.tranClient, pattern: 'get-data' },
   ];
   async onModuleInit() {
     // for (const { code, instance } of this.clients) {
@@ -313,7 +317,6 @@ export class CarMicroserviceService {
       return { success: 0, message: `No client configured for entity type: ${entityType}`, data: [] };
     }
     const client = clientConfig.instance();
-    console.log(client)
     const pattern = clientConfig.pattern;
     if (!client['isConnected']) {
       await client.connect();
@@ -407,12 +410,11 @@ export class CarMicroserviceService {
                 } else {
                   id = typeof item === 'object' ? item.id : item;
                 }
-                if(id != '' && typeof id != 'undefined' && id != null){
+                if(id != '' && typeof id != 'undefined' && id != null && id > 0){
                   const existingData = await this.fetchExistingData(subType, id , fetch_from);
                 
                   if (_.isEmpty(existingData)) {
                     const payload = { id, ...(subType && { type: subType }), selFields ,fetch_from};
-                    console.log(payload)
                     const result = await this.sendAndStoreData(payload, entityType);
                     console.log(`Processed entity [${entityType}] (subType: ${subType || 'N/A'}) with ID ${id}:`, result.message);
                   }
@@ -452,7 +454,29 @@ export class CarMicroserviceService {
     try {
       let selFields = inputParams['selFields']
       const queryObject = currentRepo.entity.createQueryBuilder(currentRepo.alias);
-      await this.general.applyDynamicSelectsFromLookup(queryObject, selFields, currentRepo.alias);
+      // await this.general.applyDynamicSelectsFromLookup(queryObject, selFields, currentRepo.alias);
+      switch(inputParams['type']){
+        case 'car' : 
+        queryObject
+        .select([
+          'c.carId as carId',
+          'c.carName as name',
+          'c.slug as slug',
+          'c.carImage as carImage',
+          'c.price as price',
+          'c.locationId as locationId',
+          'c.contactPersonId as contactPersonId',
+          'cd.manufactureYear as manufactureYear',
+          'cd.drivenDistance as drivenDistance',
+          'cd.fuelType as fuelType',
+          'cd.transmissionType as transmissionType',
+        ])
+        .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
+        break;
+        default:
+          await this.general.applyDynamicSelectsFromLookup(queryObject, selFields, currentRepo.alias);
+        break;
+      }
       if (!custom.isEmpty(inputParams.id)) {
         queryObject.andWhere(currentRepo.where, { id: inputParams.id });
       }
@@ -482,6 +506,7 @@ export class CarMicroserviceService {
     return this.blockResult;
   }
   async sendData(inputParams: any) {
+
     let set_delete = false;
     if ('mode' in inputParams && inputParams.mode === 'delete') {
       set_delete = true;

@@ -350,7 +350,7 @@ export class BrandAddService extends BaseService {
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
-        module: 'brand_list',
+        module: '',
         data: inputParams.insert_id ? inputParams.insert_id : inputParams.id
       },
     };

@@ -105,7 +105,7 @@ export class VariantDetailsService {
       status: 200,
       success: 1,
       message: custom.lang('Trim found.'),
-      fields: ['variant_id', 'variant_name', 'variant_code', 'status', 'added_by', 'added_date', 'updated_by', 'updated_date', 'model_id', 'model_name', 'model_code'],
+      fields: ['variant_id', 'variant_name', 'variant_code', 'status', 'added_by', 'added_date', 'updated_by', 'updated_date', 'model_id', 'model_name', 'model_code','brandId','brandName','brandCode'],
     };
 
     const outputData: any = {

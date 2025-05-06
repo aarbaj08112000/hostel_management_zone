@@ -56,8 +56,10 @@ export class VariantMasterAddService extends BaseService {
         type: 'and',
         fields: {
           variant_code: 'variantCode',
+          model_id : 'modedId',
+          brand_id : 'brandId'
         },
-        message: 'Record already exists with this Trim Code',
+        message: 'Record already exists with this Trim code for selected Brand and Model',
       },
       expRefer: {},
       topRefer: {},
@@ -111,6 +113,9 @@ export class VariantMasterAddService extends BaseService {
       }
       if ('model_id' in inputParams) {
         queryColumns.modedId = inputParams.model_id;
+      }
+      if ('brand_id' in inputParams) {
+        queryColumns.brandId = inputParams.brand_id;
       }
       queryColumns.updatedDate = () => 'NOW()';
       const queryObject = this.variantMasterEntityRepo
@@ -240,12 +245,11 @@ export class VariantMasterAddService extends BaseService {
     }
     return inputParams;
   }
-
   variantMasterUniqueFailure(inputParams: any) {
     const settingFields = {
       status: 200,
       success: 0,
-      message: custom.lang('Record already exists with this Trim Code'),
+      message: custom.lang('Record already exists with this Trim code for selected Brand and Model.'),
       fields: [],
     };
     return this.response.outputResponse(
@@ -278,7 +282,9 @@ export class VariantMasterAddService extends BaseService {
       if ('model_id' in inputParams) {
         queryColumns.modedId = inputParams.model_id;
       }
-
+      if ('brand_id' in inputParams) {
+        queryColumns.brandId = inputParams.brand_id;
+      }
       queryColumns.addedDate = () => 'NOW()';
       const queryObject = this.variantMasterEntityRepo;
       const res = await queryObject.insert(queryColumns);
@@ -338,7 +344,7 @@ export class VariantMasterAddService extends BaseService {
     let job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
-        module: 'variant_list',
+        module: '',
         data: inputParams.insert_id ? inputParams.insert_id : inputParams.id
       },
     };

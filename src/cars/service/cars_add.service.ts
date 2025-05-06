@@ -200,23 +200,6 @@ export class CarsAddService extends BaseService {
                   tagDetailOutput,
                 };
               }
-              if('car_data' in inputParams){
-                let send_data : any = inputParams.car_data;
-                if (
-                  inputParams.hasOwnProperty('car_tags') &&
-                  inputParams.car_tags.hasOwnProperty('tag_ids') &&
-                  inputParams.car_tags.tag_ids.length > 0
-                ) {
-                  send_data = {...send_data,tag_ids : inputParams.car_tags.tag_ids}
-                }
-                let micro_data : any = {
-                  id : car_id,
-                  mode : this.moduleAPI,
-                  data : send_data,
-                  module : 'car',
-                }
-                await this.carMicroService.sendData(micro_data)
-              }
             }
             outputResponse = this.carsFinishSuccess(response);
             let value_json = {
@@ -554,6 +537,30 @@ export class CarsAddService extends BaseService {
               affected_rows: res.affected,
             },
           };
+          const selObject = this.carEntityRepo.createQueryBuilder('c');
+          selObject.select([
+            'c.carId as carId',
+            'c.carName as name',
+            'c.slug as slug',
+            'c.carImage as carImage',
+            'c.price as price',
+            'c.locationId as locationId',
+            'c.contactPersonId as contactPersonId',
+            // 'cd.manufactureYear as manufactureYear',
+            // 'cd.drivenDistance as drivenDistance',
+            // 'cd.fuelType as fuelType',
+            // 'cd.transmissionType as transmissionType',
+          ])
+          // .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
+          selObject.where('c.carId = :id', { id: car_id });
+          const sel_data = await selObject.getRawOne();
+          let micro_data : any = {
+            id : car_id,
+            mode : 'update',
+            data : sel_data,
+            module : 'car',
+          }
+          await this.carMicroService.sendData(micro_data)
           uploadResult = await this.uploadFiles(fileInfo, inputParams, car_id);
         }
       }
@@ -578,6 +585,22 @@ export class CarsAddService extends BaseService {
           data['car_details'] = {
             affected_rows: res.affected,
           };
+          const selObject = this.carEntityDetailsRepo.createQueryBuilder('cd');
+          selObject.select([
+            'cd.manufactureYear as manufactureYear',
+            'cd.drivenDistance as drivenDistance',
+            'cd.fuelType as fuelType',
+            'cd.transmissionType as transmissionType',
+          ])
+          selObject.where('cd.carId = :id', { id: car_id });
+          const sel_data = await selObject.getRawOne();
+          let micro_data : any = {
+            id : car_id,
+            mode : 'update',
+            data : sel_data,
+            module : 'car',
+          }
+          await this.carMicroService.sendData(micro_data)
         } else {
           const res = this.insertCarDetails(car_details, car_id);
         }

@@ -149,8 +149,8 @@ export class CarDetailsService {
       if (data?.tag_information) {
         const pairs = data.tag_information.split(",");
         const tags = pairs.map(pair => {
-          const [tag_id, tag_code] = pair.split(":");
-          return { tag_id: Number(tag_id), tag_code };
+          const [tag_id, tag_code, tag_name] = pair.split(":");
+          return { tag_id: Number(tag_id), tag_code, tag_name };
         });
         data.tag_information = tags;
       }
