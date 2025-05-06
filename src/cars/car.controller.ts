@@ -703,7 +703,6 @@ export class CarController {
 
         if (typeof params.sort === 'object' && !Array.isArray(params.sort)) {
           params.sort = this.sort_map_arr(params.sort);
-          console.log(params.sort);
           params.sort = Object.entries(params.sort).map(([key, dir]) => ({
             prop: key,
             dir: dir
@@ -1270,7 +1269,7 @@ export class CarController {
         visitors: analaytics_res['total_visitor']['value'] ? analaytics_res['total_visitor']['value'] : 0,
         views: analaytics_res['total_views']['value'] ? analaytics_res['total_views']['value'] : 0
       }
-      console.log(data)
+
       let to_update_index = 'nest_local_cars';
       return await this.elasticService.updateElasticDocument(slug, to_update_index, 'slug', 'analytics', data);
 
@@ -1294,7 +1293,7 @@ export class CarController {
         color_index,
         search_params,
       );
-      const totalCount = result['total']['value'];
+      let totalCount = result['total']['value'];
       if (totalCount > 0) {
         let exteriorColor : any 
         const data = result.hits.map((hit) => {
@@ -1312,6 +1311,35 @@ export class CarController {
         };
   
         filter_arr = { ...filter_arr, exteriorColor };
+      }
+      let tag_index = 'nest_local_tag_car_list'
+      if ('filters' in params) {
+        delete params['filters']
+      }
+      params.is_front = 'Yes'
+      search_params = this.general.createElasticSearchQuery(params);
+      const tag_result = await this.elasticService.search(
+        tag_index,
+        search_params,
+      );
+       totalCount = tag_result['total']['value'];
+      if (totalCount > 0) {
+        let badges : any 
+        const data = tag_result.hits.map((hit) => {
+          return hit._source;
+        });
+        console.log(data)
+        badges = {
+          searchParam: 'car_tag',
+          searchType: 'eq',
+          label: custom.lang('Badges'),
+          values:data.length > 0 ? data.map((key) => ({
+            key: key['tag_code'],
+            value: key['tag_name'],
+          })) : [],
+        };
+  
+        filter_arr = { ...filter_arr, badges };
       }
       params = { ...params, skip_brand: 'Yes' }
       let brandName = await this.brandListService.startBrand(request, params);
