@@ -1237,4 +1237,16 @@ export class CarsAddService extends BaseService {
       unique_message: uniqueMessage,
     };
   }
+  async fetchBrandModelPresentCar() {
+    const result = await this.dataSource.query(`
+      SELECT DISTINCT cm.brandId, cm.carModelId
+      FROM car_model cm
+      WHERE cm.brandId IN (
+          SELECT DISTINCT cd.brandId
+          FROM cars_details cd
+      );
+    `);
+    return result;
+  }
+  
 }
