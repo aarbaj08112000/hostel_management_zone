@@ -1458,10 +1458,6 @@ export class CarController {
             key: 'automatic',
             value: 'Automatic',
           },
-          {
-            key: 'semiAutomatic',
-            value: 'Semi Automatic',
-          },
         ],
       };
       filter_arr = { ...filter_arr, transmissionType };
