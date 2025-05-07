@@ -110,6 +110,14 @@ export class CarWishlistService {
       });
 
       await this.carWishlistRepo.save(wishlistEntry);
+      let job_data = {
+        job_function: 'sync_elastic_data',
+        job_params: {
+          module: 'customer_wishlist',
+          data: user.entityId
+        },
+      };
+      await this.general.submitGearmanJob(job_data);
       return { success: 1, message: 'Car added to your wishlist.' };
     } catch (err) {
       return { success: 0, message: err.message, data: [] };
@@ -137,7 +145,14 @@ export class CarWishlistService {
       }
 
       await this.carWishlistRepo.delete({ carId: carData.carId, userId: user.entityId });
-
+      let job_data = {
+        job_function: 'sync_elastic_data',
+        job_params: {
+          module: 'customer_wishlist',
+          data: user.entityId
+        },
+      };
+      await this.general.submitGearmanJob(job_data);
       return { success: 1, message: 'Car removed from your wishlist.' };
     } catch (err) {
       return { success: 0, message: err.message, data: [] };
