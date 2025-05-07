@@ -243,6 +243,8 @@ export class CarListService {
       'brandName',
       'modelName',
       'bodyType',
+      'bodyId',
+      'location_id',
       'fuelType',
       'manufactureYear',
       'transmissionType',
