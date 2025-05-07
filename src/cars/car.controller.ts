@@ -69,6 +69,8 @@ import { BrandDetailsService } from './service/brand_details.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { TagMasterDetailsDto } from './dto/tag_master_details.dto';
 import { TagMasterDetailsService } from './service/tag_master_details.service';
+import { ActivityLogService } from '@repo/source/services/activity_log.service';
+import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -110,7 +112,9 @@ export class CarController {
     protected variantMasterService: VariantMasterAddService,
     private readonly variantDetailsService: VariantDetailsService,
     private variantListService: VariantListService,
-    private carTagDetails : TagMasterDetailsService
+    private carTagDetails : TagMasterDetailsService,
+
+    protected activityLogService: ActivityLogService,
   ) { }
   @MessagePattern('get-data')
   async getMasterData( @Req() request: Request, @Payload() payload: any) {
@@ -119,6 +123,11 @@ export class CarController {
     }catch(err){
       console.log(err);
     }
+  }
+  @Post('get-activity-log')
+  async getActivityLog(@Req() request: Request, @Body() body: ActivityLogListDto) {
+    const params = body;
+    return await this.activityLogService.startActivityLogList(params);
   }
   @MessagePattern('set-data')
   async setCarData( @Req() request: Request, @Payload() payload: any) {
