@@ -107,7 +107,6 @@ export class CarPublishUpdateService {
       body_id: { key: 'bodyId', label: 'Body ID' },
       fuel_type: { key: 'fuelType', label: 'Fuel Type' },
       manufacture_year: { key: 'manufactureYear', label: 'Manufacture Year' },
-      manufacture_month: { key: 'manufactureMonth', label: 'Manufacture Month' },
       transmission_type: { key: 'transmissionType', label: 'Transmission Type' },
       exterior_colorId: { key: 'exterior_color', label: 'Exterior Color ID' },
       interior_colorId: { key: 'interior_color', label: 'Interior Color ID' },
