@@ -15,7 +15,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.connectMicroservice({
     transport: Transport.TCP,
-    options: { port: process.env.MICROSERVICE },
+    options: { port: process.env.MICROSERVICE , host: '0.0.0.0' },
   });
   await app.startAllMicroservices();
   const configService = app.get(ConfigService);
