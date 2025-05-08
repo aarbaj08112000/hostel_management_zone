@@ -55,4 +55,7 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-public/upload
+# Ignore all files in the temp_files directory
+
+
+# But do not ignore the folder itsel
