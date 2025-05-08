@@ -81,6 +81,7 @@ export class CarFrontDetailsService {
       fileConfig.extensions =
         await this.general.getConfigItem('allowed_extensions');
       let _source = [
+        "engineSize",
         "tag_information",
         "carId",
         "carName",
@@ -123,7 +124,8 @@ export class CarFrontDetailsService {
         "chargingTime",
         "range",
         "locationName",
-        "zipCode"
+        "zipCode",
+        "driveType"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -259,6 +261,7 @@ export class CarFrontDetailsService {
       data.engineSuffix = 'CC';
       data.noOfCylinders = '6';
       data.added_date = this.general.timeAgo(data.added_date)
+      data.engineSizeSuffix = "L"
 
       if(data['fuelType'] == 'Electric'){
         data.vehicleType = 'ev';
@@ -342,7 +345,10 @@ export class CarFrontDetailsService {
       "vehicleType",
       "tag_information",
        "locationName",
-        "zipCode"
+        "zipCode",
+        "engineSize",
+        "engineSizeSuffix",
+        "driveType"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
