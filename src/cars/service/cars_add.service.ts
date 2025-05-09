@@ -113,14 +113,21 @@ export class CarsAddService extends BaseService {
               message,
             };
             outputResponse = this.carsFinishSuccess(inputParams);
+            let updated_by =
+  inputParams.car_data?.updated_by ||
+  inputParams.car_details?.updated_by ||
+  inputParams.car_history?.updated_by ||
+  inputParams.car_tag_data?.updated_by;
+
+            let car_name = await this.getCarName(car_id)
             let value_json = {
-              "CAR_NAME": inputParams.car_data.car_name,
+              "CAR_NAME": car_name,
               "CAR_ID": inputParams.car_data.car_id,
-              "UPDATED_BY": await this.general.getAdminName(inputParams.car_data.updated_by),
-              "UPDATED_BY_ID": inputParams.car_data.updated_by
+              "UPDATED_BY": await this.general.getAdminName(updated_by),
+              "UPDATED_BY_ID": updated_by
             }
 
-            await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.car_data.updated_by, value_json, inputParams.car_data.car_id);
+            await this.general.addActivity(this.moduleName, this.moduleAPI, updated_by, value_json, inputParams.car_data.car_id);
             return outputResponse;
           } else {
             outputResponse = this.carsFinishFailure(inputParams);
@@ -1247,6 +1254,19 @@ export class CarsAddService extends BaseService {
       );
     `);
     return result;
+  }
+  async getCarName(id) {
+    if (id > 0) {
+      const car_data = await this.carEntityRepo
+        .createQueryBuilder('c')
+        .select('c.carName')
+        .where('c.carId = :id', { id })
+        .getOne();
+      return car_data?.carName || null;
+    } else {
+      return null;
+    }
+
   }
   
 }
