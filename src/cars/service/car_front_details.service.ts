@@ -125,7 +125,9 @@ export class CarFrontDetailsService {
         "range",
         "locationName",
         "zipCode",
-        "driveType"
+        "driveType",
+        "open_time",
+        "close_time"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -257,7 +259,10 @@ export class CarFrontDetailsService {
       data.horsePowerSuffix = 'HP';
       data.transmissionSuffix = 'Transmission'
       data.seatingCapacitySuffix = 'Seater'
-      data.locationTiming = '10:00 AM to 6:00 PM'
+      const open_time = data?.open_time ? data.open_time : '10:00:00';
+      const close_time = data?.close_time ? data.close_time : '20:00:00';
+
+      data.locationTiming = this.convertTimeRange(open_time , close_time)
       data.engineSuffix = 'CC';
       data.noOfCylinders = '6';
       data.added_date = this.general.timeAgo(data.added_date)
@@ -288,6 +293,22 @@ export class CarFrontDetailsService {
     inputParams.car_details = this.blockResult.data;
     return inputParams;
   }
+  convertTimeRange(startTime: string, endTime: string): string {
+    function formatTime(timeStr: string): string {
+        const [hourStr, minute] = timeStr.split(':');
+        let hour = parseInt(hourStr, 10);
+        const isPM = hour >= 12;
+        const period = isPM ? 'PM' : 'AM';
+        hour = hour % 12 || 12; 
+        return `${hour}:${minute} ${period}`;
+    }
+
+    const startFormatted = formatTime(startTime);
+    const endFormatted = formatTime(endTime);
+
+    return `${startFormatted} to ${endFormatted}`;
+}
+
   carDetailsFinishedSuccess(inputParams: any) {
     const settingFields = {
       status: 200,
