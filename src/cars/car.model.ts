@@ -46,6 +46,10 @@ import { VariantMasterEntity } from './entities/variant-master.entity';
 import { VariantDetailsService } from './service/variant_details.service';
 import { VariantListService } from './service/variant_list.service';
 import { TagMasterDetailsService } from './service/tag_master_details.service';
+import { CarChargesService } from './service/car_charges_add.service';
+import { CarChargesEntity } from './entities/car_charges.entity';
+import { CarServicesAdd } from './service/car_service_add.service';
+import { CarServicesEntity } from './entities/car_services.entity';
 @Module({
   imports: [
     GlobalModule,
@@ -65,6 +69,8 @@ import { TagMasterDetailsService } from './service/tag_master_details.service';
       CarWishlistEntity,
       LookupEntity,
       VariantMasterEntity,
+      CarChargesEntity,
+      CarServicesEntity
     ]),
 
   ],
@@ -103,7 +109,9 @@ import { TagMasterDetailsService } from './service/tag_master_details.service';
     VariantMasterAddService,
     VariantDetailsService,
     VariantListService,
-    TagMasterDetailsService
+    TagMasterDetailsService,
+    CarChargesService,
+    CarServicesAdd
   ],
 })
 export class CarModule { }

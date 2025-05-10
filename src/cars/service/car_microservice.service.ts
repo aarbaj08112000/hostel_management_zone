@@ -34,7 +34,8 @@ type LookupFieldConfig = {
   field: string;
   subType?: string;
   selFields?: Record<string, string>;
-  fetch_from? : string
+  fetch_from? : string,
+  sub_field? : string;
 };
 @Injectable()
 export class CarMicroserviceService {
@@ -119,6 +120,16 @@ export class CarMicroserviceService {
         field: 'feature_ids', subType: 'feature', selFields: {
           featureCategoryId: 'featureCategoryId', featureCategoryCode: 'featureCategoryCode', featureCategoryName: 'featureCategoryName',
           featureName: 'featureName', featureId: 'featureId', featureCode: 'featureCode',featureValue: 'featureValue'
+        }
+      },
+      {
+        field: 'car_services', subType: 'services', sub_field : 'service_id' ,selFields: {
+          serviceId: 'serviceId', serviceName: 'serviceName', price: 'price',serviceCode : 'serviceCode'
+        }
+      },
+      {
+        field: 'car_charges', subType: 'charges', sub_field : 'charge_id' ,selFields: {
+          id: 'id', chargeName: 'chargeName', chargeFor: 'chargeFor',type : 'type',value : 'value',isOptional : 'isOptional'
         }
       }
     ],
@@ -386,7 +397,7 @@ export class CarMicroserviceService {
       const sections = ['car_data', 'car_details', 'car_history', 'car_tags'];
 
       for (const [entityType, fieldConfigs] of Object.entries(this.lookup_mapping)) {
-        for (const { field, subType, fetch_from , selFields } of fieldConfigs) {
+        for (const { field, subType, fetch_from , selFields , sub_field } of fieldConfigs) {
           let rawValue: any = null;
   
           rawValue = body?.[field];
@@ -405,7 +416,11 @@ export class CarMicroserviceService {
               : [{ id: rawValue }];
               for (const item of entityIds) {
                 let id
-                if (subType === 'feature' && typeof item === 'object' && 'feature_id' in item) {
+
+                if (sub_field && typeof item === 'object' && sub_field in item) {
+                  id = item[sub_field];
+                }
+                else if (subType === 'feature' && typeof item === 'object' && 'feature_id' in item) {
                   id = item.feature_id;
                 } else {
                   id = typeof item === 'object' ? item.id : item;
@@ -415,6 +430,7 @@ export class CarMicroserviceService {
                 
                   if (_.isEmpty(existingData)) {
                     const payload = { id, ...(subType && { type: subType }), selFields ,fetch_from};
+                    console.log(payload)
                     const result = await this.sendAndStoreData(payload, entityType);
                     console.log(`Processed entity [${entityType}] (subType: ${subType || 'N/A'}) with ID ${id}:`, result.message);
                   }

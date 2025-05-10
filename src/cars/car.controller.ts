@@ -69,6 +69,10 @@ import { BrandDetailsService } from './service/brand_details.service';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { TagMasterDetailsDto } from './dto/tag_master_details.dto';
 import { TagMasterDetailsService } from './service/tag_master_details.service';
+import { CarChargesService } from './service/car_charges_add.service';
+import { CarChargesDto , UpdateCarChargesDto } from './dto/car_charges.dto';
+import { CarServicesAdd } from './service/car_service_add.service';
+import { CarServicesDto , UpdateCarServicesDto } from './dto/car_services.dto';
 import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 @Controller()
@@ -113,8 +117,9 @@ export class CarController {
     private readonly variantDetailsService: VariantDetailsService,
     private variantListService: VariantListService,
     private carTagDetails : TagMasterDetailsService,
-
-    protected activityLogService: ActivityLogService,
+    private carChargesService : CarChargesService,
+    private carServices : CarServicesAdd,
+    private activityLogService : ActivityLogService
   ) { }
   @MessagePattern('get-data')
   async getMasterData( @Req() request: Request, @Payload() payload: any) {
@@ -132,13 +137,63 @@ export class CarController {
   @MessagePattern('set-data')
   async setCarData( @Req() request: Request, @Payload() payload: any) {
     try{
-    
       await this.carMicroservice.setData(payload);
       await this.elasticService.syncElasticData()
       return {success : 1 , message : 'data set success'}
     }catch(err){
       console.log(err)
     }
+  }
+  
+  @Get('car-services-detail/:id')
+  async carServiceDetails(@Param('id') id: string) {
+    return await this.carServices.startCarServiceDetails(id);
+  }
+  @Post('car-service-add')
+  async carServicesAdd (@Req() request: Request, @Body() body : CarServicesDto){
+    try{
+      return await this.carServices.startCarServicesAdd(request,body)
+    }catch(err){
+      console.log(err)
+    }
+  }
+  @Put('car-service-update')
+  async carServicesUpdate (@Req() request: Request, @Body() body : UpdateCarServicesDto){
+    try{
+      return await this.carServices.startCarServicesUpdate(request,body)
+    }catch(err){
+      console.log(err)
+    }
+  }
+  @Delete('car-service-delete/:id')
+  async deleteCarService(@Param('id') id: string) {
+    return await this.carServices.deleteCarService(parseInt(id));
+  }
+
+  @Get('car-charges-detail/:id')
+  async carChargesDetails(@Param('id') id: string) {
+    return await this.carChargesService.startCarChargesDetails(id);
+  }
+
+  @Post('car-charges-add')
+  async carChargesAdd (@Req() request: Request, @Body() body : CarChargesDto){
+    try{
+      return await this.carChargesService.startCarChargesAdd(request,body)
+    }catch(err){
+      console.log(err)
+    }
+  }
+  @Put('car-charges-update')
+  async carChargesUpdate (@Req() request: Request, @Body() body : UpdateCarChargesDto){
+    try{
+      return await this.carChargesService.startCarChargesUpdate(request,body)
+    }catch(err){
+      console.log(err)
+    }
+  }
+  @Delete('car-charges-delete/:id')
+  async deleteCarCharges(@Param('id') id: string) {
+    return await this.carChargesService.deleteCarCharges(parseInt(id));
   }
   @Post('user-data')
   async addUserDataasync(@Req() request: Request, @Body() body) {
