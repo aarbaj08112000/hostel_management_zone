@@ -124,7 +124,7 @@ export class CarMicroserviceService {
       },
       {
         field: 'car_services', subType: 'services', sub_field : 'service_id' ,selFields: {
-          serviceId: 'serviceId', serviceName: 'serviceName', price: 'price',serviceCode : 'serviceCode'
+          serviceId: 'serviceId', serviceName: 'serviceName', price: 'price'
         }
       },
       {

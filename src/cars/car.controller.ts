@@ -420,10 +420,10 @@ export class CarController {
           brandSearchLabel,
         },
       };
+      params['skip_brand'] = 'Yes'
       params['filters'] = [{ "key": "status", "value": "Active", "operator": "equal" }];
       params['limit'] = 8;
       let premiumBrands = await this.brandList(request, params);
-
       let image_path =
         process.env.BASE_URL +
         '/' +
@@ -435,7 +435,9 @@ export class CarController {
           title: custom.lang('Premium Brands'),
           subTitle: custom.lang('Explore Our'),
           btnName: custom.lang('Show All Brands'),
-          values: Object.values(premiumBrands['data']).map((key) => ({
+          values: Object.values(premiumBrands['data'])
+          .filter((key) => key['model_codes'] != null && key['model_codes'] !== '')
+          .map((key) => ({
             label: key['brand_name'],
             image: key['brand_image'] ? key['brand_image'] : '',
             key: key['brand_code'].toLowerCase(),

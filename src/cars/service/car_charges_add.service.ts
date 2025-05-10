@@ -51,6 +51,7 @@ export class CarChargesService extends BaseService {
       let inputParams;
       let no_insert = false;
       let existed_charges_data = await this.fetchCarChargesData(reqParams);
+      inputParams = {...inputParams,car_id : reqParams.car_id}
       if(existed_charges_data.success == 0){
        inputParams = await this.insertCarChargesData(reqParams);
       }else{
@@ -98,9 +99,9 @@ export class CarChargesService extends BaseService {
         }
       }
       if (!_.isEmpty(inputParams.insert_car_charges_data)) {
-        outputResponse = this.carChargesFinishSuccess(inputParams, 'Car Charges Added Successfully.');
+        outputResponse = await this.carChargesFinishSuccess(inputParams, 'Car Charges Added Successfully.');
       } else {
-        outputResponse = this.carChargesFinishFailure(inputParams);
+        outputResponse = await this.carChargesFinishFailure(inputParams);
       }
     } catch (err) {
       this.log.error('API Error >> car_charges_add >>', err);
@@ -132,7 +133,9 @@ export class CarChargesService extends BaseService {
     let outputResponse = {};
     try {
       this.setModuleAPI('delete');
-
+      let charges_data = await this.carChargesRepo.findOne({
+        where: { carChargesId: id },
+     })
       const deleteResult = await this.carChargesRepo.delete({ carChargesId: id });
 
       if (deleteResult.affected === 0) {
@@ -143,6 +146,14 @@ export class CarChargesService extends BaseService {
         { deleted_id: id },
         'Car Charge Deleted Successfully.'
       );
+      let job_data = {
+        job_function: 'sync_elastic_data',
+        job_params: {
+          module: 'car_charges_details',
+          data: charges_data.carId
+        },
+      };
+      await this.general.submitGearmanJob(job_data);
     } catch (err) {
       this.log.error('API Error >> car_charges_delete >>', err);
     }
@@ -150,7 +161,6 @@ export class CarChargesService extends BaseService {
   }
 
   async insertCarChargesData(inputParams: any) {
-    console.log('here',inputParams)
     const records = Array.isArray(inputParams.car_charges) ? inputParams.car_charges : [inputParams.car_charges];
     const insertedData = [];
     
@@ -227,7 +237,15 @@ export class CarChargesService extends BaseService {
        throw new Error(err)
     }
   }
-  carChargesFinishSuccess(inputParams: any, message: string) {
+  async carChargesFinishSuccess(inputParams: any, message: string) {
+    let job_data = {
+      job_function: 'sync_elastic_data',
+      job_params: {
+        module: 'car_charges_details',
+        data: inputParams.car_id
+      },
+    };
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(
       {
         settings: {
@@ -242,7 +260,7 @@ export class CarChargesService extends BaseService {
     );
   }
 
-  carChargesFinishFailure(inputParams: any) {
+ async carChargesFinishFailure(inputParams: any) {
     return this.response.outputResponse(
       {
         settings: {
