@@ -51,8 +51,10 @@ export class CarServicesAdd extends BaseService {
       this.inputParams = reqParams;
       this.setModuleAPI('add');
       let inputParams;
+      
       let no_insert = false;
       let existed_services_data = await this.fetchCarServicesData(reqParams);
+      inputParams = {...inputParams,car_id : reqParams.car_id}
       if (existed_services_data.success === 0) {
            inputParams = await this.insertCarServicesData(reqParams);
       }else{
@@ -99,9 +101,9 @@ export class CarServicesAdd extends BaseService {
       }
 
       if (!_.isEmpty(inputParams.insert_car_services_data)) {
-        outputResponse = this.carServicesFinishSuccess(inputParams, 'Car Services Added Successfully.');
+        outputResponse = await this.carServicesFinishSuccess(inputParams, 'Car Services Added Successfully.');
       } else {
-        outputResponse = this.carServicesFinishFailure(inputParams);
+        outputResponse = await this.carServicesFinishFailure(inputParams);
       }
     } catch (err) {
       console.log(err)
@@ -134,13 +136,22 @@ export class CarServicesAdd extends BaseService {
     let outputResponse = {};
     try {
       this.setModuleAPI('delete');
-
+      let service_data = await this.carServicesRepo.findOne({
+        where: { carServiceId: id },
+     })
       const deleteResult = await this.carServicesRepo.delete({ carServiceId: id });
 
       if (deleteResult.affected === 0) {
         return this.carServicesFinishFailure({ message: 'No Car Service found.' });
       }
-
+      let job_data = {
+        job_function: 'sync_elastic_data',
+        job_params: {
+          module: 'car_charges_details',
+          data: service_data.carId
+        },
+      };
+      await this.general.submitGearmanJob(job_data);
       outputResponse = this.carServicesFinishSuccess({ deleted_id: id }, 'Car Service Deleted Successfully.');
     } catch (err) {
       this.log.error('API Error >> car_services_delete >>', err);
@@ -228,7 +239,15 @@ export class CarServicesAdd extends BaseService {
     }
   }
 
-  carServicesFinishSuccess(inputParams: any, message: string) {
+  async carServicesFinishSuccess(inputParams: any, message: string) {
+    let job_data = {
+      job_function: 'sync_elastic_data',
+      job_params: {
+        module: 'car_services_details',
+        data: inputParams.car_id
+      },
+    };
+    await this.general.submitGearmanJob(job_data);
     return this.response.outputResponse(
       {
         settings: {
@@ -243,7 +262,7 @@ export class CarServicesAdd extends BaseService {
     );
   }
 
-  carServicesFinishFailure(inputParams: any) {
+  async carServicesFinishFailure(inputParams: any) {
     return this.response.outputResponse(
       {
         settings: {
