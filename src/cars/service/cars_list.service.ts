@@ -161,7 +161,8 @@ export class CarListService {
             hit._source['price'],
             'currency',
             'AED'
-          );
+          )+ ' '+ 'AED';
+          hit._source['drivenDistance'] = this.general.numberFormat( hit._source['drivenDistance']).replace(".00", "")
           hit._source['created_date'] = hit._source['added_date'];
           hit._source['added_date'] = this.general.timeAgo(
             hit._source['added_date'],
@@ -296,7 +297,8 @@ export class CarListService {
       'exteriorColorName',
       'interiorColorName',
       'is_wishlist',
-      'export_status'
+      'export_status',
+      'bodyName'
     ];
     const outputKeys = ['get_car_list'];
 
