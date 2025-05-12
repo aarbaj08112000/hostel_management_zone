@@ -75,6 +75,7 @@ import { CarServicesAdd } from './service/car_service_add.service';
 import { CarServicesDto , UpdateCarServicesDto } from './dto/car_services.dto';
 import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
+import { CarFrontCompareService } from './service/front-car-compare_service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -119,7 +120,8 @@ export class CarController {
     private carTagDetails : TagMasterDetailsService,
     private carChargesService : CarChargesService,
     private carServices : CarServicesAdd,
-    private activityLogService : ActivityLogService
+    private activityLogService : ActivityLogService,
+    private carFrontCompareService : CarFrontCompareService
   ) { }
   @MessagePattern('get-data')
   async getMasterData( @Req() request: Request, @Payload() payload: any) {
@@ -144,7 +146,26 @@ export class CarController {
       console.log(err)
     }
   }
-  
+  @Get('front-car-compare')
+  async frontCarCompare(
+    @Req() request: Request,
+    @Query()
+    body: CarsDetailsDto,
+  ) {
+    let dev_publish = body?.dev_publish ? body.dev_publish : 'No'
+    let location_enabled = body.location_enabled
+    let search_by = 'slug';
+    let search_key = body.car_slug;
+    const index = 'nest_local_cars';
+    let inputParams = {
+      search_key,
+      index,
+      search_by,
+      dev_publish,
+      location_enabled
+    };
+    return await this.carFrontCompareService.startCarDetails(request, inputParams);
+  }
   @Get('car-services-detail/:id')
   async carServiceDetails(@Param('id') id: string) {
     return await this.carServices.startCarServiceDetails(id);
