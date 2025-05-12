@@ -1307,7 +1307,7 @@ export class CarController {
         image: key['car_image'],
         car_name: key['carName'],
         car_slug: key['car_slug'],
-        price: key['price'],
+        price: key['db_price'],
         curreny_code: key['currency_code'],
         distance_driven: this.general.numberFormat(key['drivenDistance'], 'numerical') + ' ' + 'Miles',
         color: key['exteriorColorName'],
