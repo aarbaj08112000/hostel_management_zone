@@ -50,6 +50,7 @@ import { CarChargesService } from './service/car_charges_add.service';
 import { CarChargesEntity } from './entities/car_charges.entity';
 import { CarServicesAdd } from './service/car_service_add.service';
 import { CarServicesEntity } from './entities/car_services.entity';
+import { CarFrontCompareService } from './service/front-car-compare_service';
 @Module({
   imports: [
     GlobalModule,
@@ -111,6 +112,7 @@ import { CarServicesEntity } from './entities/car_services.entity';
     VariantListService,
     TagMasterDetailsService,
     CarChargesService,
+    CarFrontCompareService,
     CarServicesAdd
   ],
 })
