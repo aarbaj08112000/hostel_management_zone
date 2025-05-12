@@ -247,7 +247,7 @@ export class CarSlideService {
                 
                     if (user) {
                       const wishlist_data = await this.carWishlistRepo.findOne({
-                        where: { carId: hit['carId'], userId: user.entityId }
+                        where: { carId: hit._source['carId'], userId: user.entityId }
                       });
           
                       // data['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
