@@ -304,7 +304,8 @@ export class CarListService {
       'is_wishlist',
       'export_status',
       'bodyName',
-      'db_price'
+      'db_price',
+      "display_title"
     ];
     const outputKeys = ['get_car_list'];
 
