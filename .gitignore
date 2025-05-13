@@ -56,6 +56,6 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Ignore all files in the temp_files directory
-
+public/upload/*
 
 # But do not ignore the folder itsel
