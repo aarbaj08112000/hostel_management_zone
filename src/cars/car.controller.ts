@@ -443,7 +443,7 @@ export class CarController {
       };
       params['skip_brand'] = 'Yes'
       params['filters'] = [{ "key": "status", "value": "Active", "operator": "equal" }];
-      params['limit'] = 8;
+      // params['limit'] = 8;
       let premiumBrands = await this.brandList(request, params);
       let image_path =
         process.env.BASE_URL +
@@ -462,7 +462,7 @@ export class CarController {
             label: key['brand_name'],
             image: key['brand_image'] ? key['brand_image'] : '',
             key: key['brand_code'].toLowerCase(),
-          })),
+          })).slice(0, 8),
         };
 
         final_json = { ...final_json, premiumBrands };
