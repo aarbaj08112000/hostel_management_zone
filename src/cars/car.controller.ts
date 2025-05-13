@@ -501,11 +501,11 @@ export class CarController {
       });
       achievements.push({
         value: '90%',
-        title: "Returning <span class='text-primary'>Customer</span>",
+        title: "Returning <span class='text-primary'>Customers</span>",
       });
       achievements.push({
         value: '2K+',
-        title: "Happy <span class='text-primary'>Customer</span>",
+        title: "Happy <span class='text-primary'>Customers</span>",
       });
       achievements.push({
         value: '56',
