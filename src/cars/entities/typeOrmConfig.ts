@@ -19,4 +19,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   migrationsRun: false,
   logging: false,
   migrations: [__dirname + '/migrations/*.ts'],
+  timezone : process.env.TIMEZONE
 };
