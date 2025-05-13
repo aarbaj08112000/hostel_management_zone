@@ -77,6 +77,11 @@ export class LocationtimeSlotService {
       let operating_hours = inputParams?.operating_hours;
       operating_hours = '';
       let timeSlot = await this.general.getConfigItem('TIME_SLOT');
+      let timeZone = await this.general.getConfigItem('TIME_ZONE');
+      timeZone = JSON.parse(timeZone);
+      let {zone,numeric} = timeZone
+      const now = new Date();
+      const modifiedZone = new Date (now.toLocaleString("en-US", { timeZone: zone }));
       let location_open = `${inputParams.requested_date} 08:00:00`;
       let location_close = `${inputParams.requested_date} 20:00:00`;
       if (typeof operating_hours != 'undefined' && operating_hours != '' && operating_hours != null) {
@@ -96,13 +101,12 @@ export class LocationtimeSlotService {
         let getTimeSlot = this.general.createTimeSlots(location_open, location_close, parseInt(timeSlot));
         const slotDate = location_open.split(' ')[0];
         const now = new Date();
-
         const updatedTimeSlots = getTimeSlot.map(slot => {
           const [start, end] = slot.slot_time.split(' - ');
           const endTime = new Date(`${slotDate}T${end}`);
 
           let status = "available";
-          if (now > endTime) {
+          if (modifiedZone > endTime) {
             status = "not_available";
           }
 
@@ -124,7 +128,6 @@ export class LocationtimeSlotService {
         return inputParams;
 
       }
-      console.log(results)
       let data = results.hits.map((hit) => {
         return hit._source;
       });
@@ -142,9 +145,8 @@ export class LocationtimeSlotService {
         const updatedTimeSlots = getTimeSlot.map(slot => {
           const [start, end] = slot.slot_time.split(' - ');
           const endTime = new Date(`${slotDate}T${end}`);
-
           const isBooked = bookedTimes.includes(slot.slot_time);
-          const isPast = now > endTime;
+          const isPast = modifiedZone > endTime;
 
           return {
             ...slot,
