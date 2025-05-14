@@ -74,6 +74,7 @@ export class CarFrontCompareService {
       fileConfig.extensions =
         await this.general.getConfigItem('allowed_extensions');
       let _source = [
+        "variant_name",
         "regionName",
         "steeringSide",
         "exteriorColorName",
@@ -185,6 +186,9 @@ export class CarFrontCompareService {
             }),
           );
         }
+        if(data?.variant_name){
+          data['trim'] = data.variant_name
+        }
       }
       if (_.isObject(carDataArray) && !_.isEmpty(carDataArray)) {
         const success = 1;
@@ -217,6 +221,8 @@ export class CarFrontCompareService {
       fields: [],
     };
     settingFields.fields = [
+      "trim",
+      "variant_name",
       "carName",
       "price",
       "drivenDistance",
