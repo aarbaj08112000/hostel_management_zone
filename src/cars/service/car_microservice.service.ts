@@ -108,7 +108,7 @@ export class CarMicroserviceService {
       {
         field: 'location_id', subType: 'location', selFields: {
           locationId: 'location_id', locationName: 'location_name', locationCode: 'location_code',
-          latitude: 'latitude', longitude: 'longitude', address: 'address',openTime : 'open_time' , closeTime : 'close_time'
+          latitude: 'latitude', longitude: 'longitude', address: 'address',openTime : 'open_time' , closeTime : 'close_time' , zipCode : 'zipCode'
         }
       },
       {
