@@ -186,7 +186,6 @@ export class CarFrontCompareService {
           );
         }
       }
-      console.log(carDataArray)
       if (_.isObject(carDataArray) && !_.isEmpty(carDataArray)) {
         const success = 1;
         const message = 'Records found.';
