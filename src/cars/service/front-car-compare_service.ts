@@ -83,6 +83,7 @@ export class CarFrontCompareService {
         "interiorColor",
         "export_status",
         "accidentalHistory",
+        "serviceHistory",
         "insuranceType",
         "locationName",
         "latitude",
@@ -221,6 +222,7 @@ export class CarFrontCompareService {
       fields: [],
     };
     settingFields.fields = [
+      "serviceHistory",
       "trim",
       "variant_name",
       "carName",
