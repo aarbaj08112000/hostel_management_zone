@@ -127,6 +127,7 @@ export class CarFrontDetailsService {
         "zipCode",
         "driveType",
         "open_time",
+        "export_status",
         "close_time"
       ]
       let { search_key, search_by, index } = inputParams;
@@ -369,7 +370,8 @@ export class CarFrontDetailsService {
         "zipCode",
         "engineSize",
         "engineSizeSuffix",
-        "driveType"
+        "driveType",
+        "export_status",
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
