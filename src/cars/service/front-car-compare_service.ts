@@ -74,6 +74,19 @@ export class CarFrontCompareService {
       fileConfig.extensions =
         await this.general.getConfigItem('allowed_extensions');
       let _source = [
+        "regionName",
+        "steeringSide",
+        "exteriorColorName",
+        "exteriorColor",
+        "interiorColorName",
+        "interiorColor",
+        "export_status",
+        "accidentalHistory",
+        "insuranceType",
+        "locationName",
+        "latitude",
+        "longitude",
+        "locationAddress",
         "engineSize",
         "tag_information",
         "carId",
@@ -85,12 +98,10 @@ export class CarFrontCompareService {
         "car_image",
         "added_date",
         "bodyName",
-        "analytics",
         "fuelType",
         "engineCapacity",
         "manufactureYear",
         "seatingCapacity",
-        "features",
         "horsePower",
         "exteriorColorName",
         "numberOfDoors",
@@ -107,10 +118,11 @@ export class CarFrontCompareService {
         "range",
         "zipCode",
         "driveType",
+        "interiorImages",
+        "exteriorImages"
       ]
       let { search_key, search_by, index } = inputParams;
       search_key = search_key.split(',')
-      let images = {};
       const carDataArray = await this.elasticService.getById(
         search_key,
         index,
@@ -121,16 +133,13 @@ export class CarFrontCompareService {
 
       for (let data of carDataArray) {
         let images = {}; 
-        // Primary image processing
+
         if (data?.car_image !== '') {
           fileConfig.image_name = data['car_image'];
           fileConfig.path = `car_images_${aws_folder}/${data['carId']}`;
           data.primaryImage = await this.general.getFile(fileConfig, inputParams);
-          images['primaryImage'] = data.primaryImage;
         }
       
-        // Basic transformations
-        data.images = images;
         data.modelName = data.model_name;
         data.engineCapacity = data?.engineCapacity
           ? this.general.numberFormat(data?.engineCapacity, 'numerical')
@@ -157,7 +166,27 @@ export class CarFrontCompareService {
         if (data['fuelType'] === 'Electric') {
           data.vehicleType = 'ev';
         }
+
+        if (data['interiorImages'] && Array.isArray(data['interiorImages'])) {
+          data['interiorImages'] = await Promise.all(
+            data['interiorImages'].map(async (imageName) => {
+              fileConfig.image_name = imageName.split(':')[1];
+              fileConfig.path = `car_images_${aws_folder}/${data['carId']}`;
+              return await this.general.getFile(fileConfig, inputParams);
+            }),
+          );
+        }
+        if (data['exteriorImages'] && Array.isArray(data['exteriorImages'])) {
+          data['exteriorImages'] = await Promise.all(
+            data['exteriorImages'].map(async (imageName) => {
+              fileConfig.image_name = imageName.split(':')[1];
+              fileConfig.path = `car_images_${aws_folder}/${data['carId']}`;
+              return await this.general.getFile(fileConfig, inputParams);
+            }),
+          );
+        }
       }
+      console.log(carDataArray)
       if (_.isObject(carDataArray) && !_.isEmpty(carDataArray)) {
         const success = 1;
         const message = 'Records found.';
@@ -172,6 +201,7 @@ export class CarFrontCompareService {
         throw new Error('No records found.');
       }
     } catch (err) {
+      console.log(err)
       this.blockResult.success = 0;
       this.blockResult.message = err;
       this.blockResult.data = [];
@@ -203,9 +233,7 @@ export class CarFrontCompareService {
       "seatingCapacity",
       "overviewTitle",
       "overviewTitle",
-      "shortDescription",
       "features",
-      "carDescription",
       "horsePower",
       "exteriorColorName",
       "numberOfDoors",
@@ -236,11 +264,26 @@ export class CarFrontCompareService {
       "range",
       "vehicleType",
       "tag_information",
-       "locationName",
-        "zipCode",
-        "engineSize",
-        "engineSizeSuffix",
-        "driveType"
+      "locationName",
+      "zipCode",
+      "engineSize",
+      "engineSizeSuffix",
+      "driveType",
+      "regionName",
+      "steeringSide",
+      "exteriorColorName",
+      "exteriorColor",
+      "interiorColorName",
+      "interiorColor",
+      "export_status",
+      "accidentalHistory",
+      "insuranceType",
+      "locationName",
+      "latitude",
+      "longitude",
+      "locationAddress",
+      "exteriorImages",
+      "interiorImages"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
