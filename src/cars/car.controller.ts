@@ -1463,6 +1463,7 @@ export class CarController {
         values: bodyType['data'].length > 0 ? Object.values(bodyType['data']).map((key) => ({
           key: key['body_code'].toLowerCase(),
           value: key['body_type'],
+          image : key['body_image'] ? key['body_image'] : ''
         })) : [],
       };
       filter_arr = { ...filter_arr, bodyType };
