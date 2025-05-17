@@ -42,7 +42,7 @@ export class CarFeatureAddService extends BaseService {
       this.setModuleAPI('add');
       const inputParams = await this.insertCarFeatures(reqParams);
       let car_id = reqParams.car_id;
-      let car_name = reqParams.car_id;
+      let car_name = await this.general.getCarName(reqParams.car_id);
       let added_by = reqParams.added_by;
       if (!_.isEmpty(inputParams.inserted_car_features)) {
         outputResponse = this.featureFinishSuccess(inputParams, '');
@@ -74,8 +74,8 @@ export class CarFeatureAddService extends BaseService {
 
       const inputParams = await this.updateCarFeatureData(reqParams);
       let car_id = inputParams.car_id;
-      let car_name = inputParams.car_id;
-      let updated_by = 0;
+      let car_name = await this.general.getCarName(inputParams.car_id);
+      let updated_by = reqParams.updated_by;
       if (!_.isEmpty(inputParams.updated_car_features)) {
         outputResponse = this.featureFinishSuccess(inputParams, 'update');
         let value_json = {
