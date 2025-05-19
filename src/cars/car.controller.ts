@@ -123,6 +123,15 @@ export class CarController {
     private activityLogService : ActivityLogService,
     private carFrontCompareService : CarFrontCompareService
   ) { }
+  @MessagePattern('update-status')
+  async updateCustomer(@Req() request: Request, @Payload() payload: any){
+    try{
+    return this.carAddService.updateCarStatus(payload.data)
+    }catch(err){
+      console.log(err)
+    }
+  }
+
   @MessagePattern('get-data')
   async getMasterData( @Req() request: Request, @Payload() payload: any) {
     try {

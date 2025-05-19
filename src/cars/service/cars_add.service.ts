@@ -114,10 +114,10 @@ export class CarsAddService extends BaseService {
             };
             outputResponse = this.carsFinishSuccess(inputParams);
             let updated_by =
-  inputParams.car_data?.updated_by ||
-  inputParams.car_details?.updated_by ||
-  inputParams.car_history?.updated_by ||
-  inputParams.car_tag_data?.updated_by;
+              inputParams.car_data?.updated_by ||
+              inputParams.car_details?.updated_by ||
+              inputParams.car_history?.updated_by ||
+              inputParams.car_tag_data?.updated_by;
 
             let car_name = await this.getCarName(car_id)
             let value_json = {
@@ -388,6 +388,25 @@ export class CarsAddService extends BaseService {
       if ('export_status' in inputParams) {
         queryColumns.exportStatus = inputParams.export_status
       }
+      if ('discount_enabled' in inputParams) {
+        queryColumns.discountEnabled = inputParams.discount_enabled
+      }
+      if ('discount_value' in inputParams) {
+        queryColumns.discountValue = inputParams.discount_value
+      }
+      if ('booking_days' in inputParams) {
+        queryColumns.bookingDays = inputParams.booking_days
+      }
+      if ('booking_amount' in inputParams) {
+        queryColumns.bookingAmount = inputParams.booking_amount
+      }
+      if ('reserved_days' in inputParams) {
+        queryColumns.reservedDays = inputParams.reserved_days
+      }
+      if ('reserved_amount' in inputParams) {
+        queryColumns.reservedAmount = inputParams.reserved_amount
+      }
+
       let code = await this.general.getCustomToken('cars', '', 'Add');
       if (code != '') {
         queryColumns.carCode = code;
@@ -459,7 +478,13 @@ export class CarsAddService extends BaseService {
         updated_by: 'updatedBy',
         location_id: 'locationId',
         export_status: 'exportStatus',
-        slug: 'slug'
+        slug: 'slug',
+        discount_enabled : 'discountEnabled',
+        discount_value : 'discountValue',
+        booking_days : 'bookingDays',
+        booking_amount : 'bookingAmount',
+        reserved_days : 'reservedDays',
+        reserved_amount : 'reservedAmount'
       };
       const car_details_field_mapping: Record<string, string> = {
         chassis_number: 'chassisNumber',
@@ -490,7 +515,7 @@ export class CarsAddService extends BaseService {
         updated_by: 'updatedBy',
         negotiable: 'negotiable',
         negotiable_range: 'negotiableRange',
-        monthly_emi_amount: 'monthlyEMIAmount',
+        monthly_emi_amount: 'monthlyEMIAmount'
       };
       const car_history_data_mapping: Record<string, string> = {
         registration_number: 'registrationNumber',
@@ -1268,5 +1293,34 @@ export class CarsAddService extends BaseService {
     }
 
   }
-  
+  async updateCarStatus(data){
+    let return_arr : any = {}
+    try{
+     const queryColumns : any = {}
+     queryColumns.status = data.status;
+     const result = await this.carEntityRepo
+    .createQueryBuilder()
+    .update(CarEntity)
+    .set(queryColumns)
+    .where("carId = :id", { id: data.id })
+    .execute();
+    return_arr = {
+      success : 1,
+      message : 'Car Updated successfully'
+    }
+    let job_data = {
+      job_function: 'sync_elastic_data',
+      job_params: {
+        module: 'car_list',
+        data: data.id
+      },
+    };
+    await this.general.submitGearmanJob(job_data);
+    }catch(err){
+      return_arr = {
+        success : 0,
+        message : err.message
+      }
+    }
+  }
 }
