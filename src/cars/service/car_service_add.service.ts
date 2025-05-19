@@ -169,6 +169,7 @@ export class CarServicesAdd extends BaseService {
           carId: inputParams.car_id,
           serviceId: record.service_id,
           rateValue: record.rate_value,
+          isOptional : record.is_optional,
           addedBy: record.added_by,
         };
         const res = await this.carServicesRepo.insert(insertData);
@@ -196,6 +197,7 @@ export class CarServicesAdd extends BaseService {
           carId: record.car_id,
           serviceId: record.service_id,
           rateValue: record.rate_value,
+          isOptional : record.is_optional,
           updatedBy: record.updated_by,
         };
 
