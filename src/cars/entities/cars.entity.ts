@@ -55,9 +55,6 @@ export class CarEntity extends UserBase {
   @Column({ type: 'longtext', nullable: true })
   shortDescription: string;
 
-  // @Column({ type: 'text', nullable: true })
-  // contactDetails: string;
-
   @Column({ type: 'int', unsigned: true, nullable: true })
   contactPersonId: number;
 
@@ -75,6 +72,24 @@ export class CarEntity extends UserBase {
 
   @Column({ type: 'enum', enum: Export })
   exportStatus: Export;
+
+  @Column({ type: 'enum', enum: ['Yes', 'No'], nullable: true })
+  discountEnabled: 'Yes' | 'No';
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  discountValue: number;
+
+  @Column({ type: 'int', nullable: true })
+  bookingDays: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  bookingAmount: number;
+
+  @Column({ type: 'int', nullable: true })
+  reservedDays: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  reservedAmount: number;
 }
 
 enum InsuranceType {

@@ -11,7 +11,8 @@ import {
   IsIn,
   ValidateIf,
   IsDate,
-  registerDecorator, ValidationArguments, ValidationOptions
+  registerDecorator, ValidationArguments, ValidationOptions,
+  IsEnum
 } from 'class-validator';
 function RequiredIfNotDraft() {
   return ValidateIf((obj) => !obj.is_draft);
@@ -113,6 +114,29 @@ export class CarAddDto {
   @IsOptional()
   is_draft?: any
 
+  @IsEnum(['Yes', 'No'])
+  @IsOptional()
+  discount_enabled?: 'Yes' | 'No';
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  discount_value?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  booking_days?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  booking_amount?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  reserved_days?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  reserved_amount?: number;
 }
 
 export class UpdateCarDTO extends PartialType(CarAddDto) {
