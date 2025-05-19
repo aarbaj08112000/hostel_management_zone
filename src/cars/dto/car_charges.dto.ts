@@ -1,4 +1,4 @@
-import { IsNumber, IsNotEmpty, IsOptional, Min, IsArray, ValidateNested } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsOptional, Min, IsArray, ValidateNested, IsString } from 'class-validator';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { Transform, Type } from 'class-transformer';
 
@@ -21,6 +21,9 @@ class ChargeDetailDto {
   @Transform(({ value }) => value?.toString())
   @IsOptional()
   added_by: string;
+
+  @IsString()
+  is_optional : string
 }
 
 export class CarChargesDto {

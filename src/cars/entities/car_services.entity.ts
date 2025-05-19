@@ -1,6 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 import { UserBase } from '@repo/source/entities/base-user.entity';
-
+enum YesNo {
+  Yes = 'Yes',
+  No = 'No',
+}
 @Entity('car_services') 
 export class CarServicesEntity extends UserBase {
   
@@ -16,4 +19,6 @@ export class CarServicesEntity extends UserBase {
   @Column({ type: 'decimal', precision: 7, scale: 2 })
   rateValue: number;
 
+  @Column({ type: 'enum', enum: YesNo, default: YesNo.Yes })
+  isOptional: YesNo;
 }

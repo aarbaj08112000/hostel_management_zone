@@ -6,7 +6,10 @@ export enum CHARGE_TYPE {
   VARIABLE = 'Variable',
   PERCENTAGE = 'Percentage',
 }
-
+enum YesNo {
+  Yes = 'Yes',
+  No = 'No',
+}
 @Entity('car_charges')
 export class CarChargesEntity extends UserBase {
   
@@ -21,4 +24,7 @@ export class CarChargesEntity extends UserBase {
 
   @Column({ type: 'decimal', precision: 7, scale: 2 }) 
   rateValue: number;
+
+  @Column({ type: 'enum', enum: YesNo, default: YesNo.Yes })
+  isOptional: YesNo;
 }
