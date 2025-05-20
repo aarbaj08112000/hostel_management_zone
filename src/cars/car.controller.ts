@@ -342,13 +342,12 @@ export class CarController {
             "address": "Al Mutakamela Vehicle Testing and Registration <br>Centre, Dubai shop, 32 - next to Permagard, <br>- Al Quoz Industrial Area 2, Dubai, UAE",
             "city": "AL QUOZ 2, DUBAI",
             "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image3.png"
+          },
+          {
+            "address": "Egyptian Court Gate Entrance, Ground Floor, <br>Sheikh Zayed Rd, Jebel Ali Village, <br>Dubai, UAE",
+            "city": "IBN BATTUTA",
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image4.png"
           }
-          // ,
-          // {
-          //   "address": "Egyptian Court Gate Entrance, Ground Floor, <br>Sheikh Zayed Rd, Jebel Ali Village, <br>Dubai, UAE",
-          //   "city": "IBN BATTUTA",
-          //   "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image4.png"
-          // }
         ],
       }
     }
