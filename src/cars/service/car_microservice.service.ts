@@ -124,12 +124,12 @@ export class CarMicroserviceService {
       },
       {
         field: 'car_services', subType: 'services', sub_field : 'service_id' ,selFields: {
-          serviceId: 'serviceId', serviceName: 'serviceName', price: 'price'
+          serviceId: 'serviceId', serviceName: 'serviceName', price: 'price' , description : 'description'
         }
       },
       {
         field: 'car_charges', subType: 'charges', sub_field : 'charge_id' ,selFields: {
-          id: 'id', chargeName: 'chargeName', chargeFor: 'chargeFor',type : 'type',value : 'value',isOptional : 'isOptional'
+          id: 'id', chargeName: 'chargeName', chargeFor: 'chargeFor',type : 'type',value : 'value',isOptional : 'isOptional' , description : 'description'
         }
       }
     ],
