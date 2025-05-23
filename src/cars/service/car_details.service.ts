@@ -88,6 +88,8 @@ export class CarDetailsService {
         search_by,
       );
 
+      data['publish_status'] = data['isListed'] == 'Yes' ? 'Published' : 'Unpublished'
+
       data['is_wishlist'] = 'No';
 
       const accessToken = this.request.cookies['front-access-token'];
@@ -292,6 +294,9 @@ export class CarDetailsService {
       'regionalSpecsId',
       'monthlyEMIAmount',
       'is_wishlist',
+      'isListed',
+      'publish_status',
+      'analytics'
     ];
     const outputKeys = ['car_details'];
 

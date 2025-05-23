@@ -180,6 +180,7 @@ export class CarListService {
             hit._source['carOtherImage'],
             hit._source['carId'],
           );
+          hit._source['publish_status'] = hit._source['isListed'] == 'Yes' ? 'Published' : 'Unpublished'
           return hit._source;
         }),
       );
@@ -305,7 +306,9 @@ export class CarListService {
       'export_status',
       'bodyName',
       'db_price',
-      "display_title"
+      'display_title',
+      'isListed',
+      'publish_status'
     ];
     const outputKeys = ['get_car_list'];
 
