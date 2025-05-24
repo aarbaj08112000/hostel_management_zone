@@ -123,6 +123,10 @@ export class CarListService {
       const data = await Promise.all(
         results.hits.map(async (hit) => {
 
+
+          hit._source['trimId'] = hit._source['variantId'];
+          hit._source['trimName'] = hit._source['variant_name'];
+
           hit._source['is_wishlist'] = 'No';
 
           const accessToken = this.request.cookies['front-access-token'];
@@ -239,6 +243,9 @@ export class CarListService {
     };
     settingFields.fields = [
       'carId',
+      'trimId',
+      'trimName',
+      'locationAddress',
       'carCode',
       'carName',
       'price',
