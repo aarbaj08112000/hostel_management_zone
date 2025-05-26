@@ -62,7 +62,7 @@ export class CarPublishUpdateService {
         throw new HttpException('No car found with the provided details.', HttpStatus.NOT_FOUND);
       }
       if(car.status == Status.Draft){
-        throw error('')
+        car.status = Status.Available;
       }
       car.isListed = is_listed;
       car.updatedBy = updated_by;
