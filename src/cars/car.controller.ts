@@ -76,6 +76,7 @@ import { CarServicesDto , UpdateCarServicesDto } from './dto/car_services.dto';
 import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 import { CarFrontCompareService } from './service/front-car-compare_service';
+import { GetLookupData } from './service/fetch_lkp_data.service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -121,7 +122,8 @@ export class CarController {
     private carChargesService : CarChargesService,
     private carServices : CarServicesAdd,
     private activityLogService : ActivityLogService,
-    private carFrontCompareService : CarFrontCompareService
+    private carFrontCompareService : CarFrontCompareService,
+    private getLookupData: GetLookupData,
   ) { }
   @MessagePattern('update-status')
   async updateCustomer(@Req() request: Request, @Payload() payload: any){
@@ -140,6 +142,12 @@ export class CarController {
       console.log(err);
     }
   }
+  
+  @Get('get-lookup-data')
+  async fetchLookupData(){
+    return await this.getLookupData.getLkpData();
+  }
+
   @Post('get-activity-log')
   async getActivityLog(@Req() request: Request, @Body() body: ActivityLogListDto) {
     const params = body;
