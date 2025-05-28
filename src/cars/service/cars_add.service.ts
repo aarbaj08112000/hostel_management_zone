@@ -578,6 +578,8 @@ export class CarsAddService extends BaseService {
             'c.price as price',
             'c.locationId as locationId',
             'c.contactPersonId as contactPersonId',
+            'c.addedDate as added_data',
+            'c.status as status'
             // 'cd.manufactureYear as manufactureYear',
             // 'cd.drivenDistance as drivenDistance',
             // 'cd.fuelType as fuelType',
