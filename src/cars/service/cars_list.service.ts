@@ -138,9 +138,7 @@ export class CarListService {
           test_drive_data = test_drive_res?.car_ids?.buckets
         }
       }
-      console.log(test_drive_data);
       const testDriveMap = new Map(test_drive_data.map(item => [item.key, item.doc_count]));
-      console.log(testDriveMap)
       const aws_folder = await this.general.getConfigItem('AWS_SERVER');
       const data = await Promise.all(
         results.hits.map(async (hit) => {
