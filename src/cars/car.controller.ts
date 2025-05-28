@@ -51,7 +51,7 @@ import { CarDocumentAddService } from './service/car_document_add.service';
 import { CarAddDocumentFileDto, carDocumentDeleteDto, CarDocumentsDto } from './dto/car_documents.dto';
 import { CarDocumentDeleteService } from './service/car_document_delete.service';
 import { CarWishlistService } from './service/car_wishlist.service';
-import { CarWishlistDto } from './dto/car_wishlist.dto';
+import { CarWishlistAdminDto, CarWishlistDto } from './dto/car_wishlist.dto';
 import { CarListFrontService } from './service/car_list_front.service';
 import { CarFrontDetailsService } from './service/car_front_details.service';
 import { CarCompareDetailsService } from './service/car_compare.service';
@@ -1793,8 +1793,15 @@ export class CarController {
       })) : {}
     }
   }
+
+  @Post('car-wishlist-admin')
+  async getCarWishlistAdmin(@Req() request: ExpressRequest, @Body() body: CarListDto, @Query() query: CarWishlistAdminDto,) {
+    return await this.carWishlistService.startCarWishlist(request, body, query);
+  }
+
   @Post('car-wishlist')
   async getCarWishlist(@Req() request: ExpressRequest, @Body() body: CarListDto) {
+    body['is_front'] = 'Yes';
     return await this.carWishlistService.startCarWishlist(request, body);
   }
 

@@ -8,3 +8,11 @@ export class CarWishlistDto {
   })
   car_slug: string;
 }
+
+export class CarWishlistAdminDto {
+  @IsString()
+  @IsNotEmpty({
+    message: () => custom.lang('Please enter a value for the id field.'),
+  })
+  id: string;
+}
