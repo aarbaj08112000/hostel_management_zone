@@ -315,7 +315,8 @@ export class CarListService {
       'db_price',
       'display_title',
       'isListed',
-      'publish_status'
+      'publish_status',
+      'analytics'
     ];
     const outputKeys = ['get_car_list'];
 
