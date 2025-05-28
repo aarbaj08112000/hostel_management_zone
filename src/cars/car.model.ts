@@ -51,6 +51,7 @@ import { CarChargesEntity } from './entities/car_charges.entity';
 import { CarServicesAdd } from './service/car_service_add.service';
 import { CarServicesEntity } from './entities/car_services.entity';
 import { CarFrontCompareService } from './service/front-car-compare_service';
+import { GetLookupData } from './service/fetch_lkp_data.service';
 @Module({
   imports: [
     GlobalModule,
@@ -113,7 +114,8 @@ import { CarFrontCompareService } from './service/front-car-compare_service';
     TagMasterDetailsService,
     CarChargesService,
     CarFrontCompareService,
-    CarServicesAdd
+    CarServicesAdd,
+    GetLookupData
   ],
 })
 export class CarModule { }
