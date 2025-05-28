@@ -1794,7 +1794,7 @@ export class CarController {
     }
   }
 
-  @Post('car-wishlist-admin')
+  @Post('customer-wishlist')
   async getCarWishlistAdmin(@Req() request: ExpressRequest, @Body() body: CarListDto, @Query() query: CarWishlistAdminDto,) {
     return await this.carWishlistService.startCarWishlist(request, body, query);
   }
