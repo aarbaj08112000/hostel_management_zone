@@ -1369,7 +1369,7 @@ export class CarController {
           }
         }
       }
-      let analaytics_res = await this.elasticService.searchGlobalData(index, query, 'Yes')
+      let analaytics_res = await this.elasticService.searchAggrregate(index, query, 'Yes')
       let data = {
         visitors: analaytics_res['total_visitor']['value'] ? analaytics_res['total_visitor']['value'] : 0,
         views: analaytics_res['total_views']['value'] ? analaytics_res['total_views']['value'] : 0

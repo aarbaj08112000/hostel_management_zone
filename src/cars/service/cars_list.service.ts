@@ -118,7 +118,29 @@ export class CarListService {
       if (totalCount <= 0) {
         throw new Error('No records found.');
       }
-
+      const querySize = recLimit && recLimit > 0 ? recLimit : 1000;
+      let test_drive_index = 'nest_local_test_drive_list'
+      let test_drive_query = {
+        "size": 0,
+        "aggs": {
+          "car_ids": {
+            "terms": {
+              "field": "car_id",
+              "size": querySize
+            }
+          }
+        }
+      }
+      let test_drive_res : any  = await this.elasticService.searchAggrregate(test_drive_index, test_drive_query, 'Yes')
+      let test_drive_data = [];
+      if('car_ids' in test_drive_res){
+        if(test_drive_res?.car_ids?.buckets.length > 0){
+          test_drive_data = test_drive_res?.car_ids?.buckets
+        }
+      }
+      console.log(test_drive_data);
+      const testDriveMap = new Map(test_drive_data.map(item => [item.key, item.doc_count]));
+      console.log(testDriveMap)
       const aws_folder = await this.general.getConfigItem('AWS_SERVER');
       const data = await Promise.all(
         results.hits.map(async (hit) => {
@@ -136,29 +158,23 @@ export class CarListService {
 
             const userInfoResponse = await this.general.callThirdPartyApi('GET', userInfoUrl, '', headers);
             if (userInfoResponse.data) {
-              const userInfo = userInfoResponse.data;
-
-              // const user = await this.modCustomerRepo.findOne({ where: { phoneNumber: userInfo.preferred_username } });
-              const user = await this.modCustomerRepo
-              .createQueryBuilder('mod_customer')
-              .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
-                phoneNumber: userInfo.preferred_username,
-              }).andWhere("mod_customer.entityName = :entityName", {
-                entityName: 'customer', 
-              })
-              .getOne();
-
-              if (user) {
-
-                const wishlist_data = await this.carWishlistRepo.findOne({
-                  where: { carId: hit._source['carId'], userId: user.entityId }
-                });
-
-                hit._source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
-              }
+                const userInfo = userInfoResponse.data;
+                const user = await this.modCustomerRepo
+                .createQueryBuilder('mod_customer')
+                .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
+                  phoneNumber: userInfo.preferred_username,
+                }).andWhere("mod_customer.entityName = :entityName", {
+                  entityName: 'customer', 
+                })
+                .getOne();
+                if (user) {
+                    const wishlist_data = await this.carWishlistRepo.findOne({
+                      where: { carId: hit._source['carId'], userId: user.entityId }
+                    });
+                    hit._source['is_wishlist'] = wishlist_data ? 'Yes' : 'No';
+                }
             }
           }
-
           fileConfig.image_name = hit._source['car_image'];
           fileConfig.path = `car_images_${aws_folder}/${hit._source['carId']}`;
           hit._source['db_price'] = this.general.numberFormat(
@@ -185,6 +201,7 @@ export class CarListService {
             hit._source['carId'],
           );
           hit._source['publish_status'] = hit._source['isListed'] == 'Yes' ? 'Published' : 'Unpublished'
+          hit._source['test_drive_count'] = testDriveMap.get(hit._source['carId']) || 0;
           return hit._source;
         }),
       );
@@ -316,7 +333,8 @@ export class CarListService {
       'display_title',
       'isListed',
       'publish_status',
-      'analytics'
+      'analytics',
+      'test_drive_count'
     ];
     const outputKeys = ['get_car_list'];
 
