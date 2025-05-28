@@ -144,9 +144,9 @@ export class CarController {
   }
   
   @Get('get-lookup-data')
-  async fetchLookupData(){
-    return await this.getLookupData.getLkpData();
-  }
+    async fetchLookupData(@Body() body: CarListDto){
+      return await this.getLookupData.getLkpData(body);
+    }
 
   @Post('get-activity-log')
   async getActivityLog(@Req() request: Request, @Body() body: ActivityLogListDto) {
