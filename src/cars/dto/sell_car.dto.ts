@@ -30,7 +30,7 @@ export class SellCarDto {
     model_name: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     message: string;
 }
 

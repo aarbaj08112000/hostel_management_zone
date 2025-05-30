@@ -128,7 +128,8 @@ export class CarFrontDetailsService {
         "driveType",
         "open_time",
         "export_status",
-        "close_time"
+        "close_time",
+        "car_documents"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -145,6 +146,13 @@ export class CarFrontDetailsService {
         }
       }
       data['isWishList'] = 'No';
+      data['wishlist_count'] = 0;
+
+      const [wishlist, count] = await this.carWishlistRepo.findAndCount({
+        where: { carId: data['carId'] },
+      });
+
+      data['wishlist_count'] = data['wishlist_count'] + count;
 
       const accessToken = this.request.cookies['front-access-token'];
       if (accessToken) {
@@ -161,9 +169,7 @@ export class CarFrontDetailsService {
           .where("JSON_UNQUOTE(JSON_EXTRACT(mod_customer.entityJson, '$.phoneNumber')) = :phoneNumber", {
             phoneNumber: userInfo.preferred_username,
           })
-            .andWhere("mod_customer.entityName = :entityName", {
-    entityName: 'customer', 
-  })
+            .andWhere("mod_customer.entityName = :entityName", {entityName: 'customer'})
           .getOne();
           if (user) {
 
@@ -212,14 +218,61 @@ export class CarFrontDetailsService {
         });
         data.tag_information = tags;
       }
+      data['is_insp_rep'] = 'No';
       if (data?.car_documents) {
-        const pairs = data.car_documents.split(",");
-        const docTags = await Promise.all(pairs.map(async pair => {
-          fileConfig.image_name = pair.split(':')[1];
-          fileConfig.path = `car_documents_${aws_folder}/${data['carId']}`;
-          return { doc_id: pair.split(':')[0], doc_name: await this.general.getFile(fileConfig, inputParams) };
-        }));
+        let doc_index = 'nest_local_document_type_list';
+        inputParams['filters'] = { code: 'INSPREPORT' } ;
+        let search_params = this.general.createElasticSearchQuery(inputParams);
+        let pageIndex = 1;
+        const recLimit = 100;
+        const startIdx = custom.getStartIndex(pageIndex, recLimit);
+        const results = await this.elasticService.search(
+          doc_index,
+          search_params,
+          startIdx,
+          recLimit,
+        );
+
+        const document_data = await Promise.all(results.hits.map(async (hit) => {
+            return hit._source;
+          }),
+        );
+
+        const document_id =  document_data[0]['id'];
+
+        let docTags;
+        const car_documents = data?.car_documents;
+        if(car_documents){
+          const pairs = car_documents.match(/{[^}]+}/g);
+          docTags = await Promise.all(pairs.map(async (pair) => {
+            const doc = {} as {
+              doc_id: string | null;
+              doc_title: string | null;
+              doc_type: string | null;
+            };
+            const idMatch = pair.match(/id:(\d+)/);
+            const titleMatch = pair.match(/title:"([^"]+)"/);
+            const typeMatch = pair.match(/type:(\d+)/);
+
+            doc.doc_id = idMatch ? idMatch[1] : null;
+            doc.doc_title = titleMatch ? titleMatch[1] : null;
+            doc.doc_type = typeMatch ? typeMatch[1] : null;
+            fileConfig.image_name = doc.doc_title;
+            fileConfig.path = `car_documents_${aws_folder}/${data['carId']}`;
+
+            return {
+              doc_id: doc.doc_id,
+              doc_name: await this.general.getFile(fileConfig, inputParams),
+              key: doc.doc_type
+            };
+          }));
+        }
         data.car_documents = docTags
+        const matchingDoc = docTags.find((doc) => doc.key === document_id.toString());
+        const insp_report_url = matchingDoc ? matchingDoc.doc_name : null;
+        if(insp_report_url){
+          data['is_insp_rep'] = 'Yes'
+        }
       }
       data.images = images;
       data.modelName = data.model_name
@@ -366,12 +419,14 @@ export class CarFrontDetailsService {
       "range",
       "vehicleType",
       "tag_information",
-       "locationName",
-        "zipCode",
-        "engineSize",
-        "engineSizeSuffix",
-        "driveType",
-        "export_status",
+      "locationName",
+      "zipCode",
+      "engineSize",
+      "engineSizeSuffix",
+      "driveType",
+      "export_status",
+      "is_insp_rep",
+      "wishlist_count"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')

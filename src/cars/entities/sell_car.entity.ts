@@ -26,7 +26,7 @@ export class SellCarEntity {
   @Column({ type: 'varchar', length: 255 })
   modelName: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   message: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })

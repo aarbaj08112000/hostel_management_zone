@@ -345,21 +345,13 @@ export class CarWishlistService {
   }
 
   async carFinishedFailure(inputParams: any) {
-    let settingFields = {
-      status: 200,
-      success: 0,
-      message: custom.lang('Wishlist not found.'),
-      fields: [],
-    };
-    settingFields = { ...settingFields, ...this.settingsParams };
-    return this.response.outputResponse(
-      {
-        settings: settingFields,
-        data: inputParams,
+    return {
+      "settings": {
+        "status": 200,
+        "success": 0,
+        "message": "Wishlist not found."
       },
-      {
-        name: 'cars_list',
-      },
-    );
+      "data": []
+    }
   }
 }
