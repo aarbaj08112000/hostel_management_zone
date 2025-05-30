@@ -99,7 +99,7 @@ export class CarSlideService {
                   : cartagName === 'trending_cars' && body_type
                     ? [{ term: { body_code: body_type } }]
                     : []),
-                { terms: { status: ['Available', 'Booked'] } },
+                { terms: { status: ['Available', 'Booked', 'Sold'] } },
                 { term: { isListed: "Yes" } },
               ],
             },
@@ -107,7 +107,7 @@ export class CarSlideService {
           : {
             bool: {
               filter: [
-                { terms: { status: ['Available', 'Booked'] } },
+                { terms: { status: ['Available', 'Booked','Sold'] } },
                 { term: { isListed: "Yes" } },
               ],
             },
@@ -124,7 +124,7 @@ export class CarSlideService {
                       ? { filter: [{ term: { body_code: body_type } }] }
                       : {}),
                     filter: [
-                      { terms: { status: ['Available', 'Booked'] } },
+                      { terms: { status: ['Available', 'Booked','Sold'] } },
                       { term: { isListed: "Yes" } },
                     ],
                   },
