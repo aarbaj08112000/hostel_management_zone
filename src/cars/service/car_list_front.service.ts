@@ -85,9 +85,9 @@ export class CarListFrontService {
       let index = 'nest_local_cars';
       if ('is_front' in inputParams && (inputParams?.is_front == 'Yes' || inputParams?.is_front == 'yes')) {
         if ('filters' in inputParams) {
-          inputParams.filters = { ...inputParams.filters, status: ['Available', 'Booked'], isListed: 'Yes' };
+          inputParams.filters = { ...inputParams.filters, status: ['Available', 'Booked', 'Sold'], isListed: 'Yes' };
         } else {
-          inputParams = { ...inputParams, filters: { status: ['Available', 'Booked'], isListed: 'Yes' } };
+          inputParams = { ...inputParams, filters: { status: ['Available', 'Booked' , 'Sold'], isListed: 'Yes' } };
         }
       }
       let search_params = this.general.createElasticSearchQuery(inputParams);
