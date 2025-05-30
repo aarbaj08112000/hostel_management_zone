@@ -1564,30 +1564,34 @@ export class CarController {
         ],
       };
       filter_arr = { ...filter_arr, transmissionType };
+      let min_max_filters = await this.carAddService.fetchMinMax()
+      const {price , year} = min_max_filters
       let manufactureYear = {
         searchParam: 'year',
         searchType: 'btw',
         label: custom.lang('Year'),
         values: {
-          from: '2021',
-          to: '2025',
+          from: year.min_year,
+          to: year.max_year,
         },
       };
       filter_arr = { ...filter_arr, manufactureYear };
 
       let price_limit = await this.general.getConfigItem('PRICE_LIMIT');
       price_limit = price_limit.split('-');
+
+   
       let carPrice = {
         searchParam: 'price',
         searchType: 'btw',
         label: custom.lang('Price'),
         values: {
-          from: price_limit[0],
-          to: price_limit[1],
+          from: price.min_price,
+          to: price.max_price,
         },
         default_values: {
-          from: price_limit[0],
-          to: price_limit[1],
+          from: price.min_price,
+          to: price.max_price,
         },
       };
 
