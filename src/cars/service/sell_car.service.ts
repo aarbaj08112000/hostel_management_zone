@@ -106,6 +106,7 @@ export class SellCarService extends BaseService {
             const aws_folder = await this.general.getConfigItem('AWS_SERVER');
             const data = await Promise.all(
                 results.hits.map(async (hit) => {
+                    hit._source['contact'] = hit._source['dial_code']+' '+hit._source['phone_number'];
                     fileConfig.image_name = hit._source['attachment'];
                     fileConfig.path = `sell_car_${aws_folder}`;
                     if (hit._source['attachment']) {
@@ -248,6 +249,7 @@ export class SellCarService extends BaseService {
           'name',
           'dial_code',
           'phone_number',
+          'contact',
           'email',
           'brand_name',
           'model_name',
