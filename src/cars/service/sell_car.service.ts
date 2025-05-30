@@ -164,6 +164,14 @@ export class SellCarService extends BaseService {
                 inputParams,
                 res.id,
             );
+            let job_data = {
+                job_function: 'sync_elastic_data',
+                job_params: {
+                    module: 'nest_local_sell_car_list',
+                    data: res.id,
+                },
+                };
+                await this.general.submitGearmanJob(job_data)
             return { success: 1, message: "Thank you for contacting us. We'll get in touch with you shortly.", data: code };
         } catch (err) {
             return { success: 0, message: err.message };
