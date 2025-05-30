@@ -52,6 +52,8 @@ import { CarServicesAdd } from './service/car_service_add.service';
 import { CarServicesEntity } from './entities/car_services.entity';
 import { CarFrontCompareService } from './service/front-car-compare_service';
 import { GetLookupData } from './service/fetch_lkp_data.service';
+import { SellCarEntity } from './entities/sell_car.entity';
+import { SellCarService } from './service/sell_car.service';
 @Module({
   imports: [
     GlobalModule,
@@ -72,7 +74,8 @@ import { GetLookupData } from './service/fetch_lkp_data.service';
       LookupEntity,
       VariantMasterEntity,
       CarChargesEntity,
-      CarServicesEntity
+      CarServicesEntity,
+      SellCarEntity
     ]),
 
   ],
@@ -115,7 +118,8 @@ import { GetLookupData } from './service/fetch_lkp_data.service';
     CarChargesService,
     CarFrontCompareService,
     CarServicesAdd,
-    GetLookupData
+    GetLookupData,
+    SellCarService
   ],
 })
 export class CarModule { }
