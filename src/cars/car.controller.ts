@@ -77,6 +77,8 @@ import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 import { CarFrontCompareService } from './service/front-car-compare_service';
 import { GetLookupData } from './service/fetch_lkp_data.service';
+import { SellCarAddImageDto, SellCarDto } from './dto/sell_car.dto';
+import { SellCarService } from './service/sell_car.service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -123,6 +125,7 @@ export class CarController {
     private carServices : CarServicesAdd,
     private activityLogService : ActivityLogService,
     private carFrontCompareService : CarFrontCompareService,
+    private sellCarService : SellCarService,
     private getLookupData: GetLookupData,
   ) { }
   @MessagePattern('update-status')
@@ -1852,6 +1855,59 @@ export class CarController {
       console.error(err);
     }
   }
+
+  @Post('sell-car')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async SellCar(@Req() request: Request, @Body() body: SellCarDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+    const fileDto = new SellCarAddImageDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+    // await this.carMicroservice.processLookupDataFromBody(body)
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          body[key] = fileName;
+        }
+      }
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.sellCarService.sellCar(params);
+  }
+
+  @Post('sell-car-list')
+  async sellCarList(@Req() request: Request, @Body() body: CarListDto) {
+    const params = body;
+    return await this.sellCarService.startSellCarList(request, params);
+  }
+
   sort_map_arr(type) {
     try {
       if (typeof type === 'undefined') {
