@@ -1325,4 +1325,26 @@ export class CarsAddService extends BaseService {
       }
     }
   }
+  async fetchMinMax(){
+    const resultYear = await this.carEntityDetailsRepo
+      .createQueryBuilder('car')
+      .select('MIN(car.manufactureYear)', 'min_year')
+      .addSelect('MAX(car.manufactureYear)', 'max_year')
+      .getRawOne();
+
+     const min_max_years = resultYear;
+
+    const  resultPrice  = await this.carEntityRepo
+    .createQueryBuilder('car')
+      .select('MIN(car.price)', 'min_price')
+      .addSelect('MAX(car.price)', 'max_price')
+      .getRawOne();
+
+    const min_max_price = resultPrice
+
+    return{
+      price : min_max_price ,
+      year : min_max_years
+     }
+    }
 }
