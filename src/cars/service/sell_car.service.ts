@@ -167,7 +167,7 @@ export class SellCarService extends BaseService {
             let job_data = {
                 job_function: 'sync_elastic_data',
                 job_params: {
-                    module: 'nest_local_sell_car_list',
+                    module: 'sell_car_list',
                     data: res.id,
                 },
                 };
