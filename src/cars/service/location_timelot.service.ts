@@ -104,9 +104,9 @@ export class LocationtimeSlotService {
         const updatedTimeSlots = getTimeSlot.map(slot => {
           const [start, end] = slot.slot_time.split(' - ');
           const endTime = new Date(`${slotDate}T${end}`);
-
+          const timeDiffInMinutes = (endTime.getTime() - modifiedZone.getTime()) / (1000 * 60);
           let status = "available";
-          if (modifiedZone > endTime) {
+          if (modifiedZone > endTime ||  timeDiffInMinutes < timeSlot) {
             status = "not_available";
           }
 
@@ -146,7 +146,8 @@ export class LocationtimeSlotService {
           const [start, end] = slot.slot_time.split(' - ');
           const endTime = new Date(`${slotDate}T${end}`);
           const isBooked = bookedTimes.includes(slot.slot_time);
-          const isPast = modifiedZone > endTime;
+          const timeDiffInMinutes = (endTime.getTime() - modifiedZone.getTime()) / (1000 * 60);
+          const isPast = modifiedZone > endTime || timeDiffInMinutes < timeSlot;
 
           return {
             ...slot,
