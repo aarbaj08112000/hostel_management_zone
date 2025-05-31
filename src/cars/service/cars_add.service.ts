@@ -1298,6 +1298,9 @@ export class CarsAddService extends BaseService {
   async updateCarStatus(data){
     let return_arr : any = {}
     try{
+      if(data.bookedByDetails){
+        data.bookedByDetails = JSON.stringify(data.bookedByDetails);
+      }
      const queryColumns : any = {}
      queryColumns.status = data.status;
      queryColumns.bookedByDetails = data.bookedByDetails;
