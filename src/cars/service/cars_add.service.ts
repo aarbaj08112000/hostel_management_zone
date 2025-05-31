@@ -1300,6 +1300,7 @@ export class CarsAddService extends BaseService {
     try{
      const queryColumns : any = {}
      queryColumns.status = data.status;
+     queryColumns.bookedByDetails = data.bookedByDetails;
      const result = await this.carEntityRepo
     .createQueryBuilder()
     .update(CarEntity)
