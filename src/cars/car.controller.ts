@@ -1625,13 +1625,6 @@ export class CarController {
       console.log(err)
     }
   }
-
-
-  @Get('cars-filter')
-  async fetchFilters(@Query('list') list: string) {
-    return this.elasticService.fetchFilterData(list);
-  }
-
   @Post('body-add')
   @UseInterceptors(
     FileFieldsInterceptor([
