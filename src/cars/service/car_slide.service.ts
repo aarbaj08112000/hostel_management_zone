@@ -75,7 +75,7 @@ export class CarSlideService {
   async getCarSlide(inputParams: any) {
     this.blockResult = {};
     try {
-      let index = 'nest_local_cars';
+      let index = 'cars';
       let image_path =
         process.env.BASE_URL +
         '/' +
