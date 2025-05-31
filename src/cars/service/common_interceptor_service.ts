@@ -27,6 +27,11 @@ export class CommonInterceptor implements NestInterceptor {
     if (method === 'POST' && skipPaths.includes(path)) {
       return next.handle();
     }
+
+
+    /// time opt 
+
+    
     const params = { ...request.body, ...request.query, ...request.params };
     return from(this.carMicroService.processLookupDataFromBody(params)).pipe(
       switchMap(() => next.handle())
