@@ -88,7 +88,11 @@ export class CarDetailsService {
         search_by,
       );
 
-      data['publish_status'] = data['isListed'] == 'Yes' ? 'Published' : 'Unpublished'
+      data['publish_status'] = data['isListed'] == 'Yes' ? 'Published' : 'Unpublished';
+
+      if(data.booked_by_details){
+        data.booked_by_details = JSON.parse(data.booked_by_details);
+      }
 
       data['is_wishlist'] = 'No';
 
@@ -296,7 +300,8 @@ export class CarDetailsService {
       'is_wishlist',
       'isListed',
       'publish_status',
-      'analytics'
+      'analytics',
+      'booked_by_details'
     ];
     const outputKeys = ['car_details'];
 
