@@ -93,6 +93,9 @@ export class CarEntity extends UserBase {
 
   @Column({ type: 'text', nullable: true })
   bookedByDetails: string;
+
+  @Column({type : 'text' , nullable: true})
+  analytics : string
 }
 
 enum InsuranceType {

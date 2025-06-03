@@ -367,7 +367,7 @@ export class CarController {
   }
   @Get('sync-elastic-data')
   async syncElasticData(@Query('index') index: string, @Query('dev') dev?: string) {
-    return this.elasticService.syncElasticData(index, dev);
+    return this.elasticService.syncElasticData(index,'',dev);
   }
   @Get('delete-elastic-data')
   async deleteElasticData(@Query('index') index: string, @Query('dev') dev?: string) {
@@ -1377,9 +1377,9 @@ export class CarController {
         visitors: analaytics_res['total_visitor']['value'] ? analaytics_res['total_visitor']['value'] : 0,
         views: analaytics_res['total_views']['value'] ? analaytics_res['total_views']['value'] : 0
       }
-
       let to_update_index = 'nest_local_cars';
-      return await this.elasticService.updateElasticDocument(slug, to_update_index, 'slug', 'analytics', data);
+      return await this.carAddService.updateCarAnalytic(data,slug)
+      // return await this.elasticService.updateElasticDocument(slug, to_update_index, 'slug', 'analytics', data);
 
     }
   }

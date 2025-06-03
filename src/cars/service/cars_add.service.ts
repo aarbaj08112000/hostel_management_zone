@@ -1351,4 +1351,42 @@ export class CarsAddService extends BaseService {
       year : min_max_years
      }
     }
+  async updateCarAnalytic(inputParams , slug){
+     const queryColumns : any = {}
+     let return_arr : any = {}
+
+     const car_data = await this.carEntityRepo.findOne({
+      where : {
+        slug : slug
+      }
+     })
+     if(car_data){
+      queryColumns.analytics = JSON.stringify(inputParams);
+      const result = await this.carEntityRepo
+      .createQueryBuilder()
+      .update(CarEntity)
+      .set(queryColumns)
+      .where("carId = :id", { id: car_data.carId})
+      .execute();
+      console.log(JSON.stringify(result,null,2))
+      return_arr = {
+        success : 1,
+        message : 'Car Updated successfully'
+      }
+      let job_data = {
+        job_function: 'sync_elastic_data',
+        job_params: {
+          module: 'car_list',
+          data: car_data.carId
+        },
+      };
+      await this.general.submitGearmanJob(job_data);
+      return return_arr
+     }else{
+      return_arr = {
+        success : 0,
+        message : 'Unable to update analytics data'
+      }
+     }
+  }
 }
