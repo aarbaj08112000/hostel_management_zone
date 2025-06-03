@@ -1304,6 +1304,7 @@ export class CarsAddService extends BaseService {
      const queryColumns : any = {}
      queryColumns.status = data.status;
      queryColumns.bookedByDetails = data.bookedByDetails;
+     queryColumns.bookedDate = () => 'NOW()';
      const result = await this.carEntityRepo
     .createQueryBuilder()
     .update(CarEntity)
