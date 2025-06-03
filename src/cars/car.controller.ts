@@ -523,7 +523,7 @@ export class CarController {
         title: "Happy <span class='text-primary'>Customers</span>",
       });
       achievements.push({
-        value: '56',
+        value: '3',
         title: "Dealer <span class='text-primary'>Branches</span>",
       });
       final_json = { ...final_json, achievements };
@@ -541,7 +541,7 @@ export class CarController {
         title: "Free <span class='text-primary'>Service</span>",
       });
       benefits.push({
-        value: '2000+',
+        value: '200+',
         title: "Cars <span class='text-primary'>Largest Collection</span>",
       });
       final_json = { ...final_json, benefits };
