@@ -140,6 +140,7 @@ export class CarFrontDetailsService {
         '',
         _source
       );
+
       if (data['isListed'] == 'No') {
         if (inputParams?.dev_publish.toLowerCase() != 'yes') {
           throw new Error('No records found.');
@@ -438,14 +439,17 @@ export class CarFrontDetailsService {
     outputData.data = inputParams;
     const funcData: any = {};
     funcData.name = 'car_details';
-
+    let analaytics_res = outputData.data?.car_details?.analytics
+    delete outputData.data?.car_details?.analytics
     funcData.output_keys = outputKeys;
     funcData.singleKeys = this.singleKeys;
     let response = this.response.outputResponse(outputData, funcData);
+    
     delete response.data[0].exteriorImages
     delete response.data[0].interiorImages
     delete response.data[0].primaryImage
     response.data = response.data[0]
+    response.data['analytics'] = analaytics_res
     return response
   }
   carDetailsFinishedFailure(inputParams: any) {
