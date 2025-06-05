@@ -37,9 +37,7 @@ export class CarAddDto {
 
   @IsString()
   @RequiredIfNotDraft()
-  @IsNotEmpty({
-    message: () => custom.lang('Please enter a value for the carName field.'),
-  })
+  @IsOptional()
   car_name: string;
 
   @IsOptional()
