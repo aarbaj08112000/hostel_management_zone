@@ -458,8 +458,10 @@ export class CarController {
       };
       params['skip_brand'] = 'Yes'
       params['filters'] = [{ "key": "status", "value": "Active", "operator": "equal" }];
-      // params['limit'] = 8;
+      let carBrandList = await this.carAddService.BrandWiseCars()
+      
       let premiumBrands = await this.brandList(request, params);
+      console.log(JSON.stringify(premiumBrands,null,2))
       let image_path =
         process.env.BASE_URL +
         '/' +
@@ -472,7 +474,7 @@ export class CarController {
           subTitle: custom.lang('Explore Our'),
           btnName: custom.lang('Show All Brands'),
           values: Object.values(premiumBrands['data'])
-          .filter((key) => key['model_codes'] != null && key['model_codes'] !== '')
+          .filter((key) => key['model_codes'] != null && key['model_codes'] !== '' && carBrandList.includes(key['brand_id']))
           .map((key) => ({
             label: key['brand_name'],
             image: key['brand_image'] ? key['brand_image'] : '',

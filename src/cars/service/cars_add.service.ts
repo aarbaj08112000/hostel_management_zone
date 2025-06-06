@@ -1390,4 +1390,20 @@ export class CarsAddService extends BaseService {
       }
      }
   }
+  async BrandWiseCars() {
+    try {  
+      let ret_data = [];
+      const queryObject = await this.carEntityDetailsRepo
+        .createQueryBuilder('c')
+        .select('c.brandId', 'brandId');
+        const response = await queryObject.getRawMany();
+        if(response != null){
+           ret_data = [...new Set(response.map(item => item.brandId))];
+        }
+        return ret_data;
+      } catch (err) {
+        console.log(err);
+        throw err; 
+      }
+    }
 }
