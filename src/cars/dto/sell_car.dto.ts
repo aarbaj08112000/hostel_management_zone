@@ -52,3 +52,8 @@ export class SellCarAddImageDto {
     @MaxFileSize(10485760)
     attachment: Express.Multer.File[];
 }
+
+export class SellCarDetailsDto {
+    @IsNotEmpty()
+    id: string;
+}

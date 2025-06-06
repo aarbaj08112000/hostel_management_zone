@@ -77,7 +77,7 @@ import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 import { CarFrontCompareService } from './service/front-car-compare_service';
 import { GetLookupData } from './service/fetch_lkp_data.service';
-import { SellCarAddImageDto, SellCarDto } from './dto/sell_car.dto';
+import { SellCarAddImageDto, SellCarDetailsDto, SellCarDto } from './dto/sell_car.dto';
 import { SellCarService } from './service/sell_car.service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
@@ -1903,6 +1903,11 @@ export class CarController {
   async sellCarList(@Req() request: Request, @Body() body: CarListDto) {
     const params = body;
     return await this.sellCarService.startSellCarList(request, params);
+  }
+
+  @Get('sell-car-detail')
+  async sellCarDetails(@Query() params: SellCarDetailsDto) {
+    return await this.sellCarService.startSellCarDetail(params.id);
   }
 
   sort_map_arr(type) {
