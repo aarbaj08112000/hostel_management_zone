@@ -461,7 +461,6 @@ export class CarController {
       let carBrandList = await this.carAddService.BrandWiseCars()
       
       let premiumBrands = await this.brandList(request, params);
-      console.log(JSON.stringify(premiumBrands,null,2))
       let image_path =
         process.env.BASE_URL +
         '/' +
