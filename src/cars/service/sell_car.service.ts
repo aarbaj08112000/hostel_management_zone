@@ -90,7 +90,6 @@ export class SellCarService extends BaseService {
                 startIdx,
                 recLimit,
             );
-    
             if (!_.isObject(results) || _.isEmpty(results)) {
                 throw new Error('No records found.');
             }
@@ -136,7 +135,37 @@ export class SellCarService extends BaseService {
         }
         inputParams.sell_car = this.blockResult.data;
         return inputParams;
-      }
+    }
+
+    async startSellCarDetail(id) {
+        try {
+            let fileConfig: FileFetchDto = {};
+            const currency_code = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX');
+            const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+            fileConfig.source = 'amazon';
+            fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
+            const data = await this.elasticService.getById(id, 'nest_local_sell_car_list', 'id');
+            if (_.isObject(data) && !_.isEmpty(data)) {
+                fileConfig.image_name = data.attachment;
+                fileConfig.path = `sell_car_${aws_folder}`;
+                data['attachment'] = data.attachment ? await this.general.getFile(fileConfig, data) : '';
+                data['contact'] = data.dial_code+' '+data.phone_number;
+                return {
+                    success: 1,
+                    message: 'Records found.',
+                    data,
+                };
+            } else {
+                throw new Error('No records found.');
+            }
+        } catch (err) {
+            return { 
+                success: 0, 
+                message: err.message || 'Something went wrong.',
+                data: []
+            };
+        }
+    }
 
     async sellCar(inputParams) {
         try {
