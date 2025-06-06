@@ -89,6 +89,9 @@ export class CarFrontDetailsService {
         "drivenDistance",
         "car_slug",
         "transmissionType",
+        "discountEnabled",
+        "discountValue",
+        "booked_by_details",
         "car_image",
         "added_date",
         "bodyName",
@@ -148,6 +151,15 @@ export class CarFrontDetailsService {
       }
       data['isWishList'] = 'No';
       data['wishlist_count'] = 0;
+      data['allow_test_drive'] = 'Yes';
+      let booked_by_id;
+      if (['Sold', 'Booked'].includes(data['status'])) {
+        data['allow_test_drive'] = 'No';
+        if(data.booked_by_details){
+          data.booked_by_details = JSON.parse(data.booked_by_details);
+          booked_by_id = data.booked_by_details.id;
+        }
+      }
 
       const [wishlist, count] = await this.carWishlistRepo.findAndCount({
         where: { carId: data['carId'] },
@@ -179,6 +191,10 @@ export class CarFrontDetailsService {
             });
 
             data['isWishList'] = wishlist_data ? 'Yes' : 'No';
+            
+            if (user.entityId == booked_by_id){
+              data['allow_test_drive'] = 'Yes';
+            }
           }
         }
       }
@@ -391,6 +407,9 @@ export class CarFrontDetailsService {
       "features",
       "carDescription",
       "horsePower",
+      "discountEnabled",
+      "discountValue",
+      "allow_test_drive",
       "exteriorColorName",
       "numberOfDoors",
       "primaryImage",
