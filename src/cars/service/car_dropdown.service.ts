@@ -65,20 +65,21 @@ export class CarDropDownListService {
       if ('is_front' in inputParams && (inputParams?.is_front == 'Yes' || inputParams?.is_front == 'yes')) {
 
         if ('filters' in inputParams) {
-          inputParams.filters = { ...inputParams.filters, status: ['Available', 'Booked'] };
+          inputParams.filters = { ...inputParams.filters, status: ['Available', 'Booked'], isListed: 'Yes' };
         } else {
-          inputParams = { ...inputParams, filters: { status: ['Available', 'Booked'] } };
+          inputParams = { ...inputParams, filters: { status: ['Available', 'Booked'],  isListed: 'Yes' } };
         }
       } else {
         if ('filters' in inputParams) {
           inputParams.filters = [
             ...inputParams.filters,
-            { "key": "status", "value": "Available", "operator": "equal" }
+            { "key": "status", "value": "Available", "operator": "equal" },
+            { "key": "isListed", "value": "Yes", "operator": "equal" }
           ];
         } else {
           inputParams = {
             ...inputParams,
-            filters: [{ "key": "status", "value": "Available", "operator": "equal" }]
+            filters: [{ "key": "status", "value": "Available", "operator": "equal" },{ "key": "isListed", "value": "Yes", "operator": "equal" }]
           };
         }
       }
