@@ -43,7 +43,7 @@ export class BodyAddImageFileDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => UploadedFile)
-  @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp'])
+  @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp','image/svg+xml'])
   @MaxFileSize(10485760)
   body_image: Express.Multer.File[];
 }
