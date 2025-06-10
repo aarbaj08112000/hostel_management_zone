@@ -1295,41 +1295,58 @@ export class CarsAddService extends BaseService {
     }
 
   }
-  async updateCarStatus(data){
-    let return_arr : any = {}
-    try{
-      if(data.bookedByDetails){
-        data.bookedByDetails = JSON.stringify(data.bookedByDetails);
-      }
-     const queryColumns : any = {}
-     queryColumns.status = data.status;
-     queryColumns.bookedByDetails = data.bookedByDetails;
-     queryColumns.bookedDate = () => 'NOW()';
-     const result = await this.carEntityRepo
-    .createQueryBuilder()
-    .update(CarEntity)
-    .set(queryColumns)
-    .where("carId = :id", { id: data.id })
-    .execute();
-    return_arr = {
-      success : 1,
-      message : 'Car Updated successfully'
+  async updateCarStatus(data: any) {
+  let return_arr: any = {};
+  try {
+    if (data.bookedByDetails) {
+      data.bookedByDetails = JSON.stringify(data.bookedByDetails);
     }
-    let job_data = {
+
+    const queryColumns: any = {
+      status: data.status,
+      bookedByDetails: data.bookedByDetails,
+      bookedDate: () => 'NOW()',
+    };
+
+    const queryBuilder = this.carEntityRepo
+      .createQueryBuilder()
+      .update(CarEntity)
+      .set(queryColumns);
+
+    if (typeof data.id === 'object' && Array.isArray(data.id)) {
+          console.log(data.id)
+      queryBuilder.where('carId IN (:...ids)', { ids: data.id });
+    } else {
+      queryBuilder.where('carId = :id', { id: data.id });
+    }
+
+    const res = await queryBuilder.execute();
+    return_arr = {
+      success: 1,
+      message: 'Car(s) updated successfully',
+    };
+
+    const job_data = {
       job_function: 'sync_elastic_data',
       job_params: {
         module: 'car_list',
-        data: data.id
+        data: data.id,
       },
     };
+
     await this.general.submitGearmanJob(job_data);
-    }catch(err){
-      return_arr = {
-        success : 0,
-        message : err.message
-      }
-    }
+
+  } catch (err) {
+    console.log(err)
+    return_arr = {
+      success: 0,
+      message: err.message,
+    };
   }
+
+  return return_arr;
+}
+
   async fetchMinMax(){
     const resultYear = await this.carEntityDetailsRepo
       .createQueryBuilder('car')
