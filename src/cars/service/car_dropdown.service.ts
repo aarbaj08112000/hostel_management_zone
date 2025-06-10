@@ -81,8 +81,14 @@ export class CarDropDownListService {
             ...inputParams,
             filters: [{ "key": "status", "value": "Available", "operator": "equal" },{ "key": "isListed", "value": "Yes", "operator": "equal" }]
           };
+          if('location_id' in inputParams){
+            inputParams.filters = [
+              ...inputParams.filters , { "key": "location_id", "value": inputParams.location_id, "operator": "equal" }
+            ]            
+          }
         }
       }
+      console.log(JSON.stringify(inputParams,null,2))
       let search_params: any = this.general.createElasticSearchQuery(inputParams);
       let feilds = ['car_image', 'carId', 'carName', 'car_slug'];
       search_params = { ...search_params, feilds };
