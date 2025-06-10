@@ -61,7 +61,7 @@ export class LocationtimeSlotService {
       inputParams.filters = [
         { "key": "car_id", "value": inputParams.carId, "operator": "equal" },
         { "key": "slot_date", "value": inputParams.requested_date + 'T00:00:00.000Z', "operator": "equal" },
-        { "key": "status", "value": "Cancelled", "operator": "notequal" }
+        { "key": "status", "value": ['Cancelled', 'Completed'], "operator": "notin" }
       ];
       let search_params = this.general.createElasticSearchQuery(inputParams);
       let pageIndex = 1;
