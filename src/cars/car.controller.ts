@@ -1321,10 +1321,15 @@ export class CarController {
 
   @Get('car-compare-dropdown')
   async getCarCompareData(@Req() request: Request, @Query() params: any) {
+    const car_status = ['Booked', 'Available'];
+    if('is_testDrive' in params && params.is_testDrive == 'yes'){
+      const index = car_status.indexOf('Booking')
+      car_status.splice(index,1)
+    }
     if ('brandName' in params) {
       params['filters'] = [{ "key": "brandCode", "value": params['brandName'], "operator": "contain" }];
     }
-
+    
     if ('modelName' in params) {
       params['filters'] = [
         ...(params['filters'] || []),
@@ -1334,7 +1339,7 @@ export class CarController {
     params['filters'] = [
       ...(params['filters'] || []),
       { "key": "isListed", "value": 'Yes', "operator": "in" },
-      { "key": "status", "value": ['Booked', 'Available'], "operator": "in" }
+      { "key": "status", "value": car_status, "operator": "in" }
     ];
 
     let carList = await this.carList(request, params);
