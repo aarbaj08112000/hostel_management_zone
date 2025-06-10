@@ -1314,8 +1314,8 @@ export class CarsAddService extends BaseService {
       .set(queryColumns);
 
     if (typeof data.id === 'object' && Array.isArray(data.id)) {
-          console.log(data.id)
       queryBuilder.where('carId IN (:...ids)', { ids: data.id });
+      queryBuilder.andWhere('status NOT IN (:...statuses)', { statuses: ['Sold'] });
     } else {
       queryBuilder.where('carId = :id', { id: data.id });
     }
