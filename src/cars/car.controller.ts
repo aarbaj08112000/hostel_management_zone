@@ -481,6 +481,7 @@ export class CarController {
           })).slice(0, 8),
         };
 
+        
         final_json = { ...final_json, premiumBrands };
       }
       if ('filters' in params) {
