@@ -86,9 +86,13 @@ export class CarDropDownListService {
               ...inputParams.filters , { "key": "location_id", "value": inputParams.location_id, "operator": "equal" }
             ]            
           }
+          if('type' in inputParams && inputParams.type == 'meta'){
+            inputParams = {
+              ...inputParams,filters : [{ "key": "status", "value": "Draft", "operator": "notequal" }]
+            }
+          }
         }
       }
-      console.log(JSON.stringify(inputParams,null,2))
       let search_params: any = this.general.createElasticSearchQuery(inputParams);
       let feilds = ['car_image', 'carId', 'carName', 'car_slug'];
       search_params = { ...search_params, feilds };
