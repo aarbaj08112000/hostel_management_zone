@@ -97,7 +97,6 @@ export class CarPublishUpdateService {
       // CarAddDto
       location_id: { key: 'location_id', label: 'Location ID' },
       export_status: { key: 'export_status', label: 'Export Status' },
-      car_name: { key: 'carName', label: 'Car Name' },
       price: { key: 'price', label: 'Price' },
       slug: { key: 'car_slug', label: 'Slug' },
 
