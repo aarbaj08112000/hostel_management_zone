@@ -1408,19 +1408,24 @@ export class CarsAddService extends BaseService {
      }
   }
   async BrandWiseCars() {
-    try {  
-      let ret_data = [];
-      const queryObject = await this.carEntityDetailsRepo
-        .createQueryBuilder('c')
-        .select('c.brandId', 'brandId');
-        const response = await queryObject.getRawMany();
-        if(response != null){
-           ret_data = [...new Set(response.map(item => item.brandId))];
-        }
-        return ret_data;
-      } catch (err) {
-        console.log(err);
-        throw err; 
-      }
+  try {  
+    let ret_data = [];
+    
+    const queryObject = await this.carEntityDetailsRepo
+      .createQueryBuilder('c')
+      .innerJoin('cars', 'ce', 'ce.carId = c.carId') 
+      .select('c.brandId', 'brandId')
+      .where('ce.isListed = :status', { status: 'Yes' });
+
+    const response = await queryObject.getRawMany();
+
+    if (response != null) {
+      ret_data = [...new Set(response.map(item => item.brandId))];
     }
+    return ret_data;
+  } catch (err) {
+    console.log(err);
+    throw err; 
+  }
+}
 }
