@@ -224,7 +224,8 @@ export class CarWishlistService {
         "body_code",
         "analytics",
         "status",
-        "display_title"
+        "display_title",
+        "isListed"
       ]
       search_params['_source'] = _source;
       let pageIndex = 1;
@@ -329,7 +330,8 @@ export class CarWishlistService {
       'isWishlist',
       'distanceSuffix',
       'status',
-      'display_title'
+      'display_title',
+      'isListed'
     ];
     const outputKeys = ['get_car_list'];
 
