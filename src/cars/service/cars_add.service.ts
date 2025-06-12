@@ -1446,7 +1446,7 @@ async fetchDisplayName(car_id) {
     WHERE 
       c.carId = ?
   `, [car_id]);
-  console.log(result);
-  return result;
+  return result[0]?.display_title || null;
 }
+
 }
