@@ -22,7 +22,9 @@ export class CarDetailsDto {
   @MaxLength(255)
   vin_number: string;
 
-  @IsOptional()
+  @IsNotEmpty({
+    message: () => custom.lang('Please enter a value for the chassis_number field.'),
+  })
   @IsString()
   @MaxLength(255)
   chassis_number: string;
