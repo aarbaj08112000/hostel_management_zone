@@ -57,12 +57,14 @@ export class LocationtimeSlotService {
     this.blockResult = {};
     try {
       let index = 'nest_local_test_drive_list';
-      // inputParams.filters = { ...inputParams.filters, car_id: inputParams.carId, slot_date: inputParams.requested_date + 'T00:00:00.000Z' };
-      inputParams.filters = [
-        { "key": "car_id", "value": inputParams.carId, "operator": "equal" },
-        { "key": "slot_date", "value": inputParams.requested_date + 'T00:00:00.000Z', "operator": "equal" },
-        { "key": "status", "value": ['Cancelled', 'Completed'], "operator": "notin" }
-      ];
+      inputParams.is_front = 'Yes';
+      inputParams.filters = { 
+        ...inputParams.filters, 
+        car_id: inputParams.carId, 
+        slot_date: inputParams.requested_date + 'T00:00:00.000Z',
+        ['status.keyword']: ['Scheduled', 'Ongoing','Completed']
+      };
+
       let search_params = this.general.createElasticSearchQuery(inputParams);
       let pageIndex = 1;
       if ('page' in inputParams) {
