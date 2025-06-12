@@ -497,6 +497,7 @@ export class CarMicroserviceService {
         queryObject.andWhere(currentRepo.where, { id: inputParams.id });
       }
       const data: any = await queryObject.getRawOne();
+      data.name = await this.fetchDisplayName(data.carId)
       if (!_.isObject(data) || _.isEmpty(data)) {
         throw new Error('No records found.');
       }
@@ -674,5 +675,23 @@ export class CarMicroserviceService {
     }
     return '';
   }  
-  
+  async fetchDisplayName(car_id) {
+  const result = await this.dataSource.query(`
+    SELECT 
+      CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title
+    FROM 
+      cars c
+    JOIN 
+      cars_details cd ON c.carId = cd.carId
+    JOIN 
+      variant_master vm ON cd.variantId = vm.variantId
+    JOIN 
+      car_model cm ON cd.modelId = cm.carModelId
+    JOIN 
+      brand b ON cd.brandId = b.brandId
+    WHERE 
+      c.carId = ?
+  `, [car_id]);
+  return result[0]?.display_title || null;
+}
 } 
