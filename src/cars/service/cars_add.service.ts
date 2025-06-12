@@ -588,6 +588,7 @@ export class CarsAddService extends BaseService {
           // .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
           selObject.where('c.carId = :id', { id: car_id });
           const sel_data = await selObject.getRawOne();
+          sel_data.name = await this.fetchDisplayName(car_id)
           let micro_data : any = {
             id : car_id,
             mode : 'update',
@@ -1428,4 +1429,24 @@ export class CarsAddService extends BaseService {
     throw err; 
   }
 }
+  async fetchDisplayName(car_id){
+    const result = await this.dataSource.query(`
+    SELECT 
+        CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title
+      FROM 
+        cars c
+      JOIN 
+        cars_details cd ON c.carId = cd.carId
+      JOIN 
+        variant_master vm ON cd.variantId = vm.variantId
+      JOIN 
+        car_model cm ON cd.modelId = cm.carModelId
+      JOIN 
+        brand b ON cd.brandId = b.brandId;
+      WHERE c.carId = ${car_id}
+  );
+`);
+console.log(result)
+    return result;
+  }
 }
