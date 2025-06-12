@@ -1429,24 +1429,24 @@ export class CarsAddService extends BaseService {
     throw err; 
   }
 }
-  async fetchDisplayName(car_id){
-    const result = await this.dataSource.query(`
+async fetchDisplayName(car_id) {
+  const result = await this.dataSource.query(`
     SELECT 
-        CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title
-      FROM 
-        cars c
-      JOIN 
-        cars_details cd ON c.carId = cd.carId
-      JOIN 
-        variant_master vm ON cd.variantId = vm.variantId
-      JOIN 
-        car_model cm ON cd.modelId = cm.carModelId
-      JOIN 
-        brand b ON cd.brandId = b.brandId;
-      WHERE c.carId = ${car_id}
-  );
-`);
-console.log(result)
-    return result;
-  }
+      CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title
+    FROM 
+      cars c
+    JOIN 
+      cars_details cd ON c.carId = cd.carId
+    JOIN 
+      variant_master vm ON cd.variantId = vm.variantId
+    JOIN 
+      car_model cm ON cd.modelId = cm.carModelId
+    JOIN 
+      brand b ON cd.brandId = b.brandId
+    WHERE 
+      c.carId = ?
+  `, [car_id]);
+  console.log(result);
+  return result;
+}
 }
