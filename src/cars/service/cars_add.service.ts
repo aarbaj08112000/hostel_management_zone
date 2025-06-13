@@ -119,7 +119,7 @@ export class CarsAddService extends BaseService {
               inputParams.car_history?.updated_by ||
               inputParams.car_tag_data?.updated_by;
 
-            let car_name = await this.getCarName(car_id)
+            let car_name = await this.fetchDisplayName(car_id)
             let value_json = {
               "CAR_NAME": car_name,
               "CAR_ID": inputParams.car_data.car_id,
@@ -210,7 +210,7 @@ export class CarsAddService extends BaseService {
             }
             outputResponse = this.carsFinishSuccess(response);
             let value_json = {
-              "CAR_NAME": inputParams.car_data.car_name,
+              "CAR_NAME": await this.fetchDisplayName(response.insert_id),
               "CAR_ID": response.insert_id,
               "ADDED_BY": await this.general.getAdminName(inputParams.car_data.added_by),
               "ADDED_BY_ID": inputParams.added_by
