@@ -11,7 +11,7 @@ import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { ModuleService } from '@repo/source/services/module.service';
 import { BaseService } from '@repo/source/services/base.service';
-import { SellCarEntity } from '../entities/sell_car.entity';
+import { SellCarEntity, SellCarAttachmentsEntity } from '../entities/sell_car.entity';
 import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
@@ -41,6 +41,8 @@ export class SellCarService extends BaseService {
     protected readonly moduleService: ModuleService;
     @InjectRepository(SellCarEntity)
     protected sellCarEntity: Repository<SellCarEntity>;
+    @InjectRepository(SellCarAttachmentsEntity)
+    protected sellCarAttachmentsEntity: Repository<SellCarAttachmentsEntity>;
 
     constructor(protected readonly elasticService: ElasticService) {
         super();
@@ -66,10 +68,6 @@ export class SellCarService extends BaseService {
     }
 
     async getSellCar(inputParams: any) {
-        let fileConfig: FileFetchDto;
-        fileConfig = {};
-        fileConfig.source = 'amazon';
-        fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
         this.blockResult = {};
         try {
             let index = 'nest_local_sell_car_list';
@@ -102,14 +100,11 @@ export class SellCarService extends BaseService {
             if (totalCount <= 0) {
                 throw new Error('No records found.');
             }
-            const aws_folder = await this.general.getConfigItem('AWS_SERVER');
             const data = await Promise.all(
                 results.hits.map(async (hit) => {
                     hit._source['contact'] = hit._source['dial_code']+' '+hit._source['phone_number'];
-                    fileConfig.image_name = hit._source['attachment'];
-                    fileConfig.path = `sell_car_${aws_folder}`;
-                    if (hit._source['attachment']) {
-                        hit._source['attachment'] = await this.general.getFile(fileConfig, inputParams);
+                    if(hit._source['attachments']){
+                        hit._source['attachments'] = hit._source['attachments'].split(',');
                     }
                     return hit._source;
                 })
@@ -139,16 +134,12 @@ export class SellCarService extends BaseService {
 
     async startSellCarDetail(id) {
         try {
-            let fileConfig: FileFetchDto = {};
             const currency_code = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX');
-            const aws_folder = await this.general.getConfigItem('AWS_SERVER');
-            fileConfig.source = 'amazon';
-            fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
             const data = await this.elasticService.getById(id, 'nest_local_sell_car_list', 'id');
             if (_.isObject(data) && !_.isEmpty(data)) {
-                fileConfig.image_name = data.attachment;
-                fileConfig.path = `sell_car_${aws_folder}`;
-                data['attachment'] = data.attachment ? await this.general.getFile(fileConfig, data) : '';
+                if(data.attachments){
+                    data.attachments = data.attachments.split(',');
+                }
                 data['contact'] = data.dial_code+' '+data.phone_number;
                 return {
                     success: 1,
@@ -184,27 +175,82 @@ export class SellCarService extends BaseService {
                 brandName: inputParams.brand_name,
                 modelName: inputParams.model_name,
                 message: inputParams.message,
-                attachment: inputParams.attachment || null,
                 addedDate: new Date(),
             });
 
             let res = await this.sellCarEntity.save(data);
-            uploadResult = await this.uploadFiles(
-                fileInfo,
-                inputParams,
-                res.id,
-            );
+
+            const attachmentQuery  : any = []
+            if('attachment' in fileInfo){
+                uploadResult = await this.uploadFiles(
+                    fileInfo.attachment,
+                    inputParams,
+                    res.id
+                );
+                const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+                const allowedExtensions = await this.general.getConfigItem('allowed_extensions');
+
+                for (const file of fileInfo.attachment) {
+                    const fileConfig: FileFetchDto = {
+                        source: 'amazon',
+                        extensions: allowedExtensions,
+                        path: `sell_car_${aws_folder}/${res.id}`,
+                        image_name: file.file_name
+                    };
+
+                    const mappedData = {
+                        attachmentName: file.file_name,
+                        sourceId: res.id,
+                        fileType: file.file_type,
+                        fileSize: file.file_size,
+                        filePath: await this.general.getFile(fileConfig, inputParams),
+                    };
+                    attachmentQuery.push(mappedData);
+                }
+                const queryObject = this.sellCarAttachmentsEntity;
+                const resl = await queryObject.save(attachmentQuery);
+            }
+
             let job_data = {
                 job_function: 'sync_elastic_data',
                 job_params: {
                     module: 'sell_car_list',
                     data: res.id,
                 },
-                };
-                await this.general.submitGearmanJob(job_data)
+            };
+            await this.general.submitGearmanJob(job_data)
             return { success: 1, message: "Thank you for contacting us. We'll get in touch with you shortly.", data: code };
         } catch (err) {
             return { success: 0, message: err.message };
+        }
+    }
+
+    async processFile(paramKey, uploadInfo, params) {
+        let temp_upload = [];
+        if (paramKey in params && !custom.isEmpty(params[paramKey])) {
+            const images = params[paramKey]
+            const tmpUploadPath = await this.general.getConfigItem('upload_temp_path');
+            if (Array.isArray(images)) {
+            images.forEach((image) => {
+                const filePath = `${tmpUploadPath}${image}`;
+                if (this.general.isFile(filePath)) {
+                const fileInfo = {
+                    name: image,
+                    file_name: image,
+                    file_path: filePath,
+                    file_type: this.general.getFileMime(filePath),
+                    file_size: this.general.getFileSize(filePath),
+                    max_size: paramKey === 'car_document' ? 512000 : 102400,
+                    extensions:
+                    paramKey === 'car_document'
+                        ? 'pdf,doc,docx'
+                        : 'gif,png,jpg,jpeg,jpe,bmp,ico,webp',
+                };
+                temp_upload.push(fileInfo);
+                }
+            })
+            }
+            uploadInfo[paramKey] = temp_upload
         }
     }
 
@@ -213,55 +259,27 @@ export class SellCarService extends BaseService {
         const aws_folder = await this.general.getConfigItem('AWS_SERVER');
         for (const key in uploadInfo) {
             if ('name' in uploadInfo[key]) {
-                const uploadConfig = {
-                    source: 'amazon',
-                    upload_path: `sell_car_${aws_folder}/`,
-                    extensions: uploadInfo[key].extensions,
-                    file_type: uploadInfo[key].file_type,
-                    file_size: uploadInfo[key].file_size,
-                    max_size: uploadInfo[key].max_size,
-                    src_file: uploadInfo[key].file_path,
-                    dst_file: uploadInfo[key].name,
-                };
-
-                uploadResults[key] = await this.general.uploadFile(
-                    uploadConfig,
-                    params,
-                );
+            uploadResults[key] = await this.general.uploadFile(
+                {
+                source: 'amazon',
+                upload_path: `sell_car_${aws_folder}/${id}/`,
+                extensions: uploadInfo[key].extensions,
+                file_type: uploadInfo[key].file_type,
+                file_size: uploadInfo[key].file_size,
+                max_size: uploadInfo[key].max_size,
+                src_file: uploadInfo[key].file_path,
+                dst_file: uploadInfo[key].name,
+                },
+                params,
+            );
             }
         }
         return uploadResults;
     }
 
-    async processFile(paramKey, uploadInfo, params) {
-        if (paramKey in params && !custom.isEmpty(params[paramKey])) {
-            const tmpUploadPath = await this.general.getConfigItem('upload_temp_path');
-            const filePath = `${tmpUploadPath}${params[paramKey]}`;
-
-            if (this.general.isFile(filePath)) {
-                const fileInfo = {
-                    name: params[paramKey],
-                    file_name: params[paramKey],
-                    file_path: filePath,
-                    file_type: this.general.getFileMime(filePath),
-                    file_size: this.general.getFileSize(filePath),
-                    max_size: paramKey === 'car_document' ? 512000 : 102400,
-                    extensions: 'pdf,doc,docx,gif,png,jpg,jpeg,jpe,bmp,ico,webp',
-                };
-                uploadInfo[paramKey] = fileInfo;
-                return fileInfo;
-            }
-        }
-        return null;
-    }
-
     async processFiles(params) {
         let uploadInfo = {};
-
-        await Promise.all([
-            this.processFile.call(this, 'attachment', uploadInfo, params)
-        ]);
-
+        await this.processFile('attachment', uploadInfo, params);
         return uploadInfo;
     }
 
@@ -283,7 +301,7 @@ export class SellCarService extends BaseService {
           'brand_name',
           'model_name',
           'message',
-          'attachment',
+          'attachments',
           'added_date',
         ];
         if ('skip_brand' in inputParams && inputParams.skip_brand == 'Yes') {

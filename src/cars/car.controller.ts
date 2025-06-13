@@ -1897,9 +1897,13 @@ export class CarController {
         for (const file of fieldFiles) {
           const fileName = await this.general.temporaryUpload(file);
           uploadPromises.push(fileName);
-          body[key] = fileName;
+          // body[key] = fileName;
+          temp.push(fileName);
         }
       }
+    }
+    if(temp.length > 0){
+      body['attachment'] = temp;
     }
     await Promise.all(uploadPromises);
     const params = body;
