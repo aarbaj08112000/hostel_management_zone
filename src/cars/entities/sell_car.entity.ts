@@ -29,9 +29,30 @@ export class SellCarEntity {
   @Column({ type: 'text', nullable: true })
   message: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  attachment: string;
-
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   addedDate: Date;
+}
+
+@Entity('sell_car_images')
+export class SellCarAttachmentsEntity {
+  @PrimaryGeneratedColumn()
+  attachmentId: number;
+
+  @Column({ type: 'varchar', length: 255 })
+  attachmentName: string;
+
+  @Column({ type: 'int', nullable: true })
+  sourceId: number;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  fileType: string;
+
+  @Column({ type: 'int', nullable: true })
+  fileSize: number;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  uploadDate: Date;
+
+  @Column({ type: 'text', nullable: true })
+  filePath: string;
 }
