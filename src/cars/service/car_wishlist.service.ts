@@ -197,15 +197,16 @@ export class CarWishlistService {
       }
 
       const carIds = wishlistEntries.map(entry => entry.carId);
-      inputParams['filters'] = {carId : carIds}
-      inputParams['is_front'] = 'Yes';
       let fileConfig: FileFetchDto;
       let currency_code = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX')
       fileConfig = {};
       fileConfig.source = 'amazon';
       fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
       let index = 'nest_local_cars';
-      let search_params = this.general.createElasticSearchQuery(inputParams);
+      let search_params = this.general.createElasticSearchQuery({
+        "is_front" : "Yes",
+        filters : {carId : carIds}
+      });
       let _source = [
         "carId",
         "bodyType",
@@ -225,7 +226,8 @@ export class CarWishlistService {
         "analytics",
         "status",
         "display_title",
-        "isListed"
+        "isListed",
+        "booked_by_details"
       ]
       search_params['_source'] = _source;
       let pageIndex = 1;
@@ -277,6 +279,16 @@ export class CarWishlistService {
           hit._source['carImage'] = hit._source['car_image']
             ? await this.general.getFile(fileConfig, inputParams)
             : '';
+          let booked_by_id = 0;
+          if(hit._source['booked_by_details']){
+              hit._source['booked_by_details'] = JSON.parse(hit._source['booked_by_details']);
+              booked_by_id = hit._source['booked_by_details']?.id;
+          }
+          if(inputParams.is_front == 'Yes') {
+              if(inputParams['customer_id'] == booked_by_id){
+                  hit._source['status'] = hit._source['status'] == 'Sold' ? 'Purchased' : hit._source['status'];
+              }
+          }
           return hit._source;
         }),
       );

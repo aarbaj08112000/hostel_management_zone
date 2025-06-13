@@ -773,7 +773,7 @@ export class CarController {
   }
   @Get('front-cars-details')
   async frontCarDetail(
-    @Req() request: Request,
+    @Req() request: ExpressRequest,
     @Query()
     body: CarsDetailsDto,
   ) {

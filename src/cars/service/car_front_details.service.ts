@@ -193,13 +193,14 @@ export class CarFrontDetailsService {
             data['isWishList'] = wishlist_data ? 'Yes' : 'No';
             
             if (user.entityId == booked_by_id){
+              data['status'] = data['status'] == 'Sold' ? 'Purchased' : data['status']; 
               data['allow_test_drive'] = 'Yes';
             }
           }
         }
       }
 
-      if (data['status'] == 'Sold') {
+      if (['Sold', 'Purchased'].includes(data['status'])) {
         data['allow_test_drive'] = 'No';
       }
 
