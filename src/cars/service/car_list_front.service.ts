@@ -173,6 +173,7 @@ export class CarListFrontService {
 
           fileConfig.image_name = hit._source['car_image'];
           fileConfig.path = `car_images_${aws_folder}/${hit._source['carId']}`;
+          hit._source['raw_price'] = hit._source['price'];
           hit._source['price'] = this.general.numberFormat(
             hit._source['price'],
             'currency',
@@ -308,7 +309,8 @@ export class CarListFrontService {
       'isWishlist',
       'distanceSuffix',
       "status",
-      "display_title"
+      "display_title",
+      "raw_price"
     ];
     const outputKeys = ['get_car_list'];
 

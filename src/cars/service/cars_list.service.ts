@@ -175,6 +175,7 @@ export class CarListService {
           }
           fileConfig.image_name = hit._source['car_image'];
           fileConfig.path = `car_images_${aws_folder}/${hit._source['carId']}`;
+          hit._source['raw_price'] = hit._source['price'];
           hit._source['db_price'] = this.general.numberFormat(
             hit._source['price'],
             'currency',
@@ -332,7 +333,8 @@ export class CarListService {
       'isListed',
       'publish_status',
       'analytics',
-      'test_drive_count'
+      'test_drive_count',
+      'raw_price'
     ];
     const outputKeys = ['get_car_list'];
 

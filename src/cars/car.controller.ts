@@ -680,7 +680,7 @@ export class CarController {
   async getBrandDropdown(@Req() request: Request, @Query() params: any) {
     let brandList = await this.brandList(request, params);
     let data  = await this.carAddService.fetchBrandModelPresentCar()
-    const brandIds = data.map(item => item.brandId);
+    const brandIds = data.map(item => item.cm_brandId);
     return brandList ={
       settings: brandList['settings'],
       data: Array.isArray(brandList['data']) && brandList['data'].length > 0
@@ -1322,10 +1322,9 @@ export class CarController {
 
   @Get('car-compare-dropdown')
   async getCarCompareData(@Req() request: Request, @Query() params: any) {
-    const car_status = ['Booked', 'Available'];
+    let car_status = ['Booked', 'Available','Sold'];
     if('is_testDrive' in params && params.is_testDrive == 'yes'){
-      const index = car_status.indexOf('Booking')
-      car_status.splice(index,1)
+      car_status = ['Available']
     }
     if ('brandName' in params) {
       params['filters'] = [{ "key": "brandCode", "value": params['brandName'], "operator": "contain" }];
@@ -1797,7 +1796,7 @@ export class CarController {
     }
     let modelList = await this.modelList(request, params);
     let data  = await this.carAddService.fetchBrandModelPresentCar()
-    const modelIds = data.map(item => item.carModelId);
+    const modelIds = data.map(item => item.cm_carModelId);
     return modelList = {
       settings: modelList['settings'],
       data: modelList['data'].length > 0 ? Object.values(modelList['data'])

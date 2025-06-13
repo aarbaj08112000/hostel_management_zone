@@ -129,6 +129,7 @@ export class CarCompareDetailsService {
           car.drivenDistance = '';
         }
         if (car.price) {
+          car.raw_price = car.price
           car.formattedPrice = this.general.numberFormat(car.price, 'currency', 'AED');
         } else {
           car.formattedPrice = '';
@@ -204,7 +205,8 @@ export class CarCompareDetailsService {
       "modelName",
       "brandName",
       "status",
-      "display_title"
+      "display_title",
+      "raw_price"
     ];
     const outputKeys = ['car_details'];
 

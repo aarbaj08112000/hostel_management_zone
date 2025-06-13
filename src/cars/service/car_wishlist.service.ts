@@ -263,7 +263,7 @@ export class CarWishlistService {
           hit._source['isWishlist'] = 'Yes';
           fileConfig.image_name = hit._source['car_image'];
           fileConfig.path = `car_images_${aws_folder}/${hit._source['carId']}`;
-
+          hit._source['raw_price'] = hit._source['price'];
           hit._source['price'] = this.general.numberFormat(hit._source['price'], 'currency', 'AED');
           if (inputParams.is_front == 'Yes') {
             hit._source['added_date'] = this.general.timeAgo(hit._source['added_date']);
@@ -331,7 +331,8 @@ export class CarWishlistService {
       'distanceSuffix',
       'status',
       'display_title',
-      'isListed'
+      'isListed',
+      "raw_price"
     ];
     const outputKeys = ['get_car_list'];
 
