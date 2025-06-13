@@ -295,6 +295,7 @@ export class BodyAddService extends BaseService {
       const data = {
         insert_id: res.raw.insertId,
       };
+      console.log(JSON.stringify(fileInfo,null,2))
       uploadResult = await this.uploadFiles(
         fileInfo,
         inputParams,
@@ -419,7 +420,7 @@ export class BodyAddService extends BaseService {
             extensions:
               paramKey === 'car_document'
                 ? 'pdf,doc,docx'
-                : 'gif,png,jpg,jpeg,jpe,bmp,ico,webp',
+                : 'gif,png,jpg,jpeg,jpe,bmp,ico,webp,svg',
           };
   
           uploadInfo[paramKey] = fileInfo;

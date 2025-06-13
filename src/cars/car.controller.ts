@@ -1603,6 +1603,7 @@ export class CarController {
 
       filter_arr = { ...filter_arr, carPrice };
 
+      
       let sort = {
         "manufactureYear": {
           sortParam: 'year',
@@ -1626,6 +1627,27 @@ export class CarController {
         }
       }
       filter_arr = { ...filter_arr, sort }
+
+      let carStatus = {
+        searchParam: 'status',
+        searchType: 'eq',
+        label: custom.lang('Status'),
+        values: [
+          {
+            key: 'Booked',
+            value: 'Booked',
+          },
+          {
+            key: 'Sold',
+            value: 'Sold',
+          },
+          {
+            key: 'Available',
+            value: 'Available',
+          }
+        ],
+      };
+       filter_arr = { ...filter_arr, carStatus }
       return filter_arr;
     } catch (err) {
       console.log(err)
