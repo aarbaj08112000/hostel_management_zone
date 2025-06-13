@@ -199,6 +199,10 @@ export class CarFrontDetailsService {
         }
       }
 
+      if (data['status'] == 'Sold') {
+        data['allow_test_drive'] = 'No';
+      }
+
       if (data?.car_image != '') {
         fileConfig.image_name = data['car_image'];
         fileConfig.path = `car_images_${aws_folder}/${data['carId']}`;
