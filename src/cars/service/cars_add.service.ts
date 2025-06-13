@@ -1273,15 +1273,25 @@ export class CarsAddService extends BaseService {
     };
   }
   async fetchBrandModelPresentCar() {
-    const result = await this.dataSource.query(`
-      SELECT DISTINCT cm.brandId, cm.carModelId
-      FROM car_model cm
-      WHERE cm.brandId IN (
-          SELECT DISTINCT cd.brandId
-          FROM cars_details cd
-      );
-    `);
-    return result;
+    const queryObject = await this.modelRepo
+        .createQueryBuilder('cm')
+        .distinct(true)
+        .select(['cm.brandId', 'cm.carModelId'])
+        .where(qb => {
+          const subQuery = qb.subQuery()
+            .select('1')
+            .from('cars_details', 'cd')
+            .innerJoin('cars', 'c', 'cd.carId = c.carId')
+            .where('c.isListed = :status', { status: 'Yes' })
+            .andWhere('cd.brandId = cm.brandId')
+            .andWhere('cd.modelId = cm.carModelId')
+            .getQuery();
+
+          return `EXISTS ${subQuery}`;
+        });
+
+      const response = await queryObject.getRawMany();
+      return response
   }
   async getCarName(id) {
     if (id > 0) {

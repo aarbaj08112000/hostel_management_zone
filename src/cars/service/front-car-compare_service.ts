@@ -152,6 +152,7 @@ export class CarFrontCompareService {
         data.distanceSuffix = 'km';
         data.carSlug = data.car_slug;
         data.currencyCode = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX');
+        data.raw_price = data?.price
         data.formattedPrice = data?.price
           ? this.general.numberFormat(data.price, 'currency', 'AED')
           : '';

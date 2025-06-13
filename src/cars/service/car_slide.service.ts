@@ -268,6 +268,7 @@ export class CarSlideService {
                   carSlug: hit._source['car_slug'],
                   added_date: this.timeAgo(hit._source['added_date']),
                   addedDate: this.timeAgo(hit._source['added_date']),
+                  raw_price : hit._source["price"],
                   price: this.general.numberFormat(
                     hit._source['price'],
                     'currency',
@@ -340,6 +341,7 @@ export class CarSlideService {
                     added_date: this.timeAgo(_source['added_date']),
                     addedDate: this.timeAgo(_source['added_date']),
                     carSlug: _source['car_slug'],
+                     raw_price : hit._source["price"],
                     price: this.general.numberFormat(
                       _source['price'],
                       'currency',
@@ -429,7 +431,8 @@ export class CarSlideService {
       'isWishlist',
       'distanceSuffix',
       'status',
-      "display_title"
+      "display_title",
+      "raw_price"
     ];
     const outputData: any = {};
     outputData.settings = { ...settingFields, ...this.settingsParams };

@@ -321,6 +321,7 @@ export class CarFrontDetailsService {
       data.distanceSuffix = 'km';
       data.carSlug = data.car_slug;
       data.currencyCode = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX')
+      data.raw_price = data.price
       data.formattedPrice = data?.price ? this.general.numberFormat(
         data.price,
         'currency',
@@ -446,7 +447,8 @@ export class CarFrontDetailsService {
       "driveType",
       "export_status",
       "is_insp_rep",
-      "wishlist_count"
+      "wishlist_count",
+      "raw_price"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
