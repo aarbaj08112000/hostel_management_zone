@@ -101,16 +101,16 @@ export class CarPublishUpdateService {
       slug: { key: 'car_slug', label: 'Slug' },
 
       // CarDetailsDto
-      brand_id: { key: 'brand_id', label: 'Brand ID' },
-      model_id: { key: 'car_model', label: 'Model ID' },
-      body_id: { key: 'bodyId', label: 'Body ID' },
+      brand_id: { key: 'brand_id', label: 'Brand' },
+      model_id: { key: 'car_model', label: 'Model' },
+      body_id: { key: 'bodyId', label: 'Body' },
       fuel_type: { key: 'fuelType', label: 'Fuel Type' },
       manufacture_year: { key: 'manufactureYear', label: 'Manufacture Year' },
       transmission_type: { key: 'transmissionType', label: 'Transmission Type' },
-      exterior_colorId: { key: 'exterior_color', label: 'Exterior Color ID' },
-      interior_colorId: { key: 'interior_color', label: 'Interior Color ID' },
+      exterior_colorId: { key: 'exterior_color', label: 'Exterior Color' },
+      interior_colorId: { key: 'interior_color', label: 'Interior Color' },
       steering_side: { key: 'steeringSide', label: 'Steering Side' },
-      regional_specsId: { key: 'regionalSpecsId', label: 'Regional Specs ID' },
+      regional_specsId: { key: 'regionalSpecsId', label: 'Regional Specs' },
       // driven_distance: { key: 'drivenDistance', label: 'Driven Distance' },
     };
     if('fuelType' in data && data?.fuelType == 'Electric'){
