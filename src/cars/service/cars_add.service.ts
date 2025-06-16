@@ -213,7 +213,7 @@ export class CarsAddService extends BaseService {
               "CAR_NAME": await this.fetchDisplayName(response.insert_id),
               "CAR_ID": response.insert_id,
               "ADDED_BY": await this.general.getAdminName(inputParams.car_data.added_by),
-              "ADDED_BY_ID": inputParams.added_by
+              "ADDED_BY_ID": inputParams.car_data.added_by
             }
             await this.general.addActivity(this.moduleName, this.moduleAPI, inputParams.car_data.added_by, value_json, response.insert_id);
           } else {
@@ -1442,7 +1442,8 @@ export class CarsAddService extends BaseService {
 async fetchDisplayName(car_id) {
   const result = await this.dataSource.query(`
     SELECT 
-      CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title
+      CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title,
+      carCode as car_code
     FROM 
       cars c
     JOIN 
@@ -1456,7 +1457,7 @@ async fetchDisplayName(car_id) {
     WHERE 
       c.carId = ?
   `, [car_id]);
-  return result[0]?.display_title || null;
+  return result[0]?.display_title || result[0]?.car_code || null;
 }
 
 }
