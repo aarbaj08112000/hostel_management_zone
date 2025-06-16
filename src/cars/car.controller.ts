@@ -1474,6 +1474,7 @@ export class CarController {
 
       filter_arr = { ...filter_arr, brandName };
       params.filters = { status: 'Active' };
+      params.sort = { added_date: { prop: 'added_date', dir: 'desc' }} 
       let bodyType = await this.bodyList(request, params);
       bodyType = {
         searchParam: 'body',
@@ -1487,6 +1488,9 @@ export class CarController {
       };
       if ('filters' in params) {
         delete params['filters']
+      }
+      if ('sort' in params) {
+        delete params['sort']
       }
       filter_arr = { ...filter_arr, bodyType };
 
