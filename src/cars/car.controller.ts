@@ -509,11 +509,13 @@ export class CarController {
       final_json = { ...final_json, trendingCars };
       carCount = 200;
       achievements.push({
-        value: brandCount.toString(),
+        // value: brandCount.toString(),
+        value: "30+",
         title: "Car <span class='text-primary'>Brands</span>",
       });
       achievements.push({
-        value: carCount.toString(),
+        // value: carCount.toString(),
+        value: "200+",
         title: "Car <span class='text-primary'>Inventory</span>",
       });
       achievements.push({
@@ -521,7 +523,7 @@ export class CarController {
         title: "Returning <span class='text-primary'>Customers</span>",
       });
       achievements.push({
-        value: '2K+',
+        value: '5K+',
         title: "Happy <span class='text-primary'>Customers</span>",
       });
       achievements.push({
@@ -531,20 +533,20 @@ export class CarController {
       final_json = { ...final_json, achievements };
       let benefits = [];
       benefits.push({
-        value: '150+',
-        title: "Car <span class='text-primary'>Check Points</span>",
+        // value: '150+',
+        title: "Certified <span class='text-primary'>Dealer</span>",
       });
       benefits.push({
-        value: '12',
-        title: "Months <span class='text-primary'>Warranty</span>",
+        // value: '12',
+        title: "Paperwork <span class='text-primary'>Assistance</span>",
       });
       benefits.push({
-        value: '03',
-        title: "Free <span class='text-primary'>Service</span>",
+        // value: '03',
+        title: "Financing <span class='text-primary'>Options</span>",
       });
       benefits.push({
-        value: '200+',
-        title: "Cars <span class='text-primary'>Largest Collection</span>",
+        // value: '200+',
+        title: "Professional <span class='text-primary'>Experience</span>",
       });
       final_json = { ...final_json, benefits };
 
