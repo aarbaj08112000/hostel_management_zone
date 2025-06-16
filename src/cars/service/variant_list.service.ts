@@ -119,7 +119,7 @@ export class VariantListService {
       fields: [],
     };
     const outputKeys = ['variant_list'];
-    settingFields.fields = ['variant_id', 'variant_name', 'variant_code', 'status', 'added_date', 'updated_by', 'added_by', 'updated_date', 'added_name', 'updated_name', 'model_name', 'model_code', 'model_id'];
+    settingFields.fields = ['variant_id', 'variant_name', 'variant_code', 'status', 'added_date', 'updated_by', 'added_by', 'updated_date', 'added_name', 'updated_name', 'model_name', 'model_code', 'model_id','brandId','brandName'];
     const outputData: any = {};
     outputData.settings = { ...settingFields, ...this.settingsParams };
     outputData.data = inputParams;
