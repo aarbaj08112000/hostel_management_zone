@@ -119,7 +119,7 @@ export class CarsAddService extends BaseService {
               inputParams.car_history?.updated_by ||
               inputParams.car_tag_data?.updated_by;
 
-            let car_name = await this.fetchDisplayName(car_id)
+            let car_name = await this.fetchDisplayName(car_id ,'Yes')
             let value_json = {
               "CAR_NAME": car_name,
               "CAR_ID": inputParams.car_data.car_id,
@@ -210,7 +210,7 @@ export class CarsAddService extends BaseService {
             }
             outputResponse = this.carsFinishSuccess(response);
             let value_json = {
-              "CAR_NAME": await this.fetchDisplayName(response.insert_id),
+              "CAR_NAME": await this.fetchDisplayName(response.insert_id ,'Yes'),
               "CAR_ID": response.insert_id,
               "ADDED_BY": await this.general.getAdminName(inputParams.car_data.added_by),
               "ADDED_BY_ID": inputParams.car_data.added_by
@@ -1439,7 +1439,7 @@ export class CarsAddService extends BaseService {
     throw err; 
   }
 }
-async fetchDisplayName(car_id) {
+async fetchDisplayName(car_id , code?) {
   const result = await this.dataSource.query(`
     SELECT 
       CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title,
@@ -1457,7 +1457,19 @@ async fetchDisplayName(car_id) {
     WHERE 
       c.carId = ?
   `, [car_id]);
-  return result[0]?.display_title || result[0]?.car_code || null;
+    const response = result[0]?.display_title || null;
+    if(response == null && code == 'Yes'){
+      return await this.getCarCode(car_id)
+    }
+    return result[0]?.display_title || null;
 }
+  async getCarCode(car_id){
+      const queryObject = await this.carEntityRepo
+      .createQueryBuilder('c')
+      .select('c.carCode', 'carCode')
+      .where('c.carId = :id', { id: car_id });
 
+    const response =  await queryObject.getRawOne();
+    return response?.carCode
+  }
 }
