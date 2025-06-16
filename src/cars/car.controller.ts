@@ -1473,9 +1473,8 @@ export class CarController {
       };
 
       filter_arr = { ...filter_arr, brandName };
-
+      params.filters = { status: 'Active' };
       let bodyType = await this.bodyList(request, params);
-
       bodyType = {
         searchParam: 'body',
         searchType: 'eq',
@@ -1486,6 +1485,9 @@ export class CarController {
           image : key['body_image'] ? key['body_image'] : ''
         })) : [],
       };
+      if ('filters' in params) {
+        delete params['filters']
+      }
       filter_arr = { ...filter_arr, bodyType };
 
       if ('brandCode' in parameters.filters) {
