@@ -1594,12 +1594,12 @@ export class CarController {
         searchType: 'btw',
         label: custom.lang('Price'),
         values: {
-          from: price.min_price,
-          to: price.max_price,
+          from: Math.ceil(price.min_price),
+          to: Math.ceil(price.max_price),
         },
         default_values: {
-          from: price.min_price,
-          to: price.max_price,
+          from: Math.ceil(price.min_price),
+          to: Math.ceil(price.max_price),
         },
       };
 
