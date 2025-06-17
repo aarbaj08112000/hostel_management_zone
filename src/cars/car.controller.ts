@@ -128,6 +128,11 @@ export class CarController {
     private sellCarService : SellCarService,
     private getLookupData: GetLookupData,
   ) { }
+  @MessagePattern('sync-data')
+    async syncData(){
+      return  this.elasticService.syncElasticData();
+    }
+    
   @MessagePattern('update-status')
   async updateCustomer(@Req() request: Request, @Payload() payload: any){
     try{
