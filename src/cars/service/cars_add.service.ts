@@ -1237,7 +1237,6 @@ export class CarsAddService extends BaseService {
         const whereCondition = `(${whereClauses.join(
           ' OR ',
         )}) AND ${primaryKey} <> :${primaryKey}`;
-        console.log(whereCondition)
         queryConfig.where_condition = whereCondition;
         queryConfig.where_bindings = whereBindings;
       } else {
