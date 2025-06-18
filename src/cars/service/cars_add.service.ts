@@ -695,8 +695,16 @@ export class CarsAddService extends BaseService {
         const model = await this.modelRepo.findOne({ where: { carModelId: car_details.model_id } });
       
         if (brand?.brandName && model?.modelName) {
-          const formattedBrand = brand.brandName.toLowerCase().replace(/\s+/g, '-');
-          const formattedModel = model.modelName.toLowerCase().replace(/\s+/g, '-');
+          // const formattedBrand = brand.brandName.toLowerCase().replace(/\s+/g, '-');
+          const formattedBrand = brand.brandName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+          // const formattedModel = model.modelName.toLowerCase().replace(/\s+/g, '-');
+          const formattedModel = model.modelName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
           const year = car_details.manufacture_year;
           let slug: string;
           let isUnique = false;
