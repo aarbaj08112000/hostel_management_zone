@@ -170,7 +170,7 @@ export class BrandAddService extends BaseService {
           outputResponse = this.brandFinishSuccess(inputParams, 'Make Added Successfully.');
           let value_json = {
             "BRAND_NAME": inputParams.brand_name,
-            "BRAND_ID": inputParams.id,
+            "BRAND_ID": inputParams.insert_id,
             "ADDED_BY": await this.general.getAdminName(inputParams.added_by),
             "ADDED_BY_ID": inputParams.added_by
           }
