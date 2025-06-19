@@ -601,6 +601,7 @@ export class CarsAddService extends BaseService {
       }
 
       if (car_details) {
+        let sel_data;
         const carDetailsColumn: any = {};
         Object.keys(car_details_field_mapping).forEach((key) => {
           if (key in car_details) {
@@ -628,7 +629,50 @@ export class CarsAddService extends BaseService {
             'cd.transmissionType as transmissionType',
           ])
           selObject.where('cd.carId = :id', { id: car_id });
-          const sel_data = await selObject.getRawOne();
+          sel_data = await selObject.getRawOne();
+
+
+          if (car_details?.brand_id && car_details?.model_id && car_details?.manufacture_year) {
+            const brand = await this.brandRepo.findOne({ where: { brandId: car_details.brand_id } });
+            const model = await this.modelRepo.findOne({ where: { carModelId: car_details.model_id } });
+          
+            if (brand?.brandName && model?.modelName) {
+              // const formattedBrand = brand.brandName.toLowerCase().replace(/\s+/g, '-');
+              const formattedBrand = brand.brandName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+              // const formattedModel = model.modelName.toLowerCase().replace(/\s+/g, '-');
+              const formattedModel = model.modelName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+              const year = car_details.manufacture_year;
+              let slug: string;
+              let isUnique = false;
+              
+              while (!isUnique) {
+                const uniqueNumber = Math.floor(10000000 + Math.random() * 90000000);
+                slug = `${formattedBrand}-${formattedModel}-${year}-${uniqueNumber}`;
+                const existingCar = await this.carEntityRepo.findOne({ where: { slug } });
+                if (!existingCar) {
+                  isUnique = true;
+                }
+              }
+              await this.carEntityRepo.update({ carId: car_id }, { slug });
+            }
+          }
+
+          const carObject = this.carEntityRepo.createQueryBuilder('c');
+          carObject.select([
+            'c.slug as slug',
+          ])
+          // .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
+          carObject.where('c.carId = :id', { id: car_id });
+          const car_data = await carObject.getRawOne();
+
+          sel_data = {...sel_data, slug: car_data.slug}
+
           let micro_data : any = {
             id : car_id,
             mode : 'update',
@@ -687,37 +731,6 @@ export class CarsAddService extends BaseService {
           data['car_tag_data'] = {
             affected_modified_row: res.insert_car_tag_data.insert_id,
           };
-        }
-      }
-
-      if (car_details?.brand_id && car_details?.model_id && car_details?.manufacture_year) {
-        const brand = await this.brandRepo.findOne({ where: { brandId: car_details.brand_id } });
-        const model = await this.modelRepo.findOne({ where: { carModelId: car_details.model_id } });
-      
-        if (brand?.brandName && model?.modelName) {
-          // const formattedBrand = brand.brandName.toLowerCase().replace(/\s+/g, '-');
-          const formattedBrand = brand.brandName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-          // const formattedModel = model.modelName.toLowerCase().replace(/\s+/g, '-');
-          const formattedModel = model.modelName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-          const year = car_details.manufacture_year;
-          let slug: string;
-          let isUnique = false;
-          
-          while (!isUnique) {
-            const uniqueNumber = Math.floor(10000000 + Math.random() * 90000000);
-            slug = `${formattedBrand}-${formattedModel}-${year}-${uniqueNumber}`;
-            const existingCar = await this.carEntityRepo.findOne({ where: { slug } });
-            if (!existingCar) {
-              isUnique = true;
-            }
-          }
-          await this.carEntityRepo.update({ carId: car_id }, { slug });
         }
       }
 
