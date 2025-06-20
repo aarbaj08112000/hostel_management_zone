@@ -1830,7 +1830,7 @@ export class CarController {
     if ('brandName' in params) {
       params['filters'] = [{ "key": "brand_code", "value": params['brandName'], "operator": "contain" }]
     }else if('brandId' in params){
-      params['filters'] = [{ "key": "brand_id", "value": params['brandId'], "operator": "contain" }]
+      params['filters'] = [{ "key": "brand_id", "value": params['brandId'], "operator": "equal" }]
     }
     let modelList = await this.modelList(request, params);
     let data  = await this.carAddService.fetchBrandModelPresentCar()
