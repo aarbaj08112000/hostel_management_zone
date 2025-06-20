@@ -123,7 +123,6 @@ export class CarListFrontService {
         startIdx,
         recLimit,
       );
-      console.log(JSON.stringify(results,null,2))
       if (!_.isObject(results) || _.isEmpty(results)) {
         throw new Error('No records found.');
       }
