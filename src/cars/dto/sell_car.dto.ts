@@ -42,40 +42,40 @@ export class SellCarDto {
     color_id: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     location_id: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     year: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     km_reading: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     appointment_date: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     appointment_time: string;
 
     @IsString()
     @IsOptional()
-    other_brand: string;
+    brand_name: string;
 
     @IsString()
     @IsOptional()
-    other_model: string;
+    model_name: string;
 
     @IsString()
     @IsOptional()
-    other_variant: string;
+    variant_name: string;
 
     @IsString()
     @IsOptional()
-    other_color: string;
+    color_name: string;
 }
 
 class UploadedFile {
