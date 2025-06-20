@@ -20,17 +20,41 @@ export class SellCarEntity {
   @Column({ type: 'varchar', length: 255 })
   email: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  brandName: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  modelName: string;
-
   @Column({ type: 'text', nullable: true })
   message: string;
 
+  @Column({ type: 'int' })
+  brandId: string;
+
+  @Column({ type: 'int' })
+  modelId: string;
+
+  @Column({ type: 'int' })
+  variantId: string;
+
+  @Column({ type: 'int' })
+  colorId: string;
+
+  @Column({ type: 'int' })
+  locationId: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  year: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  kmReading: string;
+
+  @Column({ type: 'date', nullable: true })
+  appointmentDate: Date;
+
+  @Column({ type: 'varchar', nullable: true })
+  appointmentTime: string;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   addedDate: Date;
+
+  @Column({ type: 'json', nullable: true })
+  otherDetails: string;
 }
 
 @Entity('sell_car_images')

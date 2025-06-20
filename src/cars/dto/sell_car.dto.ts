@@ -22,16 +22,60 @@ export class SellCarDto {
     email: string;
 
     @IsString()
-    @IsNotEmpty()
-    brand_name: string;
-
-    @IsString()
-    @IsNotEmpty()
-    model_name: string;
+    @IsOptional()
+    message: string;
 
     @IsString()
     @IsOptional()
-    message: string;
+    brand_id: string;
+
+    @IsString()
+    @IsOptional()
+    model_id: string;
+
+    @IsString()
+    @IsOptional()
+    variant_id: string;
+
+    @IsString()
+    @IsOptional()
+    color_id: string;
+
+    @IsString()
+    @IsNotEmpty()
+    location_id: string;
+
+    @IsString()
+    @IsNotEmpty()
+    year: string;
+
+    @IsString()
+    @IsNotEmpty()
+    km_reading: string;
+
+    @IsString()
+    @IsNotEmpty()
+    appointment_date: string;
+
+    @IsString()
+    @IsNotEmpty()
+    appointment_time: string;
+
+    @IsString()
+    @IsOptional()
+    other_brand: string;
+
+    @IsString()
+    @IsOptional()
+    other_model: string;
+
+    @IsString()
+    @IsOptional()
+    other_variant: string;
+
+    @IsString()
+    @IsOptional()
+    other_color: string;
 }
 
 class UploadedFile {
