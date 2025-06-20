@@ -1585,14 +1585,15 @@ export class CarController {
       };
       filter_arr = { ...filter_arr, transmissionType };
       let min_max_filters = await this.carAddService.fetchMinMax()
+      let current_year = new Date().getFullYear()
       const {price , year} = min_max_filters
       let manufactureYear = {
         searchParam: 'year',
         searchType: 'btw',
         label: custom.lang('Year'),
         values: {
-          from: year.min_year,
-          to: year.max_year,
+          from: (year.min_year != null && year.min_year != '') ? year.min_year : current_year,
+          to: (year.max_year != null && year.max_year != '') ? year.max_year : current_year,
         },
       };
       filter_arr = { ...filter_arr, manufactureYear };
