@@ -107,6 +107,10 @@ export class SellCarService extends BaseService {
                     if(hit._source['attachments']){
                         hit._source['attachments'] = hit._source['attachments'].split(',');
                     }
+                    if(hit._source['other_details']){
+                        hit._source['brand_name'] = hit._source['other_details'].brand_name || null;
+                        hit._source['model_name'] = hit._source['other_details'].model_name || null
+                    }
                     return hit._source;
                 })
             );
@@ -142,6 +146,8 @@ export class SellCarService extends BaseService {
                     data.attachments = data.attachments.split(',');
                 }
                 data['contact'] = data.dial_code+' '+data.phone_number;
+                data['brand_name'] = data.other_details?.brand_name || null;
+                data['model_name'] = data.other_details?.model_name || null;
                 return {
                     success: 1,
                     message: 'Records found.',
@@ -186,10 +192,10 @@ export class SellCarService extends BaseService {
             queryColumns.addedDate = () => 'NOW()';
 
             const otherDetails: any = {};
-            if ('other_brand' in inputParams) otherDetails.other_brand = inputParams.other_brand;
-            if ('other_model' in inputParams) otherDetails.other_model = inputParams.other_model;
-            if ('other_variant' in inputParams) otherDetails.other_variant = inputParams.other_variant;
-            if ('other_color' in inputParams) otherDetails.other_color = inputParams.other_color;
+            if ('brand_name' in inputParams) otherDetails.brand_name = inputParams.brand_name;
+            if ('model_name' in inputParams) otherDetails.model_name = inputParams.model_name;
+            if ('variant_name' in inputParams) otherDetails.variant_name = inputParams.variant_name;
+            if ('color_name' in inputParams) otherDetails.color_name = inputParams.color_name;
 
             if (Object.keys(otherDetails).length > 0) {
                 queryColumns.otherDetails = otherDetails;
@@ -234,7 +240,7 @@ export class SellCarService extends BaseService {
                         zip_code: location_data.zip_code || null,
                         latitude: location_data.latitude || null,
                         longitude: location_data.longitude || null,
-                        };
+                    };
                 }
             }
 
@@ -359,6 +365,8 @@ export class SellCarService extends BaseService {
           'message',
           'brand_id',
           'model_id',
+          'brand_name',
+          'model_name',
           'variant_id',
           'color_id',
           'location_id',
