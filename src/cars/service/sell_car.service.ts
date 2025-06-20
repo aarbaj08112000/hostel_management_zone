@@ -16,6 +16,7 @@ import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { ElasticService } from '@repo/source/services/elastic.service';
+import * as moment from 'moment';
 
 @Injectable()
 export class SellCarService extends BaseService {
@@ -166,26 +167,83 @@ export class SellCarService extends BaseService {
 
             let code = await this.general.getCustomToken('sell_car', 'SC', 'Add');
 
-            const data = this.sellCarEntity.create({
-                code: code,
-                name: inputParams.name,
-                dialCode: inputParams.dial_code,
-                phoneNumber: inputParams.phone_number,
-                email: inputParams.email,
-                brandName: inputParams.brand_name,
-                modelName: inputParams.model_name,
-                message: inputParams.message,
-                addedDate: new Date(),
-            });
+            const queryColumns: any = {};
+            queryColumns.code = code;
+            if ('name' in inputParams) queryColumns.name = inputParams.name;
+            if ('dial_code' in inputParams) queryColumns.dialCode = inputParams.dial_code;
+            if ('phone_number' in inputParams) queryColumns.phoneNumber = inputParams.phone_number;
+            if ('email' in inputParams) queryColumns.email = inputParams.email;
+            if ('message' in inputParams) queryColumns.message = inputParams.message;
+            if ('brand_id' in inputParams) queryColumns.brandId = inputParams.brand_id;
+            if ('model_id' in inputParams) queryColumns.modelId = inputParams.model_id;
+            if ('variant_id' in inputParams) queryColumns.variantId = inputParams.variant_id;
+            if ('color_id' in inputParams) queryColumns.colorId = inputParams.color_id;
+            if ('location_id' in inputParams) queryColumns.locationId = inputParams.location_id;
+            if ('year' in inputParams) queryColumns.year = inputParams.year;
+            if ('km_reading' in inputParams) queryColumns.kmReading = inputParams.km_reading;
+            if ('appointment_date' in inputParams) queryColumns.appointmentDate = inputParams.appointment_date;
+            if ('appointment_time' in inputParams) queryColumns.appointmentTime = inputParams.appointment_time;
+            queryColumns.addedDate = () => 'NOW()';
 
-            let res = await this.sellCarEntity.save(data);
+            const otherDetails: any = {};
+            if ('other_brand' in inputParams) otherDetails.other_brand = inputParams.other_brand;
+            if ('other_model' in inputParams) otherDetails.other_model = inputParams.other_model;
+            if ('other_variant' in inputParams) otherDetails.other_variant = inputParams.other_variant;
+            if ('other_color' in inputParams) otherDetails.other_color = inputParams.other_color;
+
+            if (Object.keys(otherDetails).length > 0) {
+                queryColumns.otherDetails = otherDetails;
+            }
+            
+            const res = await this.sellCarEntity.insert(queryColumns);
+
+            const formattedSlotDate = moment(inputParams.appointment_date).format('dddd, DD MMMM YYYY');
+
+            // Determine time of day (Morning / Afternoon / Evening / Night)
+            const getTimeOfDay = (timeRange: string) => {
+                const startHour = parseInt(timeRange.split(':')[0]);
+                if (startHour >= 5 && startHour < 12) return 'Morning';
+                if (startHour >= 12 && startHour < 17) return 'Afternoon';
+                if (startHour >= 17 && startHour < 21) return 'Evening';
+                return 'Night';
+            };
+
+            const formattedSlotTime = (() => {
+                const timeRange = inputParams.appointment_time || '';
+                const [startTime, endTime] = timeRange.split(' - ');
+
+                const formatTime = (time: string) => {
+                const m = moment(time, 'HH:mm:ss');
+                return `${m.format('hh')}:${m.format('mm')} ${m.format('A')}`;
+                };
+
+                const timeOfDay = getTimeOfDay(startTime);
+                return `${timeOfDay} ${formatTime(startTime)} - ${formatTime(endTime)}`;
+            })();
+
+            const formattedSlotInfo = `${formattedSlotDate}, ${formattedSlotTime}`;
+
+            let locationDetails = null;
+            if (inputParams.location_id){
+                const location_data = await this.elasticService.getById(inputParams.location_id, 'nest_local_location', 'id');
+                if (location_data && !_.isEmpty(location_data)) {
+                    locationDetails = {
+                        location_name: location_data.location_name || null,
+                        location_address: location_data.location_address || null,
+                        address: location_data.google_address || null,
+                        zip_code: location_data.zip_code || null,
+                        latitude: location_data.latitude || null,
+                        longitude: location_data.longitude || null,
+                        };
+                }
+            }
 
             const attachmentQuery  : any = []
             if('attachment' in fileInfo){
                 uploadResult = await this.uploadFiles(
                     fileInfo.attachment,
                     inputParams,
-                    res.id
+                    res.raw.insertId
                 );
                 const aws_folder = await this.general.getConfigItem('AWS_SERVER');
                 const allowedExtensions = await this.general.getConfigItem('allowed_extensions');
@@ -194,13 +252,13 @@ export class SellCarService extends BaseService {
                     const fileConfig: FileFetchDto = {
                         source: 'amazon',
                         extensions: allowedExtensions,
-                        path: `sell_car_${aws_folder}/${res.id}`,
+                        path: `sell_car_${aws_folder}/${res.raw.insertId}`,
                         image_name: file.file_name
                     };
 
                     const mappedData = {
                         attachmentName: file.file_name,
-                        sourceId: res.id,
+                        sourceId: res.raw.insertId,
                         fileType: file.file_type,
                         fileSize: file.file_size,
                         filePath: await this.general.getFile(fileConfig, inputParams),
@@ -215,11 +273,11 @@ export class SellCarService extends BaseService {
                 job_function: 'sync_elastic_data',
                 job_params: {
                     module: 'sell_car_list',
-                    data: res.id,
+                    data: res.raw.insertId,
                 },
             };
             await this.general.submitGearmanJob(job_data)
-            return { success: 1, message: "Thank you for contacting us. We'll get in touch with you shortly.", data: code };
+            return { success: 1, message: "Thank you for contacting us. We'll get in touch with you shortly.", data: code, formattedSlotInfo, locationDetails };
         } catch (err) {
             return { success: 0, message: err.message };
         }
@@ -298,9 +356,17 @@ export class SellCarService extends BaseService {
           'phone_number',
           'contact',
           'email',
-          'brand_name',
-          'model_name',
           'message',
+          'brand_id',
+          'model_id',
+          'variant_id',
+          'color_id',
+          'location_id',
+          'year',
+          'km_reading',
+          'appointment_date',
+          'appointment_time',
+          'other_details',
           'attachments',
           'added_date',
         ];

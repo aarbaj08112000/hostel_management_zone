@@ -697,6 +697,7 @@ export class CarController {
               value: item['brand_name'],
               image: item['brand_image'] || '',
               key: item['brand_code'].toLowerCase(),
+              id: item['brand_id'],
             }))
         : []
     }
@@ -1828,6 +1829,8 @@ export class CarController {
   async getModelDropdown(@Req() request: Request, @Query() params: any) {
     if ('brandName' in params) {
       params['filters'] = [{ "key": "brand_code", "value": params['brandName'], "operator": "contain" }]
+    }else if('brandId' in params){
+      params['filters'] = [{ "key": "brand_id", "value": params['brandId'], "operator": "contain" }]
     }
     let modelList = await this.modelList(request, params);
     let data  = await this.carAddService.fetchBrandModelPresentCar()
@@ -1839,6 +1842,7 @@ export class CarController {
       .map((key) => ({
         value: key['model_name'],
         key: key['model_code'].toLowerCase(),
+        id: key['model_id'],
       })) : {}
     }
   }
