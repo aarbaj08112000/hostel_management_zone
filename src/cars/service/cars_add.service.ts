@@ -670,7 +670,7 @@ export class CarsAddService extends BaseService {
           // .leftJoin('cars_details', 'cd', 'c.carId = cd.carId')
           carObject.where('c.carId = :id', { id: car_id });
           const car_data = await carObject.getRawOne();
-
+          sel_data.name = await this.fetchDisplayName(car_id)
           sel_data = {...sel_data, slug: car_data.slug}
 
           let micro_data : any = {
