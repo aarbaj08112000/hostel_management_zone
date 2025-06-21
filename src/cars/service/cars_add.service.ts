@@ -861,6 +861,36 @@ export class CarsAddService extends BaseService {
       }
       const queryObject = this.carEntityDetailsRepo;
       const res = await queryObject.insert(queryColumns);
+      if (queryColumns?.brand_id && queryColumns?.model_id && queryColumns?.manufacture_year) {
+            const brand = await this.brandRepo.findOne({ where: { brandId: queryColumns.brand_id } });
+            const model = await this.modelRepo.findOne({ where: { carModelId: queryColumns.model_id } });
+          
+            if (brand?.brandName && model?.modelName) {
+              // const formattedBrand = brand.brandName.toLowerCase().replace(/\s+/g, '-');
+              const formattedBrand = brand.brandName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+              // const formattedModel = model.modelName.toLowerCase().replace(/\s+/g, '-');
+              const formattedModel = model.modelName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+              const year = queryColumns.manufacture_year;
+              let slug: string;
+              let isUnique = false;
+              
+              while (!isUnique) {
+                const uniqueNumber = Math.floor(10000000 + Math.random() * 90000000);
+                slug = `${formattedBrand}-${formattedModel}-${year}-${uniqueNumber}`;
+                const existingCar = await this.carEntityRepo.findOne({ where: { slug } });
+                if (!existingCar) {
+                  isUnique = true;
+                }
+              }
+              await this.carEntityRepo.update({ carId: car_id }, { slug });
+            }
+        }
       const data = {
         insert_id: res.raw.insertId,
       };
