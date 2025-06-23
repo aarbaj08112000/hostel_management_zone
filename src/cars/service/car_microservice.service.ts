@@ -80,6 +80,11 @@ export class CarMicroserviceService {
         }
       },
       {
+        field: 'color_id', subType: 'color', selFields: {
+          colorId: 'id', colorName: 'color_name', colorCode: 'color_code'
+        }
+      },
+      {
         field: 'tag_ids', subType: 'tag', selFields: {
           tagId: 'tag_id', tagName: 'tag_name', tagCode: 'tag_code' , isTrending : 'is_trending'
         }
