@@ -148,7 +148,18 @@ export class SellCarService extends BaseService {
                     const parsedUpdateDate = moment(data.appointment_date, 'DD-MM-YYYY hh:mm A');
                     data.appointment_date = parsedUpdateDate.format('DD/MM/YYYY');
                 }
-                if(data.color_id){
+                
+                if(!data.brand_id){
+                    data.brand_name = data.other_details.brand_name || null;
+                }
+                if(!data.model_id){
+                    data.model_name = data.other_details.model_name || null;
+                }
+                if(!data.variant_id){
+                    data.variant_name = data.other_details.variant_name || null;
+                }
+                
+                if(data.color_id > 0){
                     const color_data = await this.lookupRepo
                         .createQueryBuilder('color')
                         .where("color.entityId = :id", {
@@ -158,31 +169,31 @@ export class SellCarService extends BaseService {
                         })
                         .getOne();
                     if (color_data && !_.isEmpty(color_data)) {
-                        const colorJSONparsed = color_data.entityJson ? JSON.parse(color_data.entityJson) : {};
-                        data.color_name = colorJSONparsed.color_name || null;
+                        data.color_name = color_data.entityJson.color_name || null;
                     }else{
                         const colorData = await this.elasticService.getById(data.color_id, 'nest_local_color', 'id');
                         data.color_name = colorData.color_name || null;
                     }
+                }else{
+                    data.color_name = data.other_details.color_name || null;
                 }
-                if(data.location_id){
+                if(data.location_id > 0){
                     const location_data = await this.lookupRepo
                         .createQueryBuilder('location')
                         .where("location.entityId = :id", {
-                        id: data.location_id,
+                            id: data.location_id,
                         }).andWhere("location.entityName = :entityName", {
                             entityName: 'location', 
                         })
                         .getOne();
                     if (location_data && !_.isEmpty(location_data)) {
-                        const locationJSONparsed = location_data.entityJson ? JSON.parse(location_data.entityJson) : {};
-                        data.location_name = locationJSONparsed.location_name || null;
-                        data.address = locationJSONparsed.address || null;
+                        data.location_name = location_data.entityJson.location_name || null;
                     }else{
                         const locationData = await this.elasticService.getById(data.location_id, 'nest_local_location', 'id');
                         data.location_name = locationData.location_name || null;
-                        data.address = locationData.location_address || null;
                     }
+                }else{
+                    data.location_name = data.other_details.location_name || null;
                 }
                 data['contact'] = data.dial_code+' '+data.phone_number;
                 return {
@@ -194,6 +205,7 @@ export class SellCarService extends BaseService {
                 throw new Error('No records found.');
             }
         } catch (err) {
+            console.log(err);
             return { 
                 success: 0, 
                 message: err.message || 'Something went wrong.',
