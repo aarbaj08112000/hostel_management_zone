@@ -17,6 +17,7 @@ import * as _ from 'lodash';
 import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import * as moment from 'moment';
+import { LookupEntity } from '@repo/source/entities/lookup.entity';
 
 @Injectable()
 export class SellCarService extends BaseService {
@@ -44,6 +45,8 @@ export class SellCarService extends BaseService {
     protected sellCarEntity: Repository<SellCarEntity>;
     @InjectRepository(SellCarAttachmentsEntity)
     protected sellCarAttachmentsEntity: Repository<SellCarAttachmentsEntity>;
+    @InjectRepository(LookupEntity)
+    private lookupRepo: Repository<LookupEntity>;
 
     constructor(protected readonly elasticService: ElasticService) {
         super();
@@ -107,10 +110,6 @@ export class SellCarService extends BaseService {
                     if(hit._source['attachments']){
                         hit._source['attachments'] = hit._source['attachments'].split(',');
                     }
-                    if(hit._source['other_details']){
-                        hit._source['brand_name'] = hit._source['other_details'].brand_name || null;
-                        hit._source['model_name'] = hit._source['other_details'].model_name || null
-                    }
                     return hit._source;
                 })
             );
@@ -145,9 +144,47 @@ export class SellCarService extends BaseService {
                 if(data.attachments){
                     data.attachments = data.attachments.split(',');
                 }
+                if (data.appointment_date) {
+                    const parsedUpdateDate = moment(data.appointment_date, 'DD-MM-YYYY hh:mm A');
+                    data.appointment_date = parsedUpdateDate.format('DD/MM/YYYY');
+                }
+                if(data.color_id){
+                    const color_data = await this.lookupRepo
+                        .createQueryBuilder('color')
+                        .where("color.entityId = :id", {
+                        id: data.color_id,
+                        }).andWhere("color.entityName = :entityName", {
+                            entityName: 'color', 
+                        })
+                        .getOne();
+                    if (color_data && !_.isEmpty(color_data)) {
+                        const colorJSONparsed = color_data.entityJson ? JSON.parse(color_data.entityJson) : {};
+                        data.color_name = colorJSONparsed.color_name || null;
+                    }else{
+                        const colorData = await this.elasticService.getById(data.color_id, 'nest_local_color', 'id');
+                        data.color_name = colorData.color_name || null;
+                    }
+                }
+                if(data.location_id){
+                    const location_data = await this.lookupRepo
+                        .createQueryBuilder('location')
+                        .where("location.entityId = :id", {
+                        id: data.location_id,
+                        }).andWhere("location.entityName = :entityName", {
+                            entityName: 'location', 
+                        })
+                        .getOne();
+                    if (location_data && !_.isEmpty(location_data)) {
+                        const locationJSONparsed = location_data.entityJson ? JSON.parse(location_data.entityJson) : {};
+                        data.location_name = locationJSONparsed.location_name || null;
+                        data.address = locationJSONparsed.address || null;
+                    }else{
+                        const locationData = await this.elasticService.getById(data.location_id, 'nest_local_location', 'id');
+                        data.location_name = locationData.location_name || null;
+                        data.address = locationData.location_address || null;
+                    }
+                }
                 data['contact'] = data.dial_code+' '+data.phone_number;
-                data['brand_name'] = data.other_details?.brand_name || null;
-                data['model_name'] = data.other_details?.model_name || null;
                 return {
                     success: 1,
                     message: 'Records found.',
@@ -365,11 +402,10 @@ export class SellCarService extends BaseService {
           'message',
           'brand_id',
           'model_id',
+          'variant_id',
           'brand_name',
           'model_name',
-          'variant_id',
-          'color_id',
-          'location_id',
+          'variant_name',
           'year',
           'km_reading',
           'appointment_date',
@@ -378,9 +414,6 @@ export class SellCarService extends BaseService {
           'attachments',
           'added_date',
         ];
-        if ('skip_brand' in inputParams && inputParams.skip_brand == 'Yes') {
-          settingFields.fields.push('model_codes')
-        }
         const outputKeys = ['sell_car'];
     
         const outputData: any = {};

@@ -1908,7 +1908,7 @@ export class CarController {
     const fileDto = new SellCarAddImageDto();
     fileDto.attachment = files?.attachment;
     const errors = await validate(fileDto, { whitelist: true });
-    // await this.carMicroservice.processLookupDataFromBody(body)
+    await this.carMicroservice.processLookupDataFromBody(body)
     if (errors.length > 0) {
       const errorMessages = errors
         .map((error) => {
