@@ -3,6 +3,7 @@ import * as custom from '@repo/source/utilities/custom-helper';
 import { MaxFileSize, IsFileMimeType } from '@repo/source/decorators/file.decorators';
 import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
+import c from 'config';
 
 export class SellCarDto {
     @IsString()
@@ -100,4 +101,13 @@ export class SellCarAddImageDto {
 export class SellCarDetailsDto {
     @IsNotEmpty()
     id: string;
+}
+
+export class SellCarUpdateStatusDto {
+    @IsNotEmpty()
+    id: string;
+
+    @IsString()
+    @IsIn(['Open', 'Closed', 'Inprogress'])
+    status: string;
 }

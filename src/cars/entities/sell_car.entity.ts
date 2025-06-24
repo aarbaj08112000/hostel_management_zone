@@ -1,4 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+export enum STATUS {
+  OPEN = 'Open',
+  INPROGRESS = 'Inprogress',
+  CLOSED = 'Closed'
+}
 
 @Entity('sell_car')
 export class SellCarEntity {
@@ -55,6 +60,13 @@ export class SellCarEntity {
 
   @Column({ type: 'json', nullable: true })
   otherDetails: string;
+
+  @Column({
+    type: 'enum',
+    enum: STATUS,
+    default: STATUS.OPEN,
+  })
+  status: STATUS;
 }
 
 @Entity('sell_car_images')
