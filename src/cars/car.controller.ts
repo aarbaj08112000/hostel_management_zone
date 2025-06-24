@@ -150,7 +150,14 @@ export class CarController {
       console.log(err);
     }
   }
-  
+  @Get('fetch-slug')
+  async getSlugs(){
+    try{
+      return await this.carAddService.getCarPublishedSlug()
+    }catch(err){
+      console.log(err)
+    }
+  }
   @Get('get-lookup-data')
     async fetchLookupData(@Body() body: CarListDto){
       return await this.getLookupData.getLkpData(body);

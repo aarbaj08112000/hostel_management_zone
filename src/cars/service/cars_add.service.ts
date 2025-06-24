@@ -1447,7 +1447,6 @@ export class CarsAddService extends BaseService {
       .set(queryColumns)
       .where("carId = :id", { id: car_data.carId})
       .execute();
-      console.log(JSON.stringify(result,null,2))
       return_arr = {
         success : 1,
         message : 'Car Updated successfully'
@@ -1521,5 +1520,32 @@ async fetchDisplayName(car_id , code?) {
 
     const response =  await queryObject.getRawOne();
     return response?.carCode
+  }
+
+  async getCarPublishedSlug(){
+      let return_arr : any = {};
+      try{
+      const queryObject =   await this.carEntityRepo
+        .createQueryBuilder('c')
+        .select('c.slug' , 'slug')
+        .addSelect('c.updatedDate' , 'updated_date')
+        .where('c.isListed = :listed' , {listed : 'Yes'})
+        const response = await queryObject.getRawMany();
+        if(response){
+         let data = response.map((val) => ({ slug: val.slug, updated_date: val.updated_date }));
+          return_arr = {
+            success : 1,
+            message : 'Slug found successfully',
+            data : data
+          }
+        }    
+      }catch(err){
+        return_arr = {
+            success : 0,
+            message : 'No slug found',
+            data : []
+          }
+      }
+      return return_arr
   }
 }
