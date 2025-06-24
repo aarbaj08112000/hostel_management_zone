@@ -44,9 +44,9 @@ export class GetCommentDto {
     @IsString()
     @IsNotEmpty()
     @IsIn(['sell_car'])
-    entity_type: string;
+    type: string;
 
     @IsString()
     @IsNotEmpty()
-    entity_id: string;
+    id: string;
 }

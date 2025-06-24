@@ -1971,7 +1971,7 @@ export class CarController {
   }
 
   @Put('update-sell-car-status')
-  async updateSellCarStatus(@Query() params: SellCarUpdateStatusDto) {
+  async updateSellCarStatus(@Body() params: SellCarUpdateStatusDto) {
     return await this.sellCarService.updateSellCarStatus(params);
   }
 
@@ -2026,7 +2026,7 @@ export class CarController {
   }
 
   @Get('get-comment')
-  async getComments(@Body() params: GetCommentDto) {
+  async getComments(@Query() params: GetCommentDto) {
     return await this.commentService.getComment(params);
   }
 
