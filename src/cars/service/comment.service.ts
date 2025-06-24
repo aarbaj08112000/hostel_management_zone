@@ -54,6 +54,11 @@ export class CommentService extends BaseService {
 
     async getComment(inputParams) {
         try {
+            let fileConfig: FileFetchDto;
+            const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+            fileConfig = {};
+            fileConfig.source = 'amazon';
+            fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
             const rows = await this.commentEntity
                 .createQueryBuilder('c')
                 .leftJoin('attachments', 'a', 'a.commentId = c.id')
@@ -82,6 +87,9 @@ export class CommentService extends BaseService {
                     }
 
                     if (row.fileName) {
+                        fileConfig.image_name = row.fileName;
+                        fileConfig.path = `comment_${aws_folder}/${row.id}`;
+                        row.fileName = await this.general.getFile(fileConfig, inputParams);
                         resultMap.get(row.id).attachments.push(row.fileName);
                     }
                 }
