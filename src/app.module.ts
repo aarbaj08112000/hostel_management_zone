@@ -12,6 +12,19 @@ import { ApiService } from '@repo/source/services/api.service';
 import { SettingMiddleware } from '@repo/source/middleware/setting.middleware';
 import { SettingEntity } from '@repo/source/entities/setting.entity';
 import { CacheService } from '@repo/source/services/cache.service';
+import { RedisService } from '@repo/source/services/redis.service';
+import { Redis } from 'ioredis';
+const redisProvider = {
+  provide: 'REDIS_CLIENT',
+  useFactory: async (configService: ConfigService) => {
+    return new Redis({
+      host: configService.get('REDIS_HOST'),
+      port: configService.get('REDIS_PORT'),
+      
+    });
+  },
+  inject: [ConfigService],
+};
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
@@ -34,7 +47,7 @@ import { CacheService } from '@repo/source/services/cache.service';
     TypeOrmModule.forFeature([SettingEntity]),
   ],
   controllers: [AppController],
-  providers: [AppService, ApiService, CacheService],
+  providers: [AppService, ApiService, CacheService,RedisService,redisProvider],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
