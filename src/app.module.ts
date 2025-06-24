@@ -14,6 +14,7 @@ import { SettingEntity } from '@repo/source/entities/setting.entity';
 import { CacheService } from '@repo/source/services/cache.service';
 import { RedisService } from '@repo/source/services/redis.service';
 import { Redis } from 'ioredis';
+import { join } from 'path';
 const redisProvider = {
   provide: 'REDIS_CLIENT',
   useFactory: async (configService: ConfigService) => {
@@ -42,6 +43,10 @@ const redisProvider = {
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig],
+      envFilePath: [
+      join(__dirname, '../.env'),   
+      join(__dirname, '../../../.env')   
+    ],
     }),
     MailerModuleWrapper,
     TypeOrmModule.forFeature([SettingEntity]),
@@ -51,12 +56,6 @@ const redisProvider = {
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(LoggerMiddleware).forRoutes('*');
     consumer.apply(SettingMiddleware).forRoutes('*');
-    // Auth MiddleWare
-    // consumer
-    //   .apply(AuthMiddleware)
-    //   .exclude(...excludeRoutes)
-    //   .forRoutes('api/*');
   }
 }
