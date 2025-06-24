@@ -64,8 +64,8 @@ export class CommentService extends BaseService {
                     'c.entityId AS entityId',
                     'a.fileName AS fileName'
                 ])
-                .where('c.entityType = :entityType', { entityType: inputParams.entity_type })
-                .andWhere('c.entityId = :entityId', { entityId: inputParams.entity_id })
+                .where('c.entityType = :entityType', { entityType: inputParams.type })
+                .andWhere('c.entityId = :entityId', { entityId: inputParams.id })
                 .getRawMany();
 
                 const resultMap = new Map();
