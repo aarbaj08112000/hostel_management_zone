@@ -77,8 +77,10 @@ import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 import { CarFrontCompareService } from './service/front-car-compare_service';
 import { GetLookupData } from './service/fetch_lkp_data.service';
-import { SellCarAddImageDto, SellCarDetailsDto, SellCarDto } from './dto/sell_car.dto';
+import { SellCarAddImageDto, SellCarDetailsDto, SellCarDto, SellCarUpdateStatusDto } from './dto/sell_car.dto';
 import { SellCarService } from './service/sell_car.service';
+import { AddCommentDto, CommentAddImageDto, GetCommentDto } from './dto/comments.dto';
+import { CommentService } from './service/comment.service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -126,6 +128,7 @@ export class CarController {
     private activityLogService : ActivityLogService,
     private carFrontCompareService : CarFrontCompareService,
     private sellCarService : SellCarService,
+    private commentService : CommentService,
     private getLookupData: GetLookupData,
   ) { }
   @MessagePattern('sync-data')
@@ -1965,6 +1968,66 @@ export class CarController {
   @Get('sell-car-detail')
   async sellCarDetails(@Query() params: SellCarDetailsDto) {
     return await this.sellCarService.startSellCarDetail(params.id);
+  }
+
+  @Put('update-sell-car-status')
+  async updateSellCarStatus(@Query() params: SellCarUpdateStatusDto) {
+    return await this.sellCarService.updateSellCarStatus(params);
+  }
+
+  @Post('add-comment')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async AddComment(@Req() request: Request, @Body() body: AddCommentDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+    const fileDto = new CommentAddImageDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+    // await this.carMicroservice.processLookupDataFromBody(body)
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          // body[key] = fileName;
+          temp.push(fileName);
+        }
+      }
+    }
+    if(temp.length > 0){
+      body['attachment'] = temp;
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    return await this.commentService.addComment(params);
+  }
+
+  @Get('get-comment')
+  async getComments(@Body() params: GetCommentDto) {
+    return await this.commentService.getComment(params);
   }
 
   sort_map_arr(type) {

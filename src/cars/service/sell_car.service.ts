@@ -214,6 +214,38 @@ export class SellCarService extends BaseService {
         }
     }
 
+    async updateSellCarStatus(inputParams) {
+        try{
+            let queryColumns: any = {};
+            queryColumns.status = inputParams.status;
+            const queryObject = this.sellCarEntity
+                .createQueryBuilder()
+                .update(SellCarEntity)
+                .set(queryColumns);
+            if (!custom.isEmpty(inputParams.id)) {
+            queryObject.andWhere('id = :id', { id: inputParams.id });
+            }
+            const res = await queryObject.execute();
+            let job_data = {
+                job_function: 'sync_elastic_data',
+                job_params: {
+                    module: 'sell_car_list',
+                    data: inputParams.id,
+                },
+            };
+            await this.general.submitGearmanJob(job_data)
+            return {
+                success: 1,
+                message: 'Status updated successfully.',
+            }
+        }catch (err) {
+            return {
+                success: 0,
+                message: err.message || 'Something went wrong.',
+            }
+        }
+    }
+
     async sellCar(inputParams) {
         try {
             let fileInfo: any = {};
@@ -239,6 +271,7 @@ export class SellCarService extends BaseService {
             if ('appointment_date' in inputParams) queryColumns.appointmentDate = inputParams.appointment_date;
             if ('appointment_time' in inputParams) queryColumns.appointmentTime = inputParams.appointment_time;
             queryColumns.addedDate = () => 'NOW()';
+            queryColumns.status = 'Open';
 
             const otherDetails: any = {};
             if ('brand_name' in inputParams) otherDetails.brand_name = inputParams.brand_name;
