@@ -453,7 +453,8 @@ export class CarFrontDetailsService {
       "export_status",
       "is_insp_rep",
       "wishlist_count",
-      "raw_price"
+      "raw_price",
+      "isListed"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
