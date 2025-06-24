@@ -458,6 +458,7 @@ export class SellCarService extends BaseService {
           'other_details',
           'attachments',
           'added_date',
+          'status'
         ];
         const outputKeys = ['sell_car'];
     
