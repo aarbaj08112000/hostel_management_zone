@@ -150,10 +150,10 @@ export class SellCarService extends BaseService {
                 }
                 
                 if(!data.brand_id){
-                    data.brand_name = data.other_details.brand_name || null;
+                    data.brand_name = data.other_details?.brand_name || null;
                 }
                 if(!data.model_id){
-                    data.model_name = data.other_details.model_name || null;
+                    data.model_name = data.other_details?.model_name || null;
                 }
                 if(!data.variant_id){
                     data.variant_name = data.other_details?.variant_name || null;
