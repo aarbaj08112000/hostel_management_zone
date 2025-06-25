@@ -77,7 +77,7 @@ import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 import { CarFrontCompareService } from './service/front-car-compare_service';
 import { GetLookupData } from './service/fetch_lkp_data.service';
-import { SellCarAddImageDto, SellCarDetailsDto, SellCarDto, SellCarUpdateStatusDto } from './dto/sell_car.dto';
+import { SellCarAddImageDto, SellCarDetailsDto, SellCarDto } from './dto/sell_car.dto';
 import { SellCarService } from './service/sell_car.service';
 import { AddCommentDto, CommentAddImageDto, GetCommentDto } from './dto/comments.dto';
 import { CommentService } from './service/comment.service';
@@ -1970,11 +1970,6 @@ export class CarController {
     return await this.sellCarService.startSellCarDetail(params.id);
   }
 
-  @Put('update-sell-car-status')
-  async updateSellCarStatus(@Body() params: SellCarUpdateStatusDto) {
-    return await this.sellCarService.updateSellCarStatus(params);
-  }
-
   @Post('add-comment')
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -1984,7 +1979,7 @@ export class CarController {
     const fileDto = new CommentAddImageDto();
     fileDto.attachment = files?.attachment;
     const errors = await validate(fileDto, { whitelist: true });
-    // await this.carMicroservice.processLookupDataFromBody(body)
+    await this.carMicroservice.processLookupDataFromBody(body)
     if (errors.length > 0) {
       const errorMessages = errors
         .map((error) => {

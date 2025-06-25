@@ -17,6 +17,10 @@ export class AddCommentDto {
     entity_id: string;
 
     @IsString()
+    @IsIn(['Open', 'Closed', 'Inprogress'])
+    status: string;
+
+    @IsString()
     @IsOptional()
     added_by: string;
 }

@@ -214,38 +214,6 @@ export class SellCarService extends BaseService {
         }
     }
 
-    async updateSellCarStatus(inputParams) {
-        try{
-            let queryColumns: any = {};
-            queryColumns.status = inputParams.status;
-            const queryObject = this.sellCarEntity
-                .createQueryBuilder()
-                .update(SellCarEntity)
-                .set(queryColumns);
-            if (!custom.isEmpty(inputParams.id)) {
-            queryObject.andWhere('id = :id', { id: inputParams.id });
-            }
-            const res = await queryObject.execute();
-            let job_data = {
-                job_function: 'sync_elastic_data',
-                job_params: {
-                    module: 'sell_car_list',
-                    data: inputParams.id,
-                },
-            };
-            await this.general.submitGearmanJob(job_data)
-            return {
-                success: 1,
-                message: 'Status updated successfully.',
-            }
-        }catch (err) {
-            return {
-                success: 0,
-                message: err.message || 'Something went wrong.',
-            }
-        }
-    }
-
     async sellCar(inputParams) {
         try {
             let fileInfo: any = {};

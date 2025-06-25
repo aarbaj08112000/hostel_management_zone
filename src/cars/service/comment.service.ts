@@ -18,6 +18,7 @@ import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import * as moment from 'moment';
 import { LookupEntity } from '@repo/source/entities/lookup.entity';
+import { SellCarEntity } from '../entities/sell_car.entity';
 
 @Injectable()
 export class CommentService extends BaseService {
@@ -43,6 +44,8 @@ export class CommentService extends BaseService {
     protected readonly moduleService: ModuleService;
     @InjectRepository(CommentEntity)
     protected commentEntity: Repository<CommentEntity>;
+    @InjectRepository(SellCarEntity)
+    protected sellCarEntity: Repository<SellCarEntity>;
     @InjectRepository(AttachmentsEntity)
     protected attachmentsEntity: Repository<AttachmentsEntity>;
     @InjectRepository(LookupEntity)
@@ -62,12 +65,16 @@ export class CommentService extends BaseService {
             const rows = await this.commentEntity
                 .createQueryBuilder('c')
                 .leftJoin('attachments', 'a', 'a.commentId = c.id')
+                .leftJoin('lookup', 'l', 'l.entityId = c.addedBy') // Join lookup on addedBy
                 .select([
                     'c.id AS id',
                     'c.comment AS comment',
                     'c.entityType AS entityType',
                     'c.entityId AS entityId',
-                    'a.fileName AS fileName'
+                    'c.addedBy AS added_by',
+                    'c.addedDate AS added_date',
+                    'a.fileName AS fileName',
+                    `JSON_UNQUOTE(JSON_EXTRACT(l.entityJson, '$.name')) AS added_name`, // Extract name from entityJson
                 ])
                 .where('c.entityType = :entityType', { entityType: inputParams.type })
                 .andWhere('c.entityId = :entityId', { entityId: inputParams.id })
@@ -77,11 +84,17 @@ export class CommentService extends BaseService {
 
                 for (const row of rows) {
                     if (!resultMap.has(row.id)) {
+                        const formattedDate = row.added_date
+                            ? moment(row.added_date).format('DD-MM-YYYY hh:mm A')
+                            : null;
                         resultMap.set(row.id, {
                             id: row.id,
                             comment: row.comment,
                             entityType: row.entityType,
                             entityId: row.entityId,
+                            addedBy: row.added_by,
+                            addedName: row.added_name || null,
+                            addedDate: formattedDate,
                             attachments: [],
                         });
                     }
@@ -129,6 +142,25 @@ export class CommentService extends BaseService {
             queryColumns.addedDate = () => 'NOW()';
             
             const res = await this.commentEntity.insert(queryColumns);
+
+            const sellQueryColumns: any = {};
+            sellQueryColumns.status = inputParams.status;
+            const queryObject = this.sellCarEntity
+                .createQueryBuilder()
+                .update(SellCarEntity)
+                .set(sellQueryColumns);
+            if (!custom.isEmpty(inputParams.entity_id)) {
+                queryObject.andWhere('id = :id', { id: inputParams.entity_id });
+            }
+            const resNew = await queryObject.execute();
+            let job_data = {
+                job_function: 'sync_elastic_data',
+                job_params: {
+                    module: 'sell_car_list',
+                    data: inputParams.entity_id,
+                },
+            };
+            await this.general.submitGearmanJob(job_data)
 
             const attachmentQuery  : any = []
             if('attachment' in fileInfo){

@@ -102,12 +102,3 @@ export class SellCarDetailsDto {
     @IsNotEmpty()
     id: string;
 }
-
-export class SellCarUpdateStatusDto {
-    @IsNotEmpty()
-    id: string;
-
-    @IsString()
-    @IsIn(['Open', 'Closed', 'Inprogress'])
-    status: string;
-}
