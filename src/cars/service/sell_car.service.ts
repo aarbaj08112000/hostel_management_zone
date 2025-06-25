@@ -156,7 +156,7 @@ export class SellCarService extends BaseService {
                     data.model_name = data.other_details.model_name || null;
                 }
                 if(!data.variant_id){
-                    data.variant_name = data.other_details.variant_name || null;
+                    data.variant_name = data.other_details?.variant_name || null;
                 }
                 
                 if(data.color_id > 0){
