@@ -73,12 +73,13 @@ export class CommentService extends BaseService {
                     'c.entityId AS entityId',
                     'c.addedBy AS added_by',
                     'c.addedDate AS added_date',
-                    'a.fileName AS fileName',
                     `JSON_UNQUOTE(JSON_EXTRACT(l.entityJson, '$.name')) AS added_name`, // Extract name from entityJson
+                    `GROUP_CONCAT(a.fileName) AS fileName`,
                 ])
                 .where('c.entityType = :entityType', { entityType: inputParams.type })
                 .andWhere('c.entityId = :entityId', { entityId: inputParams.id })
                 .orderBy('c.addedDate', 'DESC')
+                .groupBy('c.id')
                 .getRawMany();
 
                 const resultMap = new Map();
@@ -100,11 +101,24 @@ export class CommentService extends BaseService {
                         });
                     }
 
+                    // if (row.fileName) {
+                    //     fileConfig.image_name = row.fileName;
+                    //     fileConfig.path = `comment_${aws_folder}/${row.id}`;
+                    //     row.fileName = await this.general.getFile(fileConfig, inputParams);
+                    //     resultMap.get(row.id).attachments.push(row.fileName);
+                    // }
                     if (row.fileName) {
-                        fileConfig.image_name = row.fileName;
-                        fileConfig.path = `comment_${aws_folder}/${row.id}`;
-                        row.fileName = await this.general.getFile(fileConfig, inputParams);
-                        resultMap.get(row.id).attachments.push(row.fileName);
+                        const fileNames = row.fileName.split(','); // 👈 split the concatenated string
+                        const attachments = [];
+
+                        for (const file of fileNames) {
+                            fileConfig.image_name = file.trim();
+                            fileConfig.path = `comment_${aws_folder}/${row.id}`;
+                            const fileUrl = await this.general.getFile(fileConfig, inputParams);
+                            attachments.push(fileUrl);
+                        }
+
+                        resultMap.get(row.id).attachments = attachments;
                     }
                 }
 
