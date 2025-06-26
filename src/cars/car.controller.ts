@@ -1618,11 +1618,11 @@ export class CarController {
         searchType: 'btw',
         label: custom.lang('Price'),
         values: {
-          from: this.roundPriceDynamically(price.min_price),
+          from: this.roundPriceDynamically(price.min_price , 'less'),
           to: this.roundPriceDynamically(price.max_price),
         },
         default_values: {
-          from: this.roundPriceDynamically(price.min_price),
+          from: this.roundPriceDynamically(price.min_price ,'less'),
           to: this.roundPriceDynamically(price.max_price),
         },
       };
@@ -2060,8 +2060,8 @@ export class CarController {
     return magnitude;
   }
 
-  roundPriceDynamically(price) {
+  roundPriceDynamically(price , type?) {
     const base = this.getDynamicRoundingBase(price);
-    return Math.ceil(price / base) * base;
+    return type == 'less' ? Math.floor(price / base) * base :  Math.ceil(price / base) * base;
   }
 }
