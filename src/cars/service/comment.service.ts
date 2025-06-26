@@ -78,6 +78,7 @@ export class CommentService extends BaseService {
                 ])
                 .where('c.entityType = :entityType', { entityType: inputParams.type })
                 .andWhere('c.entityId = :entityId', { entityId: inputParams.id })
+                .orderBy('c.addedDate', 'DESC')
                 .getRawMany();
 
                 const resultMap = new Map();
