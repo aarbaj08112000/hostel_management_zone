@@ -355,7 +355,7 @@ export class SellCarService extends BaseService {
                     file_type: this.general.getFileMime(filePath),
                     file_size: this.general.getFileSize(filePath),
                     max_size: paramKey === 'car_document' ? 512000 : 102400,
-                    extensions:'pdf,doc,docx,gif,png,jpg,jpeg,jpe,bmp,ico,webp',
+                    extensions:'png,jpg,jpeg,jpe,bmp,ico,webp',
                 };
                 temp_upload.push(fileInfo);
                 }
