@@ -92,8 +92,7 @@ export class SellCarAddImageDto {
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => UploadedFile)
-    @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',])
+    @IsFileMimeType(['image/jpg', 'image/jpeg', 'image/png', 'image/webp'])
     @MaxFileSize(10485760)
     attachment: Express.Multer.File[];
 }
