@@ -347,13 +347,14 @@ export class CarController {
     final_data = {
       facebook, instagram, twitter, youtube, linkedin, threads, whatsapp, google
     }
+    let footer = await this.general.getConfigItem('FOOTER')
     let return_data = {
       "header":
       {
       },
       "footer": {
         "socialMedia": final_data,
-        "officeAddresses": [
+        "officeAddresses": footer ? JSON.parse(footer):[
           {
             "address": "Block-1 Unit-4 Al Hail Business Centre, <br>Next to KM Traiding, Behind Emirates, <br>Motors M4, Mussafah, Abu Dhabi, UAE",
             "city": "MUSSAFAH",
