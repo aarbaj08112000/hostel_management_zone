@@ -68,7 +68,7 @@ export class CommentService extends BaseService {
             const rows = await this.commentEntity
                 .createQueryBuilder('c')
                 .leftJoin('attachments', 'a', 'a.commentId = c.id')
-                .leftJoin('lookup', 'l', 'l.entityId = c.addedBy') // Join lookup on addedBy
+                .leftJoin('lookup', 'l', 'l.entityId = c.addedBy AND l.entityName = :entityName', { entityName: 'user' })
                 .select([
                     'c.id AS id',
                     'c.comment AS comment',
