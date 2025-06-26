@@ -57,11 +57,14 @@ export class CommentService extends BaseService {
 
     async getComment(inputParams) {
         try {
-            let fileConfig: FileFetchDto;
             const aws_folder = await this.general.getConfigItem('AWS_SERVER');
-            fileConfig = {};
-            fileConfig.source = 'amazon';
-            fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
+            const allowedExtensions = await this.general.getConfigItem('allowed_extensions');
+
+            const fileConfig: FileFetchDto = {
+                source: 'amazon',
+                extensions: allowedExtensions
+            };
+
             const rows = await this.commentEntity
                 .createQueryBuilder('c')
                 .leftJoin('attachments', 'a', 'a.commentId = c.id')
@@ -73,8 +76,8 @@ export class CommentService extends BaseService {
                     'c.entityId AS entityId',
                     'c.addedBy AS added_by',
                     'c.addedDate AS added_date',
-                    `JSON_UNQUOTE(JSON_EXTRACT(l.entityJson, '$.name')) AS added_name`, // Extract name from entityJson
-                    `GROUP_CONCAT(a.fileName) AS fileName`,
+                    `JSON_UNQUOTE(JSON_EXTRACT(l.entityJson, '$.name')) AS added_name`,
+                    `GROUP_CONCAT(DISTINCT a.fileName) AS fileName`
                 ])
                 .where('c.entityType = :entityType', { entityType: inputParams.type })
                 .andWhere('c.entityId = :entityId', { entityId: inputParams.id })
@@ -82,61 +85,51 @@ export class CommentService extends BaseService {
                 .groupBy('c.id')
                 .getRawMany();
 
-                const resultMap = new Map();
+            const result = [];
 
-                for (const row of rows) {
-                    if (!resultMap.has(row.id)) {
-                        const formattedDate = row.added_date
-                            ? moment(row.added_date).format('DD-MM-YYYY hh:mm A')
-                            : null;
-                        resultMap.set(row.id, {
-                            id: row.id,
-                            comment: row.comment,
-                            entityType: row.entityType,
-                            entityId: row.entityId,
-                            addedBy: row.added_by,
-                            addedName: row.added_name || null,
-                            addedDate: formattedDate,
-                            attachments: [],
-                        });
-                    }
+            for (const row of rows) {
+                const formattedDate = row.added_date
+                    ? moment(row.added_date).format('DD-MM-YYYY hh:mm A')
+                    : null;
 
-                    // if (row.fileName) {
-                    //     fileConfig.image_name = row.fileName;
-                    //     fileConfig.path = `comment_${aws_folder}/${row.id}`;
-                    //     row.fileName = await this.general.getFile(fileConfig, inputParams);
-                    //     resultMap.get(row.id).attachments.push(row.fileName);
-                    // }
-                    if (row.fileName) {
-                        const fileNames = row.fileName.split(','); // 👈 split the concatenated string
-                        const attachments = [];
+                const record = {
+                    id: row.id,
+                    comment: row.comment,
+                    entityType: row.entityType,
+                    entityId: row.entityId,
+                    addedBy: row.added_by,
+                    addedName: row.added_name || null,
+                    addedDate: formattedDate,
+                    attachments: []
+                };
 
-                        for (const file of fileNames) {
-                            fileConfig.image_name = file.trim();
-                            fileConfig.path = `comment_${aws_folder}/${row.id}`;
-                            const fileUrl = await this.general.getFile(fileConfig, inputParams);
-                            attachments.push(fileUrl);
-                        }
-
-                        resultMap.get(row.id).attachments = attachments;
+                if (row.fileName) {
+                    const fileNames = row.fileName.split(',').map(f => f.trim());
+                    for (const file of fileNames) {
+                        fileConfig.image_name = file;
+                        fileConfig.path = `comment_${aws_folder}/${row.id}`;
+                        const fileUrl = await this.general.getFile(fileConfig, inputParams);
+                        record.attachments.push(fileUrl);
                     }
                 }
 
-                const result = Array.from(resultMap.values());
+                result.push(record);
+            }
 
-                if (result.length > 0) {
-                    return {
-                        success: 1,
-                        message: 'Comments fetched successfully.',
-                        data: result,
-                    };
-                } else {
-                    throw new Error('No comments found.');
-                }
+            if (result.length > 0) {
+                return {
+                    success: 1,
+                    message: 'Comments fetched successfully.',
+                    data: result
+                };
+            } else {
+                throw new Error('No comments found.');
+            }
+
         } catch (err) {
-            console.log(err);
-            return { 
-                success: 0, 
+            console.error(err);
+            return {
+                success: 0,
                 message: err.message || 'Something went wrong.',
                 data: []
             };
