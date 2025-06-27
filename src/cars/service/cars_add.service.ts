@@ -1322,7 +1322,7 @@ export class CarsAddService extends BaseService {
       unique_message: uniqueMessage,
     };
   }
-  async fetchBrandModelPresentCar() {
+  async fetchBrandModelPresentCar(needStatus?) {
     const queryObject = await this.modelRepo
         .createQueryBuilder('cm')
         .distinct(true)
@@ -1334,10 +1334,11 @@ export class CarsAddService extends BaseService {
             .innerJoin('cars', 'c', 'cd.carId = c.carId')
             .where('c.isListed = :status', { status: 'Yes' })
             .andWhere('cd.brandId = cm.brandId')
-            .andWhere('cd.modelId = cm.carModelId')
-            .getQuery();
-
-          return `EXISTS ${subQuery}`;
+            .andWhere('cd.modelId = cm.carModelId') 
+            if (needStatus === 'Yes') {
+                subQuery.andWhere('c.status = :availableStatus', { availableStatus: 'Available' });
+            }
+          return `EXISTS ${subQuery.getQuery()}`;
         });
 
       const response = await queryObject.getRawMany();
