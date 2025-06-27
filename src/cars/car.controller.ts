@@ -697,7 +697,11 @@ export class CarController {
   @Get('brand-dropdown')
   async getBrandDropdown(@Req() request: Request, @Query() params: any) {
     let brandList = await this.brandList(request, params);
-    let data  = await this.carAddService.fetchBrandModelPresentCar()
+    let needStatus = 'No'
+    if('is_testDrive' in params && params.is_testDrive == 'yes'){
+      needStatus = 'Yes'
+    }
+    let data  = await this.carAddService.fetchBrandModelPresentCar(needStatus)
     const brandIds = data.map(item => item.cm_brandId);
     return brandList ={
       settings: brandList['settings'],
@@ -1845,7 +1849,11 @@ export class CarController {
       params['filters'] = [{ "key": "brand_id", "value": params['brandId'], "operator": "equal" }]
     }
     let modelList = await this.modelList(request, params);
-    let data  = await this.carAddService.fetchBrandModelPresentCar()
+     let needStatus = 'No'
+      if('is_testDrive' in params && params.is_testDrive == 'yes'){
+        needStatus = 'Yes'
+      }
+    let data  = await this.carAddService.fetchBrandModelPresentCar(needStatus)
     const modelIds = data.map(item => item.cm_carModelId);
     return modelList = {
       settings: modelList['settings'],
