@@ -161,7 +161,7 @@ export class CarController {
       console.log(err)
     }
   }
-  @Get('get-lookup-data')
+  @Post('get-lookup-data')
     async fetchLookupData(@Body() body: CarListDto){
       return await this.getLookupData.getLkpData(body);
     }
