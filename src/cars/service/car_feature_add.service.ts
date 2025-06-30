@@ -4,6 +4,7 @@ import { LoggerHandler } from '@repo/source/utilities/logger-handler';
 import { DataSource, Repository, In } from 'typeorm';
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { CarFeatureEntity } from '../entities/cars.entity';
+import { CarEntity } from '../entities/cars.entity';
 import { BaseService } from '@repo/source/services/base.service';
 import * as _ from 'lodash';
 
@@ -25,6 +26,8 @@ export class CarFeatureAddService extends BaseService {
 
   @InjectRepository(CarFeatureEntity)
   protected carFeatureRepo: Repository<CarFeatureEntity>;
+  @InjectRepository(CarEntity)
+  protected carEntityRepo: Repository<CarEntity>;
 
   constructor() {
     super();
@@ -32,6 +35,39 @@ export class CarFeatureAddService extends BaseService {
     this.moduleAPI = '';
   }
 
+  async fetchDisplayName(car_id , code?) {
+    const result = await this.dataSource.query(`
+      SELECT 
+        CONCAT(b.brandName, ' ', cm.modelName, ' ', vm.variantName, ' - ', cd.manufactureYear) AS display_title,
+        carCode as car_code
+      FROM 
+        cars c
+      JOIN 
+        cars_details cd ON c.carId = cd.carId
+      JOIN 
+        variant_master vm ON cd.variantId = vm.variantId
+      JOIN 
+        car_model cm ON cd.modelId = cm.carModelId
+      JOIN 
+        brand b ON cd.brandId = b.brandId
+      WHERE 
+        c.carId = ?
+    `, [car_id]);
+      const response = result[0]?.display_title || null;
+      if(response == null && code == 'Yes'){
+        return await this.getCarCode(car_id)
+      }
+      return result[0]?.display_title || null;
+  }
+  async getCarCode(car_id){
+    const queryObject = await this.carEntityRepo
+    .createQueryBuilder('c')
+    .select('c.carCode', 'carCode')
+    .where('c.carId = :id', { id: car_id });
+
+  const response =  await queryObject.getRawOne();
+  return response?.carCode
+}
   // ============ ADD CAR FEATURES ============
   async addCarFeatures(reqObject, reqParams) {
     let outputResponse = {};
@@ -42,7 +78,7 @@ export class CarFeatureAddService extends BaseService {
       this.setModuleAPI('add');
       const inputParams = await this.insertCarFeatures(reqParams);
       let car_id = reqParams.car_id;
-      let car_name = await this.general.getCarName(reqParams.car_id);
+      let car_name = await this.fetchDisplayName(reqParams.car_id);
       let added_by = reqParams.added_by;
       if (!_.isEmpty(inputParams.inserted_car_features)) {
         outputResponse = this.featureFinishSuccess(inputParams, '');
@@ -74,7 +110,7 @@ export class CarFeatureAddService extends BaseService {
 
       const inputParams = await this.updateCarFeatureData(reqParams);
       let car_id = inputParams.car_id;
-      let car_name = await this.general.getCarName(inputParams.car_id);
+      let car_name = await this.fetchDisplayName(inputParams.car_id);
       let updated_by = reqParams.updated_by;
       if (!_.isEmpty(inputParams.updated_car_features)) {
         outputResponse = this.featureFinishSuccess(inputParams, 'update');
