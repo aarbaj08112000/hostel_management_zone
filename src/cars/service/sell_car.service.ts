@@ -107,9 +107,11 @@ export class SellCarService extends BaseService {
             const data = await Promise.all(
                 results.hits.map(async (hit) => {
                     hit._source['contact'] = hit._source['dial_code']+' '+hit._source['phone_number'];
+                   /*
                     if(hit._source['attachments']){
                         hit._source['attachments'] = hit._source['attachments'].split(',');
                     }
+                    */
                     return hit._source;
                 })
             );
