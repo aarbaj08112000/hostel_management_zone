@@ -76,7 +76,7 @@ import { CarServicesDto , UpdateCarServicesDto } from './dto/car_services.dto';
 import { ActivityLogService } from '@repo/source/services/activity_log.service';
 import { ActivityLogAddDto, ActivityLogListDto } from '@repo/source/common/dto/activity_log.dto';
 import { CarFrontCompareService } from './service/front-car-compare_service';
-import { GetLookupData } from './service/fetch_lkp_data.service';
+import { GetLookupData } from '@repo/source/services/fetch_lkp_data.service';
 import { SellCarAddImageDto, SellCarDetailsDto, SellCarDto } from './dto/sell_car.dto';
 import { SellCarService } from './service/sell_car.service';
 import { AddCommentDto, CommentAddImageDto, GetCommentDto } from './dto/comments.dto';
