@@ -143,9 +143,11 @@ export class SellCarService extends BaseService {
             const currency_code = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX');
             const data = await this.elasticService.getById(id, 'nest_local_sell_car_list', 'id');
             if (_.isObject(data) && !_.isEmpty(data)) {
+               /*
                 if(data.attachments){
                     data.attachments = data.attachments.split(',');
                 }
+                */
                 if (data.appointment_date) {
                     const parsedUpdateDate = moment(data.appointment_date, 'DD-MM-YYYY hh:mm A');
                     data.appointment_date = parsedUpdateDate.format('DD/MM/YYYY');
