@@ -195,10 +195,11 @@ export class CarFrontCompareService {
             if(typeof data['analytics'] != 'undefined' && data['analytics'] != null){
               if(typeof data['analytics']?.views != 'undefined'){
                   data['analytics']['views'] = data['analytics']?.views + data['views']
+                  data['analytics']['visitors'] = data['analytics']?.views + data['views']
               }
             }else{
               data['analytics'] = {}
-              data['analytics']['visitors'] = 0;
+              data['analytics']['visitors'] = data['views'] ?  data['views'] : 0;
               data['analytics']['views'] = data['views']
             }
         }
