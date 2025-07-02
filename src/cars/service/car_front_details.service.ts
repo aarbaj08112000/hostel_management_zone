@@ -132,7 +132,8 @@ export class CarFrontDetailsService {
         "open_time",
         "export_status",
         "close_time",
-        "car_documents"
+        "car_documents",
+        "views"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -344,7 +345,16 @@ export class CarFrontDetailsService {
       data.noOfCylinders = '6';
       data.added_date = this.general.timeAgo(data.added_date)
       data.engineSizeSuffix = "L"
-
+      if(data?.views){
+          if(data?.analytics){
+            data.originalView = data?.analytics?.views
+            data.analytics.views = data?.analytics?.views + data?.views
+          }else{
+            data.analytics = {}
+            data.analytics.visitors = 0;
+            data.analytics.views = data?.views
+          }
+      }
       if(data['fuelType'] == 'Electric'){
         data.vehicleType = 'ev';
       }

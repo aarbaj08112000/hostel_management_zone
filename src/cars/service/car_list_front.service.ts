@@ -105,7 +105,8 @@ export class CarListFrontService {
         "body_code",
         "analytics",
         "status",
-        "display_title"
+        "display_title",
+        "views"
       ]
       search_params['_source'] = _source;
       let pageIndex = 1;
@@ -186,12 +187,23 @@ export class CarListFrontService {
             hit._source['drivenDistance'],
             'numerical',
           ),
-            hit._source['distanceSuffix'] = 'km';
+          hit._source['distanceSuffix'] = 'km';
           hit._source['carSlug'] = hit._source['car_slug']
           hit._source['currency_code'] = currency_code,
             hit._source['carImage'] = hit._source['car_image']
               ? await this.general.getFile(fileConfig, inputParams)
               : '';
+          if(typeof hit._source['views'] != 'undefined' && hit._source['views'] != null){
+            if(typeof hit._source['analytics'] != 'undefined' && hit._source['analytics'] != null){
+              if(typeof hit._source['analytics']?.views != 'undefined'){
+                  hit._source['analytics']['views'] = hit._source['analytics']?.views + hit._source['views']
+              }
+            }else{
+              hit._source['analytics'] = {}
+              hit._source['analytics']['visitors'] = 0;
+              hit._source['analytics']['views'] = hit._source['views']
+            }
+          }
           return hit._source;
         }),
       );
@@ -209,6 +221,7 @@ export class CarListFrontService {
         throw new Error('No records found.');
       }
     } catch (err) {
+      console.log(err)
       this.blockResult.success = 0;
       this.blockResult.message = err;
       this.blockResult.data = [];

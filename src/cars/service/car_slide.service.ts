@@ -147,7 +147,8 @@ export class CarSlideService {
                         'body_code',
                         'analytics',
                         'status',
-                        "display_title"
+                        "display_title",
+                        "views"
                       ],
                       sort: [
                         {
@@ -186,7 +187,8 @@ export class CarSlideService {
                       'body_code',
                       'analytics',
                       'status',
-                      "display_title"
+                      "display_title",
+                       "views"
                     ],
                     sort: [
                       {
@@ -262,7 +264,17 @@ export class CarSlideService {
                   fileConfig.image_name = hit._source['car_image'];
                   carImage = await this.general.getFile(fileConfig, inputParams);
                 }
-
+                if(typeof hit._source['views'] != 'undefined' && hit._source['views'] != null){
+                  if(typeof hit._source['analytics'] != 'undefined' && hit._source['analytics'] != null){
+                    if(typeof hit._source['analytics']?.views != 'undefined'){
+                        hit._source['analytics']['views'] = hit._source['analytics']?.views + hit._source['views']
+                    }
+                  }else{
+                    hit._source['analytics'] = {}
+                    hit._source['analytics']['visitors'] = 0;
+                    hit._source['analytics']['views'] = hit._source['views']
+                  }
+                }
                 return {
                   ...hit._source,
                   carSlug: hit._source['car_slug'],
@@ -335,7 +347,17 @@ export class CarSlideService {
                     fileConfig.image_name = _source['car_image'];
                     carImage = await this.general.getFile(fileConfig, inputParams);
                   }
-
+                  if(typeof hit._source['views'] != 'undefined' && hit._source['views'] != null){
+                    if(typeof hit._source['analytics'] != 'undefined' && hit._source['analytics'] != null){
+                      if(typeof hit._source['analytics']?.views != 'undefined'){
+                          hit._source['analytics']['views'] = hit._source['analytics']?.views + hit._source['views']
+                      }
+                    }else{
+                      hit._source['analytics'] = {}
+                      hit._source['analytics']['visitors'] = 0;
+                      hit._source['analytics']['views'] = hit._source['views']
+                    }
+                  }
                   return {
                     ..._source,
                     added_date: this.timeAgo(_source['added_date']),

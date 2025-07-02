@@ -201,6 +201,17 @@ export class CarListService {
           );
           hit._source['publish_status'] = hit._source['isListed'] == 'Yes' ? 'Published' : 'Unpublished'
           hit._source['test_drive_count'] = testDriveMap.get(hit._source['carId']) || 0;
+          if(typeof hit._source['views'] != 'undefined' && hit._source['views'] != null){
+            if(typeof hit._source['analytics'] != 'undefined' && hit._source['analytics'] != null){
+              if(typeof hit._source['analytics']?.views != 'undefined'){
+                  hit._source['analytics']['views'] = hit._source['analytics']?.views + hit._source['views']
+              }
+            }else{
+              hit._source['analytics'] = {}
+              hit._source['analytics']['visitors'] = 0;
+              hit._source['analytics']['views'] = hit._source['views']
+            }
+          }
           return hit._source;
         }),
       );
