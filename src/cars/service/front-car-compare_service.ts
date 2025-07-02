@@ -191,6 +191,17 @@ export class CarFrontCompareService {
         if(data?.variant_name){
           data['trim'] = data.variant_name
         }
+        if(typeof data['views'] != 'undefined' && data['views'] != null){
+            if(typeof data['analytics'] != 'undefined' && data['analytics'] != null){
+              if(typeof data['analytics']?.views != 'undefined'){
+                  data['analytics']['views'] = data['analytics']?.views + data['views']
+              }
+            }else{
+              data['analytics'] = {}
+              data['analytics']['visitors'] = 0;
+              data['analytics']['views'] = data['views']
+            }
+        }
       }
       if (_.isObject(carDataArray) && !_.isEmpty(carDataArray)) {
         const success = 1;

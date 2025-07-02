@@ -141,6 +141,15 @@ export class CarCompareDetailsService {
         car.noOfCylinders = '6';
         car.modelName = car.model_name;
         car.currencyCode = await this.general.getConfigItem('ADMIN_CURRENCY_PREFIX');
+        if(car?.views){
+          if(car?.analytics){
+            car.analytics.views = car?.analytics?.views + car?.views
+          }else{
+            car.analytics = {}
+            car.analytics.visitors = 0;
+            car.analytics.views = car?.views
+          }
+        }
       }
 
 

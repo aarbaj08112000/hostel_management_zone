@@ -406,7 +406,8 @@ export class CarsAddService extends BaseService {
       if ('reserved_amount' in inputParams) {
         queryColumns.reservedAmount = inputParams.reserved_amount
       }
-
+      let generatedViews = await this.general.getRandomInt(3000,5000)
+      queryColumns.generatedView = generatedViews;
       let code = await this.general.getCustomToken('cars', '', 'Add');
       if (code != '') {
         queryColumns.carCode = code;

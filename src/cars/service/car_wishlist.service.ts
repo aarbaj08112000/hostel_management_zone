@@ -227,6 +227,7 @@ export class CarWishlistService {
         "status",
         "display_title",
         "isListed",
+        "views",
         "booked_by_details"
       ]
       search_params['_source'] = _source;
@@ -288,6 +289,17 @@ export class CarWishlistService {
               if(inputParams['customer_id'] == booked_by_id){
                   hit._source['status'] = hit._source['status'] == 'Sold' ? 'Purchased' : hit._source['status'];
               }
+          }
+          if(typeof hit._source['views'] != 'undefined' && hit._source['views'] != null){
+            if(typeof hit._source['analytics'] != 'undefined' && hit._source['analytics'] != null){
+              if(typeof hit._source['analytics']?.views != 'undefined'){
+                  hit._source['analytics']['views'] = hit._source['analytics']?.views + hit._source['views']
+              }
+            }else{
+              hit._source['analytics'] = {}
+              hit._source['analytics']['visitors'] = 0;
+              hit._source['analytics']['views'] = hit._source['views']
+            }
           }
           return hit._source;
         }),

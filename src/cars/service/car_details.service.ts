@@ -160,6 +160,17 @@ export class CarDetailsService {
         });
         data.tag_information = tags;
       }
+       if(data?.views){
+          if(data?.analytics){
+            data.originalView = data?.analytics?.views
+            data.analytics.views = data?.analytics?.views + data?.views
+          }else{
+            data.analytics = {}
+            data.analytics.visitors = 0;
+            data.originalView = 0;
+            data.analytics.views = data?.views
+          }
+        }
       // if (data?.car_documents) {
       //   const pairs = data.car_documents.split(",");
       //   console.log(pairs)
@@ -301,7 +312,8 @@ export class CarDetailsService {
       'isListed',
       'publish_status',
       'analytics',
-      'booked_by_details'
+      'booked_by_details',
+      'originalView'
     ];
     const outputKeys = ['car_details'];
 
