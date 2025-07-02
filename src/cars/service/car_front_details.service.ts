@@ -349,7 +349,7 @@ export class CarFrontDetailsService {
           if(data?.analytics){
             data.originalView = data?.analytics?.views
             data.analytics.views = data?.analytics?.views + data?.views
-            data.analytics.visitors = data?.analytics?.views + data?.views
+            data.analytics.visitors = data.analytics.views
           }else{
             data.analytics = {}
             data.analytics.visitors = data?.views;
