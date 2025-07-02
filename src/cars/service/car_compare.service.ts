@@ -144,7 +144,7 @@ export class CarCompareDetailsService {
         if(car?.views){
           if(car?.analytics){
             car.analytics.views = car?.analytics?.views + car?.views
-            car.analytics.visitors = car?.analytics?.views + car?.views
+            car.analytics.visitors = car.analytics.views
           }else{
             car.analytics = {}
             car.analytics.visitors = car?.views;

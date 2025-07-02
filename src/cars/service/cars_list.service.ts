@@ -205,7 +205,7 @@ export class CarListService {
             if(typeof hit._source['analytics'] != 'undefined' && hit._source['analytics'] != null){
               if(typeof hit._source['analytics']?.views != 'undefined'){
                   hit._source['analytics']['views'] = hit._source['analytics']?.views + hit._source['views']
-                  hit._source['analytics']['visitors'] = hit._source['analytics']?.views + hit._source['views']
+                 hit._source['analytics']['visitors'] = hit._source['analytics']['views']
               }
             }else{
               hit._source['analytics'] = {}
