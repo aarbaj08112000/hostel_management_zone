@@ -164,9 +164,10 @@ export class CarDetailsService {
           if(data?.analytics){
             data.originalView = data?.analytics?.views
             data.analytics.views = data?.analytics?.views + data?.views
+            data.analytics.visitors = data?.analytics?.views + data?.views
           }else{
             data.analytics = {}
-            data.analytics.visitors = 0;
+            data.analytics.visitors = data?.views;
             data.originalView = 0;
             data.analytics.views = data?.views
           }

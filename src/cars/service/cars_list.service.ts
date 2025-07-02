@@ -205,10 +205,11 @@ export class CarListService {
             if(typeof hit._source['analytics'] != 'undefined' && hit._source['analytics'] != null){
               if(typeof hit._source['analytics']?.views != 'undefined'){
                   hit._source['analytics']['views'] = hit._source['analytics']?.views + hit._source['views']
+                  hit._source['analytics']['visitors'] = hit._source['analytics']?.views + hit._source['views']
               }
             }else{
               hit._source['analytics'] = {}
-              hit._source['analytics']['visitors'] = 0;
+              hit._source['analytics']['visitors'] = hit._source['views'] ? hit._source['views'] : 0;
               hit._source['analytics']['views'] = hit._source['views']
             }
           }
