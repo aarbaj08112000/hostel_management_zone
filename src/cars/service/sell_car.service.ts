@@ -474,7 +474,6 @@ export class SellCarService extends BaseService {
         const doubleEscaped = JSON.stringify(params);
 
         const notify_url = domain_url+'notify-api/insert-email-execution';
-        console.log(notify_url);
         const notificationResponse = await this.general.callThirdPartyApi('POST', notify_url, {
             template_code: 'SELL_CAR_ENQUIRY',
             params: doubleEscaped,
