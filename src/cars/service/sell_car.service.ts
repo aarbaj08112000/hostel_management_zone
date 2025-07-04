@@ -18,6 +18,9 @@ import { FileFetchDto } from '@repo/source/common/dto/amazon.dto';
 import { ElasticService } from '@repo/source/services/elastic.service';
 import * as moment from 'moment';
 import { LookupEntity } from '@repo/source/entities/lookup.entity';
+import { BrandEntity } from '../entities/brand.entity';
+import { ModelEntity } from '../entities/model.entity';
+import { VariantMasterEntity } from '../entities/variant-master.entity';
 
 @Injectable()
 export class SellCarService extends BaseService {
@@ -47,6 +50,12 @@ export class SellCarService extends BaseService {
     protected sellCarAttachmentsEntity: Repository<SellCarAttachmentsEntity>;
     @InjectRepository(LookupEntity)
     private lookupRepo: Repository<LookupEntity>;
+    @InjectRepository(BrandEntity)
+    private brandRepo: Repository<BrandEntity>;
+    @InjectRepository(ModelEntity)
+    private modelRepo: Repository<ModelEntity>;
+    @InjectRepository(VariantMasterEntity)
+    private variantRepo: Repository<VariantMasterEntity>;
 
     constructor(protected readonly elasticService: ElasticService) {
         super();
@@ -336,11 +345,142 @@ export class SellCarService extends BaseService {
                     data: res.raw.insertId,
                 },
             };
-            await this.general.submitGearmanJob(job_data)
+            await this.general.submitGearmanJob(job_data);
+
+            // Send Sell Car Email
+            await this.sendSellCarEmail(inputParams, code);
+
             return { success: 1, message: "Thank you for contacting us. We'll get in touch with you shortly.", data: code, formattedSlotInfo, locationDetails };
         } catch (err) {
             return { success: 0, message: err.message };
         }
+    }
+
+    async sendSellCarEmail(inputParams: any, code?) {
+        // Email Code
+        let fileConfig: FileFetchDto;
+        const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+        const domain_url = await this.general.getConfigItem('DOMAIN_URL');
+        fileConfig = {};
+        fileConfig.source = 'amazon';
+        fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
+        let locationDetails, brand_name, variant_name, model_name, color_name;
+
+        if(inputParams.brand_id > 0){
+            const brand_data = await this.brandRepo
+                .createQueryBuilder('brand')
+                .where("brand.brandId = :id", {
+                    id: inputParams.brand_id,
+                })
+                .getOne();
+            if (brand_data && !_.isEmpty(brand_data)) {
+                brand_name = brand_data.brandName || null;
+            }
+        }else{
+            brand_name = inputParams.brand_name || null;
+        }
+
+        if(inputParams.model_id > 0){
+            const model_data = await this.modelRepo
+                .createQueryBuilder('model')
+                .where("model.carModelId = :id", {
+                    id: inputParams.model_id,
+                })
+                .getOne();
+            if (model_data && !_.isEmpty(model_data)) {
+                model_name = model_data.modelName || null;
+            }
+        }else{
+            model_name = inputParams.model_name || null;
+        }
+
+        if(inputParams.variant_id > 0){
+            const variant_data = await this.variantRepo
+                .createQueryBuilder('variant')
+                .where("variant.variantId = :id", {
+                    id: inputParams.variant_id,
+                })
+                .getOne();
+            if (variant_data && !_.isEmpty(variant_data)) {
+                variant_name = variant_data.variantName || null;
+            }
+        }else{
+            variant_name = inputParams.variant_name || null;
+        }
+
+        if(inputParams.color_id > 0){
+            const color_data = await this.lookupRepo
+                .createQueryBuilder('color')
+                .where("color.entityId = :id", {
+                id: inputParams.color_id,
+                }).andWhere("color.entityName = :entityName", {
+                    entityName: 'color', 
+                })
+                .getOne();
+            if (color_data && !_.isEmpty(color_data)) {
+                color_name = color_data.entityJson.color_name || null;
+            }else{
+                const colorData = await this.elasticService.getById(inputParams.color_id, 'nest_local_color', 'id');
+                color_name = colorData.color_name || null;
+            }
+        }else{
+            color_name = inputParams.color_name || null;
+        }
+
+        if (inputParams.location_id){
+            const location_data = await this.elasticService.getById(inputParams.location_id, 'nest_local_location', 'id');
+            if (location_data && !_.isEmpty(location_data)) {
+                locationDetails = {
+                    location_name: location_data.location_name || null,
+                    location_address: location_data.location_address || null,
+                    address: location_data.google_address || null,
+                    zip_code: location_data.zip_code || null,
+                    latitude: location_data.latitude || null,
+                    longitude: location_data.longitude || null,
+                };
+            }
+        }
+
+        const formattedSlotDate = moment(inputParams.appointment_date, 'YYYY-MM-DD').format('DD/MM/YYYY');
+
+        if (inputParams.appointment_time) {
+            const timeRange = inputParams.appointment_time || '';
+            const [startTime, endTime] = timeRange.split('-').map((s) => s.trim());
+            
+            const formatTimeAMPM = (time: string) => {
+                return moment(time, 'HH:mm:ss').format('hh:mm A');
+            };
+            
+            const formattedTimeRange = `${formatTimeAMPM(startTime)} - ${formatTimeAMPM(endTime)}`;
+            inputParams.appointment_time = formattedTimeRange
+        }
+
+        const params: any = {
+            "dealership_name" : 'Kamdhenu Cars',
+            "enquiry_code" : code || null,
+            "customer_name" : inputParams.name || null,
+            "message" : inputParams.message || null,
+            "make" : brand_name || null,
+            "model" : model_name || null,
+            "trim" : variant_name || null,
+            "color" : color_name || null,
+            "year" : inputParams?.year || null,
+            "km_driven" : inputParams?.km_reading || null,
+            "location" : locationDetails?.location_address || null,
+            "appointment_date" : formattedSlotDate || null,
+            "appointment_time" : inputParams?.appointment_time || null,
+        };
+
+        const doubleEscaped = JSON.stringify(params);
+
+        const notify_url = domain_url+'notify-api/insert-email-execution';
+        const notificationResponse = await this.general.callThirdPartyApi('POST', notify_url, {
+            template_code: 'SELL_CAR_ENQUIRY',
+            params: doubleEscaped,
+            receiver: inputParams.email,
+            notification_type: 'EmailNotify',
+            status: 'Pending'
+        }, {});
     }
 
     async processFile(paramKey, uploadInfo, params) {
