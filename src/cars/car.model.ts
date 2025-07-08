@@ -56,6 +56,7 @@ import { SellCarEntity, SellCarAttachmentsEntity } from './entities/sell_car.ent
 import { SellCarService } from './service/sell_car.service';
 import { CommentService } from './service/comment.service';
 import { CommentEntity, AttachmentsEntity } from './entities/comments.entity';
+import { GenerateViews } from './service/generateData.service';
 @Module({
   imports: [
     GlobalModule,
@@ -125,7 +126,8 @@ import { CommentEntity, AttachmentsEntity } from './entities/comments.entity';
     CarServicesAdd,
     GetLookupData,
     SellCarService,
-    CommentService
+    CommentService,
+    GenerateViews
   ],
 })
 export class CarModule { }
