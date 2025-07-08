@@ -81,6 +81,7 @@ import { SellCarAddImageDto, SellCarDetailsDto, SellCarDto } from './dto/sell_ca
 import { SellCarService } from './service/sell_car.service';
 import { AddCommentDto, CommentAddImageDto, GetCommentDto } from './dto/comments.dto';
 import { CommentService } from './service/comment.service';
+import { GenerateViews } from './service/generateData.service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
@@ -130,6 +131,7 @@ export class CarController {
     private sellCarService : SellCarService,
     private commentService : CommentService,
     private getLookupData: GetLookupData,
+    private generateView : GenerateViews
   ) { }
   @MessagePattern('sync-data')
     async syncData(){
@@ -151,6 +153,15 @@ export class CarController {
       return this.carMicroservice.getData(payload);
     }catch(err){
       console.log(err);
+    }
+  }
+  @Get('generate-view-data')
+  async updateViewData(@Query() inputParams){
+    try{
+      console.log(inputParams)
+      return await  this.generateView.updateGenerateViews(inputParams)
+    }catch(err){
+      console.log(err)
     }
   }
   @Get('fetch-slug')

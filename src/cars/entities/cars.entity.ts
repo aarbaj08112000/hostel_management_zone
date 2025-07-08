@@ -102,6 +102,9 @@ export class CarEntity extends UserBase {
 
   @Column({ type: 'int', nullable: true })
   generatedView : string;
+
+  @Column({ type: 'int', nullable: true })
+  generatedWishList : string;
 }
 
 enum InsuranceType {
