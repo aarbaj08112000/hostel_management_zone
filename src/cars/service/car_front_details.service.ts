@@ -133,7 +133,8 @@ export class CarFrontDetailsService {
         "export_status",
         "close_time",
         "car_documents",
-        "views"
+        "views",
+        "wishlistCount"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -165,8 +166,13 @@ export class CarFrontDetailsService {
       const [wishlist, count] = await this.carWishlistRepo.findAndCount({
         where: { carId: data['carId'] },
       });
-
-      data['wishlist_count'] = data['wishlist_count'] + count;
+      if('wishlistCount' in data){
+        let wishList = typeof data['wishlistCount'] != 'undefined' && data['wishlistCount'] != '' ? data['wishlistCount'] : 0 ;
+        data['wishlist_count'] = data['wishlist_count'] + count;
+        data['wishlist_count'] = data['wishlist_count'] +  wishList
+      }else{
+        data['wishlist_count'] = data['wishlist_count'] + count;
+      }
 
       const accessToken = this.request.cookies['front-access-token'];
       if (accessToken) {
@@ -465,7 +471,8 @@ export class CarFrontDetailsService {
       "is_insp_rep",
       "wishlist_count",
       "raw_price",
-      "isListed"
+      "isListed",
+      "wishlistCount"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
