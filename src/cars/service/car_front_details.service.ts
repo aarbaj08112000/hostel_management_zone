@@ -67,6 +67,7 @@ export class CarFrontDetailsService {
         outputResponse = this.carDetailsFinishedFailure(inputParams);
       }
     } catch (err) {
+      console.log(err)
       this.log.error('API Error >> car_details >>', err);
     }
     return outputResponse;
@@ -485,16 +486,21 @@ export class CarFrontDetailsService {
     const funcData: any = {};
     funcData.name = 'car_details';
     let analaytics_res = outputData.data?.car_details?.analytics
+    let booked_by_details = outputData.data?.car_details?.booked_by_details
     delete outputData.data?.car_details?.analytics
+    delete outputData.data?.car_details?.booked_by_details
     funcData.output_keys = outputKeys;
     funcData.singleKeys = this.singleKeys;
     let response = this.response.outputResponse(outputData, funcData);
-    
-    delete response.data[0].exteriorImages
-    delete response.data[0].interiorImages
-    delete response.data[0].primaryImage
+    delete response?.data[0]?.exteriorImages
+    delete response?.data[0]?.interiorImages
+    delete response?.data[0]?.primaryImage
     response.data = response.data[0]
+    if(!('analytics' in response.data)){
+      response.data['analytics'] = {}
+    }
     response.data['analytics'] = analaytics_res
+    response.data['booked_by_details'] = booked_by_details
     return response
   }
   carDetailsFinishedFailure(inputParams: any) {
