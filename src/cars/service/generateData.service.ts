@@ -21,6 +21,7 @@ export class GenerateViews {
         let min = inputParams?.min
         let max = inputParams?.max
         let viewGenerate = await this.general.getConfigItem('VIEWS_GENERATE');
+
         viewGenerate = viewGenerate.split('-')
         min = typeof min != 'undefined' && min != '' ? min : viewGenerate[0];
         max = typeof max != 'undefined' && max != '' ? max : viewGenerate[1];
@@ -29,7 +30,10 @@ export class GenerateViews {
         }
         let generatedViews = await this.general.getRandomInt(min,max)
         const generatedView = generatedViews
-        let generatedWishLists = await this.general.getRandomInt(min,max)
+      
+        let wishGenerate = await this.general.getConfigItem('WISHLIST_GENERATE')
+        wishGenerate = wishGenerate.split('-')
+        let generatedWishLists = await this.general.getRandomInt(wishGenerate[0],wishGenerate[1])
         const generatedWishList = generatedWishLists
         const result = await this.carsRepo
             .createQueryBuilder()

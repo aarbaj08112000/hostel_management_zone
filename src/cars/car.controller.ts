@@ -158,7 +158,6 @@ export class CarController {
   @Get('generate-view-data')
   async updateViewData(@Query() inputParams){
     try{
-      console.log(inputParams)
       return await  this.generateView.updateGenerateViews(inputParams)
     }catch(err){
       console.log(err)
