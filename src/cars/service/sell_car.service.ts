@@ -459,6 +459,8 @@ export class SellCarService extends BaseService {
             "dealership_name" : 'Kamdhenu Cars',
             "enquiry_code" : code || null,
             "customer_name" : inputParams.name || null,
+            "customer_phone_no": inputParams.dial_code + ' ' + inputParams.phone_number,
+            "customer_email": inputParams.email || null,
             "message" : inputParams.message || null,
             "make" : brand_name || null,
             "model" : model_name || null,
@@ -481,6 +483,18 @@ export class SellCarService extends BaseService {
             notification_type: 'EmailNotify',
             status: 'Pending'
         }, {});
+
+        let admin_data = await this.general.getAdminData();
+        if(_.isObject(admin_data.data) && admin_data.data.length > 0){
+            const emailString = admin_data.data.join(',');
+            const notificationResponseAdmin = await this.general.callThirdPartyApi('POST', notify_url, {
+                template_code: 'ADMIN_SELL_CAR_ENQUIRY',
+                params: doubleEscaped,
+                receiver: emailString,
+                notification_type: 'EmailNotify',
+                status: 'Pending'
+            }, {});
+        }
     }
 
     async processFile(paramKey, uploadInfo, params) {
