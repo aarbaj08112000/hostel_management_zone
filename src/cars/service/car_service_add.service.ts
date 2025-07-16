@@ -141,13 +141,22 @@ export class CarServicesAdd extends BaseService {
      })
       const deleteResult = await this.carServicesRepo.delete({ carServiceId: id });
 
+      if(service_data != null){
+        let allChargesData = await this.carServicesRepo.find({
+          where : {carId : service_data?.carId}
+        })
+        if(allChargesData.length <= 0){
+           await this.elasticService.deleteDocument('nest_local_car_services_details',service_data?.carId.toString() )
+        }
+     }
+
       if (deleteResult.affected === 0) {
         return this.carServicesFinishFailure({ message: 'No Car Service found.' });
       }
       let job_data = {
         job_function: 'sync_elastic_data',
         job_params: {
-          module: 'car_charges_details',
+          module: 'car_services_details',
           data: service_data.carId
         },
       };
