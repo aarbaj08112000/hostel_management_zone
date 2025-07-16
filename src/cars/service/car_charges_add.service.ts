@@ -137,7 +137,14 @@ export class CarChargesService extends BaseService {
         where: { carChargesId: id },
      })
       const deleteResult = await this.carChargesRepo.delete({ carChargesId: id });
-
+     if(charges_data != null){
+        let allChargesData = await this.carChargesRepo.find({
+          where : {carId : charges_data?.carId}
+        })
+        if(allChargesData.length <= 0){
+           await this.elasticService.deleteDocument('nest_local_car_charges_details',charges_data?.carId.toString() )
+        }
+     }
       if (deleteResult.affected === 0) {
         return this.carChargesFinishFailure({ message: 'No Car Charge found.' });
       }
