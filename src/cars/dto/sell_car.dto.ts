@@ -77,6 +77,14 @@ export class SellCarDto {
     @IsString()
     @IsOptional()
     color_name: string;
+
+    @IsString()
+    @IsOptional()
+    regional_specs_name: string;
+
+    @IsString()
+    @IsOptional()
+    regional_specs_id: string;
 }
 
 class UploadedFile {

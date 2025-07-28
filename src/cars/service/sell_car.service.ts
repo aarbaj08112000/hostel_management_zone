@@ -171,7 +171,9 @@ export class SellCarService extends BaseService {
                 if(!data.variant_id){
                     data.variant_name = data.other_details?.variant_name || null;
                 }
-                
+                if(!data.regional_specs_id){
+                    data.regional_specs_name = data.other_details?.regional_specs_name || null;
+                }
                 if(data.color_id > 0){
                     const color_data = await this.lookupRepo
                         .createQueryBuilder('color')
@@ -207,6 +209,24 @@ export class SellCarService extends BaseService {
                     }
                 }else{
                     data.location_name = data.other_details.location_name || null;
+                }
+                if(data?.regional_specs_id > 0){
+                    const region_data = await this.lookupRepo
+                        .createQueryBuilder('region')
+                        .where("region.entityId = :id", {
+                            id: data.regional_specs_id,
+                        }).andWhere("region.entityName = :entityName", {
+                            entityName: 'regional', 
+                        })
+                        .getOne();
+                    if (region_data && !_.isEmpty(region_data)) {
+                        data.regional_specs_name = region_data.entityJson.location_name || null;
+                    }else{
+                        const regionData = await this.elasticService.getById(data.regional_specs_id, 'nest_local_regional_specification', 'id');
+                        data.regional_specs_name = regionData.region_name || null;
+                    }
+                }else{
+                    data.regional_specs_name = data?.other_details?.regional_specs_name || null;
                 }
                 data['contact'] = data.dial_code+' '+data.phone_number;
                 return {
@@ -245,6 +265,7 @@ export class SellCarService extends BaseService {
             if ('brand_id' in inputParams) queryColumns.brandId = inputParams.brand_id;
             if ('model_id' in inputParams) queryColumns.modelId = inputParams.model_id;
             if ('variant_id' in inputParams) queryColumns.variantId = inputParams.variant_id;
+            if('regional_specs_id' in inputParams) queryColumns.regionId = inputParams.regional_specs_id;
             if ('color_id' in inputParams) queryColumns.colorId = inputParams.color_id;
             if ('location_id' in inputParams) queryColumns.locationId = inputParams.location_id;
             if ('year' in inputParams) queryColumns.year = inputParams.year;
@@ -259,7 +280,7 @@ export class SellCarService extends BaseService {
             if ('model_name' in inputParams) otherDetails.model_name = inputParams.model_name;
             if ('variant_name' in inputParams) otherDetails.variant_name = inputParams.variant_name;
             if ('color_name' in inputParams) otherDetails.color_name = inputParams.color_name;
-
+            if ('regional_specs_name' in inputParams) otherDetails.regional_specs_name = inputParams.regional_specs_name;
             if (Object.keys(otherDetails).length > 0) {
                 queryColumns.otherDetails = otherDetails;
             }
