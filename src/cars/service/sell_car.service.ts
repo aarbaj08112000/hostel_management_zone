@@ -463,7 +463,7 @@ export class SellCarService extends BaseService {
                 regional_specs_name = regionData.region_name || null;
             }
         }else{
-            regional_specs_name = inputParams?.other_details?.regional_specs_name || null;
+            regional_specs_name = inputParams?.regional_specs_name || null;
         }
         if (inputParams.location_id){
             const location_data = await this.elasticService.getById(inputParams.location_id, 'nest_local_location', 'id');
