@@ -67,6 +67,9 @@ export class SellCarEntity {
     default: STATUS.OPEN,
   })
   status: STATUS;
+
+  @Column({ type: 'int' , nullable: true })
+  regionId: string;
 }
 
 @Entity('sell_car_images')
