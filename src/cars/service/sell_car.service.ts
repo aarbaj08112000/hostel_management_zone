@@ -509,7 +509,7 @@ export class SellCarService extends BaseService {
             "location" : locationDetails?.location_address || null,
             "appointment_date" : formattedSlotDate || null,
             "appointment_time" : inputParams?.appointment_time || null,
-            "regional_specs_name" : regional_specs_name || null
+            "regional_specs_name" : regional_specs_name || '-'
         };
 
         const doubleEscaped = JSON.stringify(params);
