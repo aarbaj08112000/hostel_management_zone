@@ -220,7 +220,7 @@ export class SellCarService extends BaseService {
                         })
                         .getOne();
                     if (region_data && !_.isEmpty(region_data)) {
-                        data.regional_specs_name = region_data.entityJson.location_name || null;
+                        data.regional_specs_name = region_data.entityJson.region_name || null;
                     }else{
                         const regionData = await this.elasticService.getById(data.regional_specs_id, 'nest_local_regional_specification', 'id');
                         data.regional_specs_name = regionData.region_name || null;
