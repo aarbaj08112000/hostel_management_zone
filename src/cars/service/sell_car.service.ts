@@ -385,7 +385,7 @@ export class SellCarService extends BaseService {
         fileConfig = {};
         fileConfig.source = 'amazon';
         fileConfig.extensions = await this.general.getConfigItem('allowed_extensions');
-        let locationDetails, brand_name, variant_name, model_name, color_name;
+        let locationDetails, brand_name, variant_name, model_name, color_name , regional_specs_name;
 
         if(inputParams.brand_id > 0){
             const brand_data = await this.brandRepo
@@ -447,7 +447,24 @@ export class SellCarService extends BaseService {
         }else{
             color_name = inputParams.color_name || null;
         }
-
+        if(inputParams?.regional_specs_id > 0){
+            const region_data = await this.lookupRepo
+                .createQueryBuilder('region')
+                .where("region.entityId = :id", {
+                    id: inputParams.regional_specs_id,
+                }).andWhere("region.entityName = :entityName", {
+                    entityName: 'regional', 
+                })
+                .getOne();
+            if (region_data && !_.isEmpty(region_data)) {
+                regional_specs_name = region_data.entityJson.region_name || null;
+            }else{
+                const regionData = await this.elasticService.getById(inputParams.regional_specs_id, 'nest_local_regional_specification', 'id');
+                regional_specs_name = regionData.region_name || null;
+            }
+        }else{
+            regional_specs_name = inputParams?.other_details?.regional_specs_name || null;
+        }
         if (inputParams.location_id){
             const location_data = await this.elasticService.getById(inputParams.location_id, 'nest_local_location', 'id');
             if (location_data && !_.isEmpty(location_data)) {
@@ -492,6 +509,7 @@ export class SellCarService extends BaseService {
             "location" : locationDetails?.location_address || null,
             "appointment_date" : formattedSlotDate || null,
             "appointment_time" : inputParams?.appointment_time || null,
+            "regional_specs_name" : regional_specs_name || null
         };
 
         const doubleEscaped = JSON.stringify(params);
