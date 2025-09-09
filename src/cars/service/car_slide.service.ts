@@ -85,54 +85,109 @@ export class CarSlideService {
       let body_type = inputParams.body_code;
       let search_params = {
         size: 0,
-        query: cartagName
-          ? {
-            bool: {
-              filter: [
-                Array.isArray(cartagName)
-                  ? { terms: { car_tag: cartagName } }
-                  : { term: { car_tag: cartagName } },
-                ...(Array.isArray(cartagName) &&
+        query: {
+          bool: {
+            must: cartagName
+              ? [
+                  ...(Array.isArray(cartagName)
+                    ? [{ terms: { car_tag: cartagName } }]
+                    : [{ term: { car_tag: cartagName } }]),
+                  ...(Array.isArray(cartagName) &&
                   cartagName.includes('trending_cars') &&
                   body_type
-                  ? [{ term: { body_code: body_type } }]
-                  : cartagName === 'trending_cars' && body_type
+                    ? [{ term: { body_code: body_type } }]
+                    : cartagName === 'trending_cars' && body_type
                     ? [{ term: { body_code: body_type } }]
                     : []),
-                { terms: { status: ['Available', 'Booked', 'Sold'] } },
-                { term: { isListed: "Yes" } },
-              ],
-            },
+                  { terms: { status: ['Available', 'Booked', 'Sold'] } },
+                  { term: { isListed: "Yes" } }
+                ]
+              : [
+                  { terms: { status: ['Available', 'Booked', 'Sold'] } },
+                  { term: { isListed: "Yes" } }
+                ],
+            should: [
+              {
+                term: {
+                  "priority.keyword": {
+                    value: "p1",
+                    boost: 10
+                  }
+                }
+              },
+              {
+                term: {
+                  "priority.keyword": {
+                    value: "p2",
+                    boost: 9
+                  }
+                }
+              }
+            ]
           }
-          : {
-            bool: {
-              filter: [
-                { terms: { status: ['Available', 'Booked','Sold'] } },
-                { term: { isListed: "Yes" } },
-              ],
-            },
-          },
+        },
         aggs: cartagName
           ? Object.fromEntries(
-            (Array.isArray(cartagName) ? cartagName : [cartagName]).map((tag) => [
-              `${tag}_cars`,
-              {
-                filter: {
-                  bool: {
-                    must: [{ term: { car_tag: tag } }],
-                    ...(tag === 'trending_cars' && body_type
-                      ? { filter: [{ term: { body_code: body_type } }] }
-                      : {}),
-                    filter: [
-                      { terms: { status: ['Available', 'Booked','Sold'] } },
-                      { term: { isListed: "Yes" } },
-                    ],
+              (Array.isArray(cartagName) ? cartagName : [cartagName]).map((tag) => [
+                `${tag}_cars`,
+                {
+                  filter: {
+                    bool: {
+                      must: [
+                        { term: { car_tag: tag } },
+                        ...(tag === 'trending_cars' && body_type
+                          ? [{ term: { body_code: body_type } }]
+                          : []),
+                        { terms: { status: ['Available', 'Booked', 'Sold'] } },
+                        { term: { isListed: "Yes" } }
+                      ]
+                    }
                   },
+                  aggs: {
+                    cars: {
+                      top_hits: {
+                        size: 6,
+                        _source: [
+                          'carId',
+                          'bodyType',
+                          'carName',
+                          'price',
+                          'drivenDistance',
+                          'car_slug',
+                          'fuelType',
+                          'transmissionType',
+                          'car_image',
+                          'added_date',
+                          'body_code',
+                          'analytics',
+                          'status',
+                          "display_title",
+                          "views"
+                        ],
+                        sort: [
+                          { "_score": "desc" },
+                          {
+                            added_date: {
+                              order: 'desc'
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ])
+            )
+          : {
+              group_by_car_tag: {
+                terms: {
+                  field: 'car_tag',
+                  size: 100
                 },
                 aggs: {
                   cars: {
                     top_hits: {
-                      size: 6,
+                      size: 18,
                       _source: [
                         'carId',
                         'bodyType',
@@ -151,57 +206,18 @@ export class CarSlideService {
                         "views"
                       ],
                       sort: [
+                        { "_score": "desc" },
                         {
                           added_date: {
-                            order: 'desc',
-                          },
-                        },
-                      ],
-                    },
-                  },
-                },
-              },
-            ])
-          )
-          : {
-            group_by_car_tag: {
-              terms: {
-                field: 'car_tag',
-                size: 100,
-              },
-              aggs: {
-                cars: {
-                  top_hits: {
-                    size: 18,
-                    _source: [
-                      'carId',
-                      'bodyType',
-                      'carName',
-                      'price',
-                      'drivenDistance',
-                      'car_slug',
-                      'fuelType',
-                      'transmissionType',
-                      'car_image',
-                      'added_date',
-                      'body_code',
-                      'analytics',
-                      'status',
-                      "display_title",
-                       "views"
-                    ],
-                    sort: [
-                      {
-                        added_date: {
-                          order: 'desc',
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-          },
+                            order: 'desc'
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
       };
       const results = await this.elasticService.searchGlobalData(
         index,
