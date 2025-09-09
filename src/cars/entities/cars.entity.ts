@@ -23,6 +23,12 @@ enum Export {
   CanBeExported = 'CanBeExported',
   NotForExport = 'NotForExport'
 }
+
+enum PriorityType {
+  p1 = 'p1',
+  p2 = 'p2'
+}
+
 @Entity('cars')
 export class CarEntity extends UserBase {
   @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
@@ -105,6 +111,10 @@ export class CarEntity extends UserBase {
 
   @Column({ type: 'int', nullable: true })
   generatedWishList : string;
+
+
+  @Column({ type: 'enum', enum : PriorityType , nullable: true })
+  priority : string;
 }
 
 enum InsuranceType {

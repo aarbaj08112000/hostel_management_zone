@@ -406,6 +406,9 @@ export class CarsAddService extends BaseService {
       if ('reserved_amount' in inputParams) {
         queryColumns.reservedAmount = inputParams.reserved_amount
       }
+      if('priority' in inputParams){
+        queryColumns.priority = inputParams.priority
+      }
       queryColumns.generatedView = 0;
       queryColumns.generatedWishList = 0;
       let code = await this.general.getCustomToken('cars', '', 'Add');

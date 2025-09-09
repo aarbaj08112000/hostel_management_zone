@@ -135,6 +135,10 @@ export class CarAddDto {
   @IsOptional()
   @Transform(({ value }) => Number(value))
   reserved_amount?: number;
+
+  @IsOptional()
+  @IsIn(['p1', 'p2'])
+  priority? : string
 }
 
 export class UpdateCarDTO extends PartialType(CarAddDto) {

@@ -90,6 +90,19 @@ export class CarListFrontService {
           inputParams = { ...inputParams, filters: { status: ['Available', 'Booked' , 'Sold'], isListed: 'Yes' } };
         }
       }
+      inputParams.boost = {
+        'priority.keyword' : [{
+          'key' : 'p1',
+          'boost' : 10
+        },{
+          'key' : 'p2',
+          'boost' : 9
+        }]
+      }
+      let boosted = 'Yes';
+      if(inputParams?.sort.length > 0){
+        boosted = 'No';
+      }
       let search_params = this.general.createElasticSearchQuery(inputParams);
       let _source = [
         "carId",
@@ -123,6 +136,7 @@ export class CarListFrontService {
         search_params,
         startIdx,
         recLimit,
+        boosted
       );
       if (!_.isObject(results) || _.isEmpty(results)) {
         throw new Error('No records found.');
