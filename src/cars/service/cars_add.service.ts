@@ -488,7 +488,8 @@ export class CarsAddService extends BaseService {
         booking_days : 'bookingDays',
         booking_amount : 'bookingAmount',
         reserved_days : 'reservedDays',
-        reserved_amount : 'reservedAmount'
+        reserved_amount : 'reservedAmount',
+        priority : 'priority'
       };
       const car_details_field_mapping: Record<string, string> = {
         chassis_number: 'chassisNumber',
