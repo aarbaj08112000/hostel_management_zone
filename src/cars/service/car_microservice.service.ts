@@ -64,8 +64,8 @@ export class CarMicroserviceService {
       {field : 'phone' , subType : 'customer' ,fetch_from : "phoneNumber",selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}}
     ],
     user: [
-      { field: 'added_by', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email', dialCode: 'dial_code', phoneNumber: 'phone_number' } },
-      { field: 'updated_by', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email' } },
+      { field: 'added_by', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email', dialCode: 'dial_code', phoneNumber: 'phone_number' ,profileImage : 'profile_image'} },
+      { field: 'updated_by', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email',profileImage : 'profile_image' } },
       { field: 'contact_person_id', subType: 'user', selFields: { id: 'id', name: 'name', email: 'email', dialCode: 'dial_code', phoneNumber: 'phone_number' ,profileImage : 'profile_image'} },
     ],
     master: [
