@@ -214,7 +214,7 @@ export class CarFrontDetailsService {
 
       if (data?.contactDetails != '') {
         fileConfig.image_name = data.contactDetails?.contactPersonProfile;
-        fileConfig.path = `user_${aws_folder}/${data.contactDetails?.contactPersonId}`;
+        fileConfig.path = `user_${aws_folder}`;
         data.contactDetails.contactPersonProfile = await this.general.getFile(fileConfig, inputParams);
       }
       if (data?.car_image != '') {
