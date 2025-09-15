@@ -212,6 +212,11 @@ export class CarFrontDetailsService {
         data['allow_test_drive'] = 'No';
       }
 
+      if (data?.contactDetails != '') {
+        fileConfig.image_name = data.contactDetails?.contactPersonProfile;
+        fileConfig.path = `user_${aws_folder}/${data.contactDetails?.contactPersonId}`;
+        data.contactDetails.contactPersonProfile = await this.general.getFile(fileConfig, inputParams);
+      }
       if (data?.car_image != '') {
         fileConfig.image_name = data['car_image'];
         fileConfig.path = `car_images_${aws_folder}/${data['carId']}`;
