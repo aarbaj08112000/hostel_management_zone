@@ -19,6 +19,7 @@ import { BlockResultDto, SettingsParamsDto } from '@repo/source/common/dto/commo
 import { LoggerHandler } from '@repo/source/utilities/logger-handler';
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import * as moment from 'moment';
+import { CarsAddService } from './cars_add.service';
 @Injectable()
 export class CarWishlistService {
   protected readonly log = new LoggerHandler(CarWishlistService.name).getInstance();
@@ -40,6 +41,7 @@ export class CarWishlistService {
     protected readonly elasticService: ElasticService,
     private readonly general: CitGeneralLibrary,
     private readonly configService: ConfigService,
+    private readonly carsAddService: CarsAddService,
     @InjectRepository(CarWishlistEntity)
     private readonly carWishlistRepo: Repository<CarWishlistEntity>,
     @InjectRepository(LookupEntity)
@@ -88,7 +90,6 @@ export class CarWishlistService {
   async addToWishlist(request: Request, inputParams: { car_slug: string }) {
     try {
       const user = await this.getUserFromAccessToken(request);
-
       const carData = await this.carRepo.findOne({
         where: { slug: inputParams.car_slug },
       });
@@ -110,7 +111,18 @@ export class CarWishlistService {
         userId: user.entityId,
       });
 
-      await this.carWishlistRepo.save(wishlistEntry);
+      let res = await this.carWishlistRepo.save(wishlistEntry);
+      if(res.id){
+        let value_json = {
+          "CAR_NAME": await this.carsAddService.fetchDisplayName(carData.carId),
+          "TYPE": "front",
+          "CAR_ID": carData.carId,
+          "ADDED_BY": user?.entityJson?.first_name +' '+ user?.entityJson?.last_name,
+          "ADDED_BY_ID": user.entityId
+        }
+        await this.general.addActivity('car', 'wishlist_added', user.entityId, value_json, carData.carId);
+      }
+   
       let job_data = {
         job_function: 'sync_elastic_data',
         job_params: {
@@ -145,7 +157,7 @@ export class CarWishlistService {
         throw new NotFoundException('Car is not in your wishlist.');
       }
 
-      await this.carWishlistRepo.delete({ carId: carData.carId, userId: user.entityId });
+      let wishlist_delete_res = await this.carWishlistRepo.delete({ carId: carData.carId, userId: user.entityId });
       let job_data = {
         job_function: 'sync_elastic_data',
         job_params: {
@@ -153,6 +165,17 @@ export class CarWishlistService {
           data: user.entityId
         },
       };
+      if(wishlist_delete_res?.affected){
+        let value_json = {
+          "CAR_NAME": await this.carsAddService.fetchDisplayName(carData.carId),
+          "TYPE": "front",
+          "CAR_ID": carData.carId,
+          "REMOVED_BY": user?.entityJson?.first_name +' '+ user?.entityJson?.last_name,
+          "REMOVED_BY_ID": user.entityId
+        }
+        await this.general.addActivity('car', 'wishlist_deleted', user.entityId, value_json, carData.carId);
+   
+      }
       await this.general.submitGearmanJob(job_data);
       return { success: 1, message: 'Car removed from your wishlist.' };
     } catch (err) {
