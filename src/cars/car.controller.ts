@@ -368,17 +368,22 @@ export class CarController {
           {
             "address": "Block-1 Unit-4 Al Hail Business Centre, <br>Next to KM Traiding, Behind Emirates, <br>Motors M4, Mussafah, Abu Dhabi, UAE",
             "city": "MUSSAFAH",
-            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image1.png"
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image1.webp"
           },
           {
             "address": "Deerfields Mall, Hypermarket Entrance, <br>Kisosk Ground Floor, 99 - Al Rubban St, <br>- Al Bahyah Abu Dhabi, UAE",
             "city": "SHAHAMA",
-            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image2.png"
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image2.webp"
           },
           {
             "address": "Al Mutakamela Vehicle Testing and Registration <br>Centre, Dubai shop, 32 - next to Permagard, <br>- Al Quoz Industrial Area 2, Dubai, UAE",
             "city": "AL QUOZ 2, DUBAI",
-            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image3.png"
+            "image": "https://kamdhenu-cars.s3.amazonaws.com/icons/image3.webp"
+          },
+          {
+            "address" : "Dubai - Silicon Central Mall Basement one, Opposite excellence driving school Dubai Silicon Oasis, Dubai, UAE",
+            "city" : "Dubai, United Arab Emirates",
+            "image" : "https://kamdhenu-cars.s3.amazonaws.com/icons/image5.webp"
           }
         ],
       }
