@@ -522,7 +522,7 @@ export class SellCarService extends BaseService {
             channel : "Website",
             source : "Kamdhenu Cars (your portal)",
             contact_person_id : '',
-            closing_date : '',
+            closing_date : moment().format('YYYY-MM-DD HH:mm:ss'),
             customer_id : 0,
             lead_info : JSON.stringify({
             budget_min : '',
