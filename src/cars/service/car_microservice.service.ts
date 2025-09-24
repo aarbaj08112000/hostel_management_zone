@@ -14,6 +14,9 @@ const MASTER_PORT = parseInt(process.env.MASTER_PORT || '6003', 10);
 const TRANSACTION_URL = process.env.TRANSACTION_URL || '127.0.0.1';
 const TRANSACTION_PORT = parseInt(process.env.TRANSACTION_PORT || '6004', 10);
 
+const CRM_URL = process.env.CRM_URL || '127.0.0.1';
+const CRM_PORT = parseInt(process.env.CRM_PORT || '6008', 10);
+
 import { Inject, Injectable} from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -24,7 +27,7 @@ import { ElasticService } from '@repo/source/services/elastic.service';
 import { Client,ClientTCP} from '@nestjs/microservices';
 import { Transport } from '@nestjs/microservices';
 import { LookupEntity } from '@repo/source/entities/lookup.entity';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { CarEntity } from '../entities/cars.entity';
 import * as custom from '@repo/source/utilities/custom-helper';
@@ -58,6 +61,7 @@ export class CarMicroserviceService {
   @Client({ transport: Transport.TCP, options: { port: MASTER_PORT , host : MASTER_URL} }) public masterClient: ClientTCP;
   @Client({ transport: Transport.TCP, options: { port: USER_PORT , host : USER_URL } }) public userClient: ClientTCP;
   @Client({ transport: Transport.TCP, options: { port: TRANSACTION_PORT  , host : TRANSACTION_URL} }) public tranClient: ClientTCP;
+  @Client({ transport: Transport.TCP, options: { port: CRM_PORT , host : CRM_URL} }) public crmClient: ClientTCP;
   private lookup_mapping: Record<string, LookupFieldConfig[]> = {
     customer : [
       {field : 'customer_id' , subType : 'customer' , selFields : {id : 'id' , firstName : 'first_name' , middleName : 'middle_name', 'lastName' : 'last_name' ,email : 'email',phoneNumber:'phoneNumber'}},
@@ -699,4 +703,23 @@ export class CarMicroserviceService {
   `, [car_id]);
   return result[0]?.display_title || null;
 }
+
+async notifyCrm(inputParams: any) {
+    let allow_fields = [{ entity: 'customer_id', key: 'customer_info' }];
+
+    for (const field of allow_fields) {
+      if (field.entity in inputParams) {
+        let data = await this.lookupEntityRepo.findOne({
+          where: {
+            entityId: inputParams[field.entity],
+            entityName: 'customer'
+          }
+        });
+        inputParams[field.key] = JSON.stringify(data?.entityJson);
+      }
+    }
+    const res = await this.crmClient.send('push-lead', inputParams);
+    await lastValueFrom(res);
+    return true;
+  }
 } 

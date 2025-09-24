@@ -21,7 +21,7 @@ import { LookupEntity } from '@repo/source/entities/lookup.entity';
 import { BrandEntity } from '../entities/brand.entity';
 import { ModelEntity } from '../entities/model.entity';
 import { VariantMasterEntity } from '../entities/variant-master.entity';
-
+import { CarMicroserviceService } from './car_microservice.service';
 @Injectable()
 export class SellCarService extends BaseService {
     protected readonly log = new LoggerHandler(
@@ -44,6 +44,8 @@ export class SellCarService extends BaseService {
     protected readonly response: ResponseLibrary;
     @Inject()
     protected readonly moduleService: ModuleService;
+    @Inject()
+    protected readonly carMicroService : CarMicroserviceService;
     @InjectRepository(SellCarEntity)
     protected sellCarEntity: Repository<SellCarEntity>;
     @InjectRepository(SellCarAttachmentsEntity)
@@ -285,8 +287,8 @@ export class SellCarService extends BaseService {
                 queryColumns.otherDetails = otherDetails;
             }
             
+        
             const res = await this.sellCarEntity.insert(queryColumns);
-
             const formattedSlotDate = moment(inputParams.appointment_date).format('dddd, DD MMMM YYYY');
 
             // Determine time of day (Morning / Afternoon / Evening / Night)
@@ -511,6 +513,37 @@ export class SellCarService extends BaseService {
             "appointment_time" : inputParams?.appointment_time || null,
             "regional_specs_name" : regional_specs_name || '-'
         };
+
+        let leadData = {
+            lead_code : 'SELL',
+            location_id : inputParams?.location_id.toString(),
+            lead_stage : 'New',
+            lead_status : 'Open',
+            channel : "Website",
+            source : "Kamdhenu Cars (your portal)",
+            contact_person_id : '',
+            closing_date : '',
+            customer_id : 0,
+            lead_info : JSON.stringify({
+            budget_min : '',
+            budget_max : '',
+            lead_value : '',
+            additional_info : {
+                requirement_type : 'Buy Car',
+                brand_id : inputParams?.brand_id,
+                make : brand_name,
+                model : model_name,
+                model_id : inputParams?.model_id,
+                year : inputParams?.year,
+                variant : variant_name,
+                variant_id : inputParams?.variant_id,
+                condition : 'Good',
+            }
+            }),
+            remarks : 'Lead From Sell Car',
+            added_by : '',
+        }
+        this.carMicroService.notifyCrm(leadData);
 
         const doubleEscaped = JSON.stringify(params);
 
