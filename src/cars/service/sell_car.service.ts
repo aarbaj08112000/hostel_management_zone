@@ -529,7 +529,7 @@ export class SellCarService extends BaseService {
             budget_max : '',
             lead_value : '',
             additional_info : {
-                requirement_type : 'Buy Car',
+                requirement_type : 'Sell Car',
                 brand_id : inputParams?.brand_id,
                 make : brand_name,
                 model : model_name,
