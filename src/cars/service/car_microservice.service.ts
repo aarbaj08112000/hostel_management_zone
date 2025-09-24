@@ -708,7 +708,7 @@ async notifyCrm(inputParams: any) {
     let allow_fields = [{ entity: 'customer_id', key: 'customer_info' }];
 
     for (const field of allow_fields) {
-      if (field.entity in inputParams) {
+      if (field.entity in inputParams && inputParams[field.entity] > 0) {
         let data = await this.lookupEntityRepo.findOne({
           where: {
             entityId: inputParams[field.entity],
