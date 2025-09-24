@@ -524,6 +524,12 @@ export class SellCarService extends BaseService {
             contact_person_id : '',
             closing_date : moment().format('YYYY-MM-DD HH:mm:ss'),
             customer_id : 0,
+            customer_info : JSON.stringify({
+                first_name : inputParams?.name,
+                dial_code : inputParams?.dial_code,
+                phone_number : inputParams?.phone_number,
+                email : inputParams?.email
+            }),
             lead_info : JSON.stringify({
             budget_min : '',
             budget_max : '',
