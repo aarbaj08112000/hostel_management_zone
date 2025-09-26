@@ -122,6 +122,14 @@ export class CarSlideService {
                     boost: 9
                   }
                 }
+              },
+              {
+                term: {
+                  "priority.keyword": {
+                    value: "p3",
+                    boost: 8
+                  }
+                }
               }
             ]
           }
