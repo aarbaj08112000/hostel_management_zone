@@ -97,13 +97,18 @@ export class CarListFrontService {
         },{
           'key' : 'p2',
           'boost' : 9
-        }]
+        },
+        {
+          'key' : 'p3',
+          'boost' : 8
+        }
+      ]
       }
       let boosted = 'Yes';
       if(inputParams?.sort.length > 0){
         boosted = 'No';
       }
-      let search_params = this.general.createElasticSearchQuery(inputParams);
+      let search_params : any = this.general.createElasticSearchQuery(inputParams);
       let _source = [
         "carId",
         "bodyType",
