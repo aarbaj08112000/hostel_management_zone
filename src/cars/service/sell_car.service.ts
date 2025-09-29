@@ -274,6 +274,7 @@ export class SellCarService extends BaseService {
             if ('km_reading' in inputParams) queryColumns.kmReading = inputParams.km_reading;
             if ('appointment_date' in inputParams) queryColumns.appointmentDate = inputParams.appointment_date;
             if ('appointment_time' in inputParams) queryColumns.appointmentTime = inputParams.appointment_time;
+            if ('type' in inputParams) queryColumns.type = inputParams.type;
             queryColumns.addedDate = () => 'NOW()';
             queryColumns.status = 'Open';
 
@@ -371,10 +372,18 @@ export class SellCarService extends BaseService {
             await this.general.submitGearmanJob(job_data);
 
             // Send Sell Car Email
-            await this.sendSellCarEmail(inputParams, code);
-
-            return { success: 1, message: "Thank you for contacting us. We'll get in touch with you shortly.", data: code, formattedSlotInfo, locationDetails };
+            if(inputParams.type == 'Sell'){
+                await this.sendSellCarEmail(inputParams, code);
+            }
+            return {
+                success: 1,
+                message: "Thank you for contacting us. We'll get in touch with you shortly.",
+                ...(inputParams.type === 'Sell'
+                  ? { data: code, formattedSlotInfo, locationDetails: '' }
+                  : {}),
+              };              
         } catch (err) {
+            console.log(err)
             return { success: 0, message: err.message };
         }
     }
