@@ -4,6 +4,10 @@ export enum STATUS {
   INPROGRESS = 'Inprogress',
   CLOSED = 'Closed'
 }
+export enum TYPE {
+  SELL = 'Sell',
+  BUY = 'Buy'
+}
 
 @Entity('sell_car')
 export class SellCarEntity {
@@ -67,6 +71,13 @@ export class SellCarEntity {
     default: STATUS.OPEN,
   })
   status: STATUS;
+
+  @Column({
+    type: 'enum',
+    enum: TYPE,
+    default: TYPE.SELL,
+  })
+  type: TYPE;
 
   @Column({ type: 'int' , nullable: true })
   regionId: string;

@@ -1980,6 +1980,57 @@ export class CarController {
     }
     await Promise.all(uploadPromises);
     const params = body;
+    params['type']='Sell';
+    return await this.sellCarService.sellCar(params);
+  }
+  @Post('buy-car')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'attachment' },
+    ]))
+  async BuyCar(@Req() request: Request, @Body() body: SellCarDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+    const fileDto = new SellCarAddImageDto();
+    fileDto.attachment = files?.attachment;
+    const errors = await validate(fileDto, { whitelist: true });
+    await this.carMicroservice.processLookupDataFromBody(body)
+    if (errors.length > 0) {
+      const errorMessages = errors
+        .map((error) => {
+          if (error.hasOwnProperty('constraints')) {
+            return Object.values(error.constraints);
+          } else {
+            return [];
+          }
+        })
+        .flat();
+      if (errorMessages.length > 0) {
+        const response = {
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: errorMessages,
+        };
+        return response;
+      }
+    }
+    const uploadPromises = [];
+    let temp = [];
+    if (typeof files !== 'undefined' && Object.keys(files).length > 0) {
+      for (const [key, value] of Object.entries(files)) {
+        const fieldFiles = files[key];
+        for (const file of fieldFiles) {
+          const fileName = await this.general.temporaryUpload(file);
+          uploadPromises.push(fileName);
+          // body[key] = fileName;
+          temp.push(fileName);
+        }
+      }
+    }
+    if(temp.length > 0){
+      body['attachment'] = temp;
+    }
+    await Promise.all(uploadPromises);
+    const params = body;
+    params['type']='Buy';
     return await this.sellCarService.sellCar(params);
   }
 
