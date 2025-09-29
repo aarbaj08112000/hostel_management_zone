@@ -284,6 +284,7 @@ export class SellCarService extends BaseService {
             if ('variant_name' in inputParams) otherDetails.variant_name = inputParams.variant_name;
             if ('color_name' in inputParams) otherDetails.color_name = inputParams.color_name;
             if ('regional_specs_name' in inputParams) otherDetails.regional_specs_name = inputParams.regional_specs_name;
+            if ('enquiry_type' in inputParams) otherDetails.type = inputParams.enquiry_type;
             if (Object.keys(otherDetails).length > 0) {
                 queryColumns.otherDetails = otherDetails;
             }
@@ -338,14 +339,14 @@ export class SellCarService extends BaseService {
                     inputParams,
                     res.raw.insertId
                 );
-                const aws_folder = await this.general.getConfigItem('AWS_SERVER');
+                let aws_folder = await this.general.getConfigItem('AWS_SERVER');
                 const allowedExtensions = await this.general.getConfigItem('allowed_extensions');
-
+                aws_folder = inputParams.type === 'Sell' ? `sell_car_${aws_folder}` :`enquiry_car_${aws_folder}`
                 for (const file of fileInfo.attachment) {
                     const fileConfig: FileFetchDto = {
                         source: 'amazon',
                         extensions: allowedExtensions,
-                        path: `sell_car_${aws_folder}/${res.raw.insertId}`,
+                        path: `${aws_folder}/${res.raw.insertId}`,
                         image_name: file.file_name
                     };
 

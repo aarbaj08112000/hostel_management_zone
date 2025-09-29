@@ -1983,12 +1983,12 @@ export class CarController {
     params['type']='Sell';
     return await this.sellCarService.sellCar(params);
   }
-  @Post('buy-car')
+  @Post('car-enquiry')
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'attachment' },
     ]))
-  async BuyCar(@Req() request: Request, @Body() body: SellCarDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
+  async EnquiryCar(@Req() request: Request, @Body() body: SellCarDto, @UploadedFiles() files: Record<string, Express.Multer.File[]>,) {
     const fileDto = new SellCarAddImageDto();
     fileDto.attachment = files?.attachment;
     const errors = await validate(fileDto, { whitelist: true });
@@ -2030,10 +2030,10 @@ export class CarController {
     }
     await Promise.all(uploadPromises);
     const params = body;
-    params['type']='Buy';
+    params['enquiry_type']=body.type;
+    params['type']='Enquiry';
     return await this.sellCarService.sellCar(params);
   }
-
   @Post('sell-car-list')
   async sellCarList(@Req() request: Request, @Body() body: CarListDto) {
     const params = body;

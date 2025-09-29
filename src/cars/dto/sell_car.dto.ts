@@ -68,6 +68,10 @@ export class SellCarDto {
 
     @IsString()
     @IsOptional()
+    type: string;
+
+    @IsString()
+    @IsOptional()
     model_name: string;
 
     @IsString()
