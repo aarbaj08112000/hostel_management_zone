@@ -1368,10 +1368,22 @@ export class CarsAddService extends BaseService {
     if (data.bookedByDetails) {
       data.bookedByDetails = JSON.stringify(data.bookedByDetails);
     }
+    let priority = 'p1';
+    switch (data?.status) {
+      case 'Booked':
+        priority = 'p2';
+      break;
+      case 'Sold':
+        priority = 'p3';
+      break;  
+      default:
+      break;
+    }
 
     const queryColumns: any = {
       status: data.status,
       bookedByDetails: data.bookedByDetails,
+      priority : priority,
       bookedDate: () => 'NOW()',
     };
 
