@@ -170,7 +170,8 @@ export class CarSlideService {
                           'analytics',
                           'status',
                           "display_title",
-                          "views"
+                          "views",
+                          "car_booking_status"
                         ],
                         sort: [
                           { "_score": "desc" },
@@ -211,7 +212,8 @@ export class CarSlideService {
                         'analytics',
                         'status',
                         "display_title",
-                        "views"
+                        "views",
+                        "car_booking_status"
                       ],
                       sort: [
                         { "_score": "desc" },
@@ -480,7 +482,8 @@ export class CarSlideService {
       'distanceSuffix',
       'status',
       "display_title",
-      "raw_price"
+      "raw_price",
+      "car_booking_status"
     ];
     const outputData: any = {};
     outputData.settings = { ...settingFields, ...this.settingsParams };

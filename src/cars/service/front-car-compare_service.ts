@@ -121,7 +121,8 @@ export class CarFrontCompareService {
         "zipCode",
         "driveType",
         "interiorImages",
-        "exteriorImages"
+        "exteriorImages",
+        "car_booking_status"
       ]
       let { search_key, search_by, index } = inputParams;
       search_key = search_key.split(',')
@@ -303,7 +304,8 @@ export class CarFrontCompareService {
       "longitude",
       "locationAddress",
       "exteriorImages",
-      "interiorImages"
+      "interiorImages",
+      "car_booking_status"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')

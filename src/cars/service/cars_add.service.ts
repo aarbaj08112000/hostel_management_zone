@@ -11,7 +11,7 @@ import { BlockResultDto, SettingsParamsDto } from '@repo/source/common/dto/commo
 import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { CitGeneralLibrary } from '@repo/source/utilities/cit-general-library';
 import { ModuleService } from '@repo/source/services/module.service';
-import { CarEntity, CarHistoryEntity, CarTagEntity, CarDocumentEntity } from '../entities/cars.entity';
+import { CarEntity, CarHistoryEntity, CarTagEntity, CarDocumentEntity, CarBookingStatus } from '../entities/cars.entity';
 import { CarDetailsEntity } from '../entities/cars-detail.entity';
 import { BaseService } from '@repo/source/services/base.service';
 import { CarMicroserviceService } from './car_microservice.service';
@@ -1386,6 +1386,14 @@ export class CarsAddService extends BaseService {
       priority : priority,
       bookedDate: () => 'NOW()',
     };
+
+    if(data?.car_booking_status == 'Reserved') {
+      queryColumns.carBookingStatus = CarBookingStatus.RESERVED;
+    }else if(data?.car_booking_status == 'Booked') {
+      queryColumns.carBookingStatus = CarBookingStatus.BOOKED;
+    }else if(data?.car_booking_status == 'Sold') {
+      queryColumns.carBookingStatus = CarBookingStatus.SOLD;
+    }
 
     const queryBuilder = this.carEntityRepo
       .createQueryBuilder()

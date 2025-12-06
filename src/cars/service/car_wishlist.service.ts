@@ -251,7 +251,8 @@ export class CarWishlistService {
         "display_title",
         "isListed",
         "views",
-        "booked_by_details"
+        "booked_by_details",
+        "car_booking_status"
       ]
       search_params['_source'] = _source;
       let pageIndex = 1;
@@ -380,7 +381,8 @@ export class CarWishlistService {
       'status',
       'display_title',
       'isListed',
-      "raw_price"
+      "raw_price",
+      "car_booking_status"
     ];
     const outputKeys = ['get_car_list'];
 

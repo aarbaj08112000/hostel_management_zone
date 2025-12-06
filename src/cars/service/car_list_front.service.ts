@@ -124,7 +124,8 @@ export class CarListFrontService {
         "analytics",
         "status",
         "display_title",
-        "views"
+        "views",
+        "car_booking_status"
       ]
       search_params['_source'] = _source;
       let pageIndex = 1;
@@ -343,7 +344,8 @@ export class CarListFrontService {
       'distanceSuffix',
       "status",
       "display_title",
-      "raw_price"
+      "raw_price",
+      "car_booking_status"
     ];
     const outputKeys = ['get_car_list'];
 

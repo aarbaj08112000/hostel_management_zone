@@ -135,7 +135,8 @@ export class CarFrontDetailsService {
         "close_time",
         "car_documents",
         "views",
-        "wishlistCount"
+        "wishlistCount",
+        "car_booking_status"
       ]
       let { search_key, search_by, index } = inputParams;
       let images = {};
@@ -478,7 +479,8 @@ export class CarFrontDetailsService {
       "wishlist_count",
       "raw_price",
       "isListed",
-      "wishlistCount"
+      "wishlistCount",
+      "car_booking_status"
     ];
     if ('location_enabled' in inputParams && inputParams.location_enabled == 'Yes') {
       settingFields.fields.push('location_id', 'carId', 'operating_hours')
