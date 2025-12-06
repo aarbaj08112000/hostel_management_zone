@@ -171,6 +171,10 @@ export class CarFrontCompareService {
           data.vehicleType = 'ev';
         }
 
+        if(data['status'] == 'Booked' && data['car_booking_status'] == 'Reserved'){
+          data['status'] = 'Reserved';
+        }
+
         if (data['interiorImages'] && Array.isArray(data['interiorImages'])) {
           data['interiorImages'] = await Promise.all(
             data['interiorImages'].map(async (imageName) => {
