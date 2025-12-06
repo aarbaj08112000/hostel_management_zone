@@ -30,6 +30,12 @@ enum PriorityType {
   p3 = 'p3'
 }
 
+export enum CarBookingStatus {
+  RESERVED = 'Reserved',
+  BOOKED = 'Booked',
+  SOLD = 'Sold'
+}
+
 @Entity('cars')
 export class CarEntity extends UserBase {
   @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
@@ -113,9 +119,11 @@ export class CarEntity extends UserBase {
   @Column({ type: 'int', nullable: true })
   generatedWishList : string;
 
-
   @Column({ type: 'enum', enum : PriorityType , nullable: true })
   priority : string;
+
+  @Column({ type: 'enum', enum: CarBookingStatus, nullable: true})
+  carBookingStatus: CarBookingStatus;
 }
 
 enum InsuranceType {

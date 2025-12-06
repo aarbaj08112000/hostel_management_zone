@@ -314,7 +314,8 @@ export class CarDetailsService {
       'publish_status',
       'analytics',
       'booked_by_details',
-      'originalView'
+      'originalView',
+      'car_booking_status'
     ];
     const outputKeys = ['car_details'];
 
