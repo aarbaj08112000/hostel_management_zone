@@ -559,7 +559,7 @@ export class SellCarService extends BaseService {
             remarks : 'Lead From Sell Car',
             added_by : '',
         }
-        // this.carMicroService.notifyCrm(leadData);
+        this.carMicroService.notifyCrm(leadData);
 
         const doubleEscaped = JSON.stringify(params);
 
