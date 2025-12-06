@@ -1392,6 +1392,7 @@ export class CarsAddService extends BaseService {
       bookedByDetails: data.bookedByDetails,
       priority : priority,
       bookedDate: () => 'NOW()',
+      carBookingStatus: data.carBookingStatus,
     };
 
     const queryBuilder = this.carEntityRepo
