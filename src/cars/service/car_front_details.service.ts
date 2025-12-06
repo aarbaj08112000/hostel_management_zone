@@ -261,7 +261,8 @@ export class CarFrontDetailsService {
       data['is_insp_rep'] = 'No';
       if (data?.car_documents) {
         let doc_index = 'nest_local_document_type_list';
-        inputParams['filters'] = { code: 'INSPREPORT' } ;
+        // inputParams['filters'] = { code: 'INSPREPORT' } ;
+        inputParams['filters'] = [{ key: "code", value : "INSPREPORT", operator : "equal" }] ;
         let search_params = this.general.createElasticSearchQuery(inputParams);
         let pageIndex = 1;
         const recLimit = 100;
