@@ -1368,6 +1368,13 @@ export class CarsAddService extends BaseService {
     if (data.bookedByDetails) {
       data.bookedByDetails = JSON.stringify(data.bookedByDetails);
     }
+    if(data?.carBookingStatus == 'Reserved') {
+      data.carBookingStatus = CarBookingStatus.RESERVED;
+    }else if(data?.carBookingStatus == 'Booked') {
+      data.carBookingStatus = CarBookingStatus.BOOKED;
+    }else if(data?.carBookingStatus == 'Sold') {
+      data.carBookingStatus = CarBookingStatus.SOLD;
+    }
     let priority = 'p1';
     switch (data?.status) {
       case 'Booked':
@@ -1386,14 +1393,6 @@ export class CarsAddService extends BaseService {
       priority : priority,
       bookedDate: () => 'NOW()',
     };
-
-    if(data?.car_booking_status == 'Reserved') {
-      queryColumns.carBookingStatus = CarBookingStatus.RESERVED;
-    }else if(data?.car_booking_status == 'Booked') {
-      queryColumns.carBookingStatus = CarBookingStatus.BOOKED;
-    }else if(data?.car_booking_status == 'Sold') {
-      queryColumns.carBookingStatus = CarBookingStatus.SOLD;
-    }
 
     const queryBuilder = this.carEntityRepo
       .createQueryBuilder()
