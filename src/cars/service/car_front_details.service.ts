@@ -165,6 +165,10 @@ export class CarFrontDetailsService {
         }
       }
 
+      if (data?.status == 'Booked' && data?.car_booking_status == 'Reserved') {
+        data['status'] = 'Reserved';
+      }
+
       const [wishlist, count] = await this.carWishlistRepo.findAndCount({
         where: { carId: data['carId'] },
       });

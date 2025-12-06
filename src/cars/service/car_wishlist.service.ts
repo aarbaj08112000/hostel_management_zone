@@ -326,6 +326,9 @@ export class CarWishlistService {
               hit._source['analytics']['views'] = hit._source['views']
             }
           }
+          if(hit._source['status'] == 'Booked' && hit._source['car_booking_status'] == 'Reserved'){
+            hit._source['status'] = 'Reserved';
+          }
           return hit._source;
         }),
       );

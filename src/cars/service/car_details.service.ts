@@ -209,6 +209,9 @@ export class CarDetailsService {
 
         data.car_documents = docTags;
       }
+      if(data?.status == 'Booked' && data?.car_booking_status == 'Reserved'){
+        data.status = 'Reserved';
+      }
 
       data.modelName = data.model_name;
       if (_.isObject(data) && !_.isEmpty(data)) {

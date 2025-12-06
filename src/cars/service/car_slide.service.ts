@@ -254,6 +254,10 @@ export class CarSlideService {
 
                 hit._source['is_wishlist'] = 'No';
 
+                if(hit._source['status'] == 'Booked' && hit._source['car_booking_status'] == 'Reserved'){
+                  hit._source['status'] = 'Reserved';
+                }
+
                 const accessToken = this.request.cookies['front-access-token'];
                 if (accessToken) {
                   const userInfoUrl = `${this.keycloakUrl}/realms/${this.keycloakRealm}/protocol/openid-connect/userinfo`;
@@ -337,6 +341,10 @@ export class CarSlideService {
                   const { _source } = hit;
 
                   _source['is_wishlist'] = 'No';
+
+                  if(_source['status'] == 'Booked' && _source['car_booking_status'] == 'Reserved'){
+                    _source['status'] = 'Reserved';
+                  }
 
                   const accessToken = this.request.cookies['front-access-token'];
                   if (accessToken) {
