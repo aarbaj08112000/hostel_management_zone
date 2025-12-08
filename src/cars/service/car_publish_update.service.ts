@@ -111,7 +111,7 @@ export class CarPublishUpdateService {
       interior_colorId: { key: 'interior_color', label: 'Interior Color' },
       steering_side: { key: 'steeringSide', label: 'Steering Side' },
       regional_specsId: { key: 'regionalSpecsId', label: 'Regional Specs' },
-      // driven_distance: { key: 'drivenDistance', label: 'Driven Distance' },
+      variant_id: { key: 'variantId', label: 'Trim' },
     };
     if('fuelType' in data && data?.fuelType == 'Electric'){
       requiredFields = {...requiredFields, battery_capacity: { key: 'batteryCapacity', label: 'Battery Capacity' }, charging_time: { key: 'chargingTime', label: 'Charging Time' }, range: { key: 'range', label: 'Range' },}

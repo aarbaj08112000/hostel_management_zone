@@ -527,10 +527,10 @@ export class SellCarService extends BaseService {
         let leadData = {
             lead_code : 'SELL_CAR',
             location_id : inputParams?.location_id.toString(),
-            lead_stage : 'New',
-            lead_status : 'Open',
+            lead_stage : 'NEW___OPEN',
+            lead_status : 'NEW',
             channel : "Website",
-            source : "Kamdhenu Cars (your portal)",
+            source : "Kamdhenu Website",
             contact_person_id : '',
             closing_date : moment().format('YYYY-MM-DD HH:mm:ss'),
             customer_id : 0,
