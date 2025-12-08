@@ -525,7 +525,7 @@ export class SellCarService extends BaseService {
         };
 
         let leadData = {
-            lead_code : 'SELL',
+            lead_code : 'SELL_CAR',
             location_id : inputParams?.location_id.toString(),
             lead_stage : 'New',
             lead_status : 'Open',
@@ -545,7 +545,7 @@ export class SellCarService extends BaseService {
             budget_max : '',
             lead_value : '',
             additional_info : {
-                requirement_type : 'SELL_CAR',
+                requirement_type : 'Sell Car',
                 brand_id : inputParams?.brand_id,
                 make : brand_name,
                 model : model_name,
