@@ -379,8 +379,8 @@ export class SellCarService extends BaseService {
             return {
                 success: 1,
                 message: "Thank you for contacting us. We'll get in touch with you shortly.",
-                ...(inputParams.type === 'Sell'
-                  ? { data: code, formattedSlotInfo, locationDetails: '' }
+                ...(inputParams.type == 'Sell'
+                  ? { data: code, formattedSlotInfo, locationDetails }
                   : {}),
               };              
         } catch (err) {
@@ -545,7 +545,7 @@ export class SellCarService extends BaseService {
             budget_max : '',
             lead_value : '',
             additional_info : {
-                requirement_type : 'Sell Car',
+                requirement_type : 'SELL_CAR',
                 brand_id : inputParams?.brand_id,
                 make : brand_name,
                 model : model_name,
