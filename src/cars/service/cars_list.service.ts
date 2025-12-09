@@ -90,6 +90,34 @@ export class CarListService {
           inputParams = { ...inputParams, filters: { status: 'Active', isListed: 'Yes' } };
         }
       }
+        console.log(JSON.stringify(inputParams,null,2))
+        let userData;
+        const ADMIN_ROLES = ['hbadmin','admin']
+        try{
+          if(inputParams?.logged_user_id){
+          userData = await this.elasticService.getById(
+            inputParams?.logged_user_id,
+            'nest_local_user_list',
+            'id'
+          );
+          }
+        }catch(err){
+        }
+      const groupCode = userData?.group_code;
+       if (!(ADMIN_ROLES.includes(groupCode))) {
+        if(groupCode == 'sales_executive' || groupCode == 'HOD'){
+          let filters = { "key": "location_id", "value": userData?.location_ids, "operator": "in" }
+          inputParams = {
+            ...inputParams,
+            filters: [
+              ...(inputParams.filters || []),
+              filters
+            ]
+          };
+        }else{
+          // throw new Error('No records found.');
+        }
+      }
       let search_params = this.general.createElasticSearchQuery(inputParams);
       let pageIndex = 1;
       if ('page' in inputParams) {
