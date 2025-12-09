@@ -558,6 +558,10 @@ export class SellCarService extends BaseService {
             }),
             custom_field : JSON.stringify({
                 vehicle_service : {
+                REQUIREMENT_TYPE : {
+                    id: 'Sell Car',
+                    name: 'Sell Car'
+                },
                 MAKE: {
                     id: inputParams?.brand_id,
                     name: brand_name
