@@ -93,10 +93,10 @@ export class CarListFrontService {
       inputParams.boost = {
         'priority.keyword' : [{
           'key' : 'p1',
-          'boost' : 10
+          'boost' : 1000
         },{
           'key' : 'p2',
-          'boost' : 9
+          'boost' : 90
         },
         {
           'key' : 'p3',
