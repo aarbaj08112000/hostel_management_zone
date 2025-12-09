@@ -37,4 +37,7 @@ export class CarListDto {
   @IsOptional()
   tag: string;
 
+  @IsOptional()
+  logged_user_id? : string
+
 }
