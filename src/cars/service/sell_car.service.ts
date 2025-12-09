@@ -556,6 +556,32 @@ export class SellCarService extends BaseService {
                 condition : 'Good',
             }
             }),
+            custom_field : JSON.stringify({
+                MAKE: {
+                    id: inputParams?.brand_id,
+                    name: inputParams?.brand_name
+                },
+                MODEL: {
+                    id: inputParams?.model_id,
+                    name: inputParams?.model_name
+                },
+                YEAR: {
+                    id: inputParams?.year,               
+                    name: inputParams?.year
+                },
+                VARIANT: inputParams?.variant_name,
+                CONDITION: {
+                    id: inputParams?.condition,                
+                    name: inputParams?.condition
+                },
+                BUDGET_MIN: inputParams?.budget_min,
+                BUDGET_MAX: inputParams?.budget_max,
+                LEAD_VALUE: inputParams?.lead_value,
+                SHOWROOM: {
+                    id: inputParams?.showroom_id,
+                    name: inputParams?.showroom_name
+                }
+                }),
             remarks : 'Lead From Sell Car',
             added_by : '',
         }

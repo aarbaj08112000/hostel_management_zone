@@ -111,7 +111,7 @@ export class CarSlideService {
                 term: {
                   "priority.keyword": {
                     value: "p1",
-                    boost: 10
+                    boost: 1000
                   }
                 }
               },
@@ -119,7 +119,7 @@ export class CarSlideService {
                 term: {
                   "priority.keyword": {
                     value: "p2",
-                    boost: 9
+                    boost: 90
                   }
                 }
               },
