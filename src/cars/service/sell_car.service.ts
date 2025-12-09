@@ -560,11 +560,11 @@ export class SellCarService extends BaseService {
                 vehicle_service : {
                 MAKE: {
                     id: inputParams?.brand_id,
-                    name: inputParams?.brand_name
+                    name: brand_name
                 },
                 MODEL: {
                     id: inputParams?.model_id,
-                    name: inputParams?.model_name
+                    name: model_name
                 },
                 YEAR: {
                     id: inputParams?.year,               
@@ -572,16 +572,12 @@ export class SellCarService extends BaseService {
                 },
                 VARIANT: inputParams?.variant_name,
                 CONDITION: {
-                    id: inputParams?.condition,                
-                    name: inputParams?.condition
+                    id: 'Good',                
+                    name: 'Good'
                 },
                 BUDGET_MIN: inputParams?.budget_min,
                 BUDGET_MAX: inputParams?.budget_max,
-                LEAD_VALUE: inputParams?.lead_value,
-                SHOWROOM: {
-                    id: inputParams?.showroom_id,
-                    name: inputParams?.showroom_name
-                }
+                LEAD_VALUE: inputParams?.lead_value
                 }
             }),
             remarks : 'Lead From Sell Car',
