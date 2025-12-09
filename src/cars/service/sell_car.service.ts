@@ -557,6 +557,7 @@ export class SellCarService extends BaseService {
             }
             }),
             custom_field : JSON.stringify({
+                vehicle_service : {
                 MAKE: {
                     id: inputParams?.brand_id,
                     name: inputParams?.brand_name
@@ -581,7 +582,8 @@ export class SellCarService extends BaseService {
                     id: inputParams?.showroom_id,
                     name: inputParams?.showroom_name
                 }
-                }),
+                }
+            }),
             remarks : 'Lead From Sell Car',
             added_by : '',
         }
