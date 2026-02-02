@@ -25,6 +25,9 @@ export class VariantMasterEntity extends UserBase {
 
   @Column({ type: 'int', unsigned: true })
   brandId: number;
+
+  @Column({type : 'int', nullable :true})
+  companyId : string
 }
 
 

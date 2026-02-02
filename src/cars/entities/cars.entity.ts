@@ -124,6 +124,9 @@ export class CarEntity extends UserBase {
 
   @Column({ type: 'enum', enum: CarBookingStatus, nullable: true})
   carBookingStatus: CarBookingStatus;
+
+  @Column({type : 'int', nullable :true})
+  companyId : string
 }
 
 enum InsuranceType {

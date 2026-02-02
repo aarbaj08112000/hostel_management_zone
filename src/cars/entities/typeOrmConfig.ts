@@ -6,6 +6,7 @@ import {LookupEntity}  from '@repo/source/entities/lookup.entity';
 import { ActivityMasterEntity } from '@repo/source/entities/activity-master.entity';
 import { ActivityLogEntity } from '@repo/source/entities/activity-log.entity';
 import { SyncElasticEntity } from '@repo/source/entities/elastic_sync.entity';
+import { TenantSubscriber } from '../pipes/tenant.subscriber';
 dotenv.config();
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: process.env.DB_CLIENT as 'mysql',
@@ -19,5 +20,6 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   migrationsRun: false,
   logging: false,
   migrations: [__dirname + '/migrations/*.ts'],
-  timezone : process.env.TIMEZONE
+  timezone : process.env.TIMEZONE,
+  subscribers: [TenantSubscriber]
 };

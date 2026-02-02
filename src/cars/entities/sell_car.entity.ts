@@ -81,6 +81,9 @@ export class SellCarEntity {
 
   @Column({ type: 'int' , nullable: true })
   regionId: string;
+
+  @Column({type : 'int', nullable :true})
+  companyId : string
 }
 
 @Entity('sell_car_images')

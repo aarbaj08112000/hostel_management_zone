@@ -22,4 +22,7 @@ export class BodyEntity extends UserBase {
 
   @Column({ type: 'enum', nullable: true, enum: STATUS })
   status: STATUS;
+
+  @Column({type : 'int', nullable :true})
+  companyId : string
 }

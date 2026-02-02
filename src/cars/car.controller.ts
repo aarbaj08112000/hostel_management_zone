@@ -5,7 +5,7 @@ import { AnyFilesInterceptor, FileFieldsInterceptor } from '@nestjs/platform-exp
 import { validate, Validate } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
 import { Request as ExpressRequest } from 'express';
-
+import { TenantMergeInterceptor } from './pipes/tenant.merger';
 // Add - Update imports
 import { CarTagAddService } from './service/car_tag_add.service';
 import { TagCarAddDto, TagCarUpdateDto, TagCarDeleteDto } from './dto/car_tag.dto';
@@ -85,6 +85,7 @@ import { GenerateViews } from './service/generateData.service';
 @Controller()
 @UseFilters(HttpExceptionFilter)
 @UseInterceptors(CommonInterceptor)
+@UseInterceptors(TenantMergeInterceptor)
 export class CarController {
   CarDocumentDeleteService: any;
   constructor(
