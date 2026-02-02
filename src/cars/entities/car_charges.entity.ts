@@ -28,6 +28,6 @@ export class CarChargesEntity extends UserBase {
   @Column({ type: 'enum', enum: YesNo, default: YesNo.Yes })
   isOptional: YesNo;
 
-  @Column({type : 'int', nullable :true})
-  companyId : string
+  //@Column({type : 'int', nullable :true})
+  //companyId : string
 }

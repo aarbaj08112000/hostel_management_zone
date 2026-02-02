@@ -20,6 +20,6 @@ export class Charges extends BaseEntity {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedDate: Date;
 
-  @Column({type : 'int', nullable :true})
-  companyId : string
+  //@Column({type : 'int', nullable :true})
+  //companyId : string
 }

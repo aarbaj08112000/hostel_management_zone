@@ -23,6 +23,6 @@ export class BrandEntity extends UserBase {
   @Column({ type: 'varchar', length: 255 })
   brandImage: string;
 
-  @Column({type : 'int', nullable :true})
-  companyId : string
+  //@Column({type : 'int', nullable :true})
+  //companyId : string
 }
