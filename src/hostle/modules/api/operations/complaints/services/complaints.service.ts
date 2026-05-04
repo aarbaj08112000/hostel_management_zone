@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
+import { AttachmentEntity } from 'src/hostle/modules/api/users/users/entities/users.entity';
 import * as _ from 'lodash';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { LoggerHandler } from '@repo/source/utilities/logger-handler';
@@ -76,7 +77,18 @@ export class ComplaintsService {
       const [data, count] = await query.getManyAndCount();
       if (_.isEmpty(data)) throw new Error('No records found.');
 
-      this.blockResult = { success: 1, message: 'Records found.', data,  };
+      // Fetch attachments
+      const ids = data.map((item) => item.complaint_id);
+      const attachments = await this.dataSource.getRepository(AttachmentEntity).find({
+        where: { module: 'complaint', reference_id: In(ids) },
+      });
+      const attachmentMap = _.groupBy(attachments, 'reference_id');
+
+      data.forEach((item) => {
+        item['attachments'] = attachmentMap[item.complaint_id] || [];
+      });
+
+      this.blockResult = { success: 1, message: 'Records found.', data };
     } catch (err) {
       this.blockResult = { success: 0, message: err.message, data: [] };
     }
@@ -105,6 +117,7 @@ export class ComplaintsService {
         'status',
         'created_date',
         'resolved_date',
+        'attachments',
       ],
       page,
       limit,
@@ -159,7 +172,13 @@ export class ComplaintsService {
       const data = await query.getOne();
       if (_.isEmpty(data)) throw new Error('No records found.');
 
-      this.blockResult = { success: 1, message: 'Record found.', data,  };
+      // Fetch attachments
+      const attachments = await this.dataSource.getRepository(AttachmentEntity).find({
+        where: { module: 'complaint', reference_id: data.complaint_id },
+      });
+      data['attachments'] = attachments;
+
+      this.blockResult = { success: 1, message: 'Record found.', data };
     } catch (err) {
       this.blockResult = { success: 0, message: err.message, data: {} };
     }

@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
+import { AttachmentEntity } from 'src/hostle/modules/api/users/users/entities/users.entity';
 import * as _ from 'lodash';
 import * as custom from '@repo/source/utilities/custom-helper';
 import { LoggerHandler } from '@repo/source/utilities/logger-handler';
@@ -34,7 +35,7 @@ export class StudentsService {
   @Inject() protected readonly response: ResponseLibrary;
   @Inject() protected readonly moduleService: ModuleService;
 
-  constructor(protected readonly elasticService: ElasticService) {}
+  constructor(protected readonly elasticService: ElasticService) { }
 
   async startStudents(reqObject, reqParams) {
     let outputResponse = {};
@@ -69,20 +70,31 @@ export class StudentsService {
         query.andWhere('s.gender = :gender', { gender: inputParams.gender });
       }
 
-      
+
       const page = inputParams.page ? Number(inputParams.page) : 1;
       const limit = inputParams.limit ? Number(inputParams.limit) : 10;
       query.skip((page - 1) * limit).take(limit);
       const [data, count] = await query.getManyAndCount();
       if (_.isEmpty(data)) throw new Error('No records found.');
 
-      this.blockResult = { success: 1, message: 'Records found.', data,  };
+      // Fetch attachments
+      const studentIds = data.map((s) => s.student_id);
+      const attachments = await this.dataSource.getRepository(AttachmentEntity).find({
+        where: { module: 'student', reference_id: In(studentIds) },
+      });
+      const attachmentMap = _.groupBy(attachments, 'reference_id');
+
+      data.forEach((s) => {
+        s['attachments'] = attachmentMap[s.student_id] || [];
+      });
+
+      this.blockResult = { success: 1, message: 'Records found.', data };
     } catch (err) {
       this.blockResult = { success: 0, message: err.message, data: [] };
     }
 
     inputParams.students = this.blockResult.data;
-    
+
     return inputParams;
   }
 
@@ -111,6 +123,7 @@ export class StudentsService {
         'updated_by',
         'added_date',
         'updated_date',
+        'attachments',
       ],
       page,
       limit,
@@ -124,7 +137,7 @@ export class StudentsService {
     const funcData: any = {
       name: 'students',
       multiple_keys: this.multipleKeys,
-    
+
       output_keys: ['students'],
     };
 
@@ -163,15 +176,22 @@ export class StudentsService {
       }
 
       const data = await query.getOne();
+      const data = await query.getOne();
       if (_.isEmpty(data)) throw new Error('No records found.');
 
-      this.blockResult = { success: 1, message: 'Record found.', data,  };
+      // Fetch attachments
+      const attachments = await this.dataSource.getRepository(AttachmentEntity).find({
+        where: { module: 'student', reference_id: data.student_id },
+      });
+      data['attachments'] = attachments;
+
+      this.blockResult = { success: 1, message: 'Record found.', data };
     } catch (err) {
       this.blockResult = { success: 0, message: err.message, data: {} };
     }
 
     inputParams.student_details = this.blockResult.data;
-    
+
     return inputParams;
   }
 
@@ -193,6 +213,7 @@ export class StudentsService {
         'updated_by',
         'added_date',
         'updated_date',
+        'attachments',
       ],
     };
 

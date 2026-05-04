@@ -74,7 +74,7 @@ export class UserAddService extends BaseService {
           reqParams.entity_id = reqParams.insert_user_data.insert_id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 
@@ -111,7 +111,7 @@ export class UserAddService extends BaseService {
           reqParams.entity_id = reqParams.id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 

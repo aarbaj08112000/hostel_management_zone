@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Param, Patch, Delete, Query, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { PaymentsService } from './payments/services/payments.service';
 import { PaymentAllocationsService } from './payment_allocations/services/payment_allocations.service';
@@ -35,77 +36,88 @@ export class FinanceController {
 
   // Payments
   @Post('payments-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addPayment(@Req() req: Request, @Body() body: PaymentsDto) {
-    return await this.paymentsAddService.startPaymentAdd(req, body);
+    return await this.paymentsAddService.startPaymentAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('payments-update')
-  async updatePayment(@Req() req: Request, @Body() body: UpdatePaymentsDto) {
-    return await this.paymentsAddService.startPaymentUpdate(req, body);
+  @Patch('payments-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updatePayment(@Req() req: Request, @Param('id') id: string, @Body() body: UpdatePaymentsDto) {
+    return await this.paymentsAddService.startPaymentUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   // Payment Allocations
   @Post('payment-allocations-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addPaymentAllocation(@Req() req: Request, @Body() body: PaymentAllocationsDto) {
-    return await this.payment_allocationsAddService.startAllocationAdd(req, body);
+    return await this.payment_allocationsAddService.startAllocationAdd(req, { ...body, files: (req as any).files });
   }
 
   // Deposits
   @Post('deposits-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addDeposit(@Req() req: Request, @Body() body: DepositsDto) {
-    return await this.depositsAddService.startDepositAdd(req, body);
+    return await this.depositsAddService.startDepositAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('deposits-update')
-  async updateDeposit(@Req() req: Request, @Body() body: UpdateDepositsDto) {
-    return await this.depositsAddService.startDepositUpdate(req, body);
+  @Patch('deposits-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateDeposit(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateDepositsDto) {
+    return await this.depositsAddService.startDepositUpdate(req, { ...body, id, files: (req as any).files });
+  }
+  @Delete('deposits-delete/:id')
+  async deleteDeposit(@Param('id') id: string) {
+    return await this.depositsAddService.DeleteDeposit(Number(id));
   }
 
   // Invoices
   @Post('invoices-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addInvoice(@Req() req: Request, @Body() body: InvoicesDto) {
-    return await this.invoicesAddService.startInvoiceAdd(req, body);
+    return await this.invoicesAddService.startInvoiceAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('invoices-update')
-  async updateInvoice(@Req() req: Request, @Body() body: UpdateInvoicesDto) {
-    return await this.invoicesAddService.startInvoiceUpdate(req, body);
+  @Patch('invoices-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateInvoice(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateInvoicesDto) {
+    return await this.invoicesAddService.startInvoiceUpdate(req, { ...body, id, files: (req as any).files });
   }
-  @Post('payments-list')
-  async getpaymentsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.paymentsService.startPayments(req, body);
-  }
-
-  @Post('payments-details')
-  async getpaymentsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.paymentsService.startPaymentDetails(req, body);
+  @Get('payments-list')
+  async getpaymentsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.paymentsService.startPayments(req, query);
   }
 
-  @Post('payment-allocations-list')
-  async getpaymentallocationsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.payment_allocationsService.startPaymentAllocations(req, body);
+  @Get('payments-details/:id')
+  async getpaymentsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.paymentsService.startPaymentDetails(req, { id });
   }
 
-  @Post('payment-allocations-details')
-  async getpaymentallocationsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.payment_allocationsService.startPaymentAllocationDetails(req, body);
+  @Get('payment-allocations-list')
+  async getpaymentallocationsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.payment_allocationsService.startPaymentAllocations(req, query);
   }
 
-  @Post('deposits-list')
-  async getdepositsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.depositsService.startDeposits(req, body);
+  @Get('payment-allocations-details/:id')
+  async getpaymentallocationsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.payment_allocationsService.startPaymentAllocationDetails(req, { id });
   }
 
-  @Post('deposits-details')
-  async getdepositsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.depositsService.startDepositDetails(req, body);
+  @Get('deposits-list')
+  async getdepositsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.depositsService.startDeposits(req, query);
   }
 
-  @Post('invoices-list')
-  async getinvoicesList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.invoicesService.startInvoices(req, body);
+  @Get('deposits-details/:id')
+  async getdepositsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.depositsService.startDepositDetails(req, { id });
   }
 
-  @Post('invoices-details')
-  async getinvoicesDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.invoicesService.startInvoiceDetails(req, body);
+  @Get('invoices-list')
+  async getinvoicesList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.invoicesService.startInvoices(req, query);
+  }
+
+  @Get('invoices-details/:id')
+  async getinvoicesDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.invoicesService.startInvoiceDetails(req, { id });
   }
 
 }

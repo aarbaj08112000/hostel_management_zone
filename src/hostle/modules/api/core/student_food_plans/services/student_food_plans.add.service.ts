@@ -44,7 +44,7 @@ export class StudentFoodPlansAddService extends BaseService {
       module_name: 'student_food_plan',
       table_name: 'student_food_plans',
       table_alias: 'sfp',
-      primary_key: 'planId',
+      primary_key: 'student_food_plan_id',
       primary_alias: 'sfp_plan_id',
       unique_fields: {},
       expRefer: {},
@@ -75,16 +75,14 @@ export class StudentFoodPlansAddService extends BaseService {
     try {
       const queryColumns: any = {};
       [
-        'student_id',
+        'stay_id',
         'food_plan_id',
         'start_date',
         'end_date',
         'status',
-        'added_by',
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
-      queryColumns.added_date = () => 'NOW()';
       const res = await this.studentFoodPlanRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -121,16 +119,14 @@ export class StudentFoodPlansAddService extends BaseService {
     try {
       const queryColumns: any = {};
       [
-        'student_id',
+        'stay_id',
         'food_plan_id',
         'start_date',
         'end_date',
         'status',
-        'updated_by',
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
-      queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.studentFoodPlanRepo
         .createQueryBuilder()
         .update(StudentFoodPlansEntity)

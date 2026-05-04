@@ -12,6 +12,7 @@ import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { ModuleService } from '@repo/source/services/module.service';
 import { ComplaintsEntity } from '../entities/complaints.entity';
 import { BaseService } from '@repo/source/services/base.service';
+import { CommonAttachmentService } from 'src/services/base-file-upload.service';
 import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
 
@@ -36,6 +37,7 @@ export class ComplaintsAddService extends BaseService {
   @Inject() protected readonly moduleService: ModuleService;
   @InjectRepository(ComplaintsEntity)
   protected complaintRepo: Repository<ComplaintsEntity>;
+  @Inject() protected readonly commonAttachment: CommonAttachmentService;
 
   constructor() {
     super();
@@ -68,6 +70,16 @@ export class ComplaintsAddService extends BaseService {
       inputParams = await this.customUniqueCondition(inputParams);
 
       inputParams = await this.insertComplaintData(inputParams);
+      if (inputParams.insert_complaint_data.insert_id) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'complaint';
+          reqParams.entity_id = inputParams.insert_complaint_data.insert_id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       if (!_.isEmpty(inputParams.insert_complaint_data))
         outputResponse = await this.complaintFinishSuccess(
           inputParams,
@@ -113,6 +125,16 @@ export class ComplaintsAddService extends BaseService {
       this.setModuleAPI('update');
       let inputParams = reqParams;
       inputParams = await this.updateComplaintData(inputParams);
+      if (!_.isEmpty(inputParams.update_complaint_data)) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'complaint';
+          reqParams.entity_id = reqParams.id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       if (!_.isEmpty(inputParams.update_complaint_data))
         outputResponse = await this.complaintFinishSuccess(
           inputParams,

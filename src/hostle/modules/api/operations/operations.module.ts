@@ -11,12 +11,14 @@ import { ElectricityReadingsEntity } from './electricity_readings/entities/elect
 import { VisitorLogsEntity } from './visitor_logs/entities/visitor_logs.entity';
 import { ComplaintsEntity } from './complaints/entities/complaints.entity';
 import { NotificationsEntity } from './notifications/entities/notifications.entity';
+import { AttachmentEntity } from '../users/users/entities/users.entity';
 import { GlobalModule } from '@repo/source/modules/global.module';
 import { MaintenanceRequestsAddService } from './maintenance_requests/services/maintenance_requests.add.service';
 import { ElectricityAddReadingsService } from './electricity_readings/services/electricity.add.service';
 import { VisitorLogsAddService } from './visitor_logs/services/visitor_logs.add.service';
 import { ComplaintsAddService } from './complaints/services/complaints.add.service';
 import { NotificationsAddService } from './notifications/services/notifications.add.service';
+import { CommonAttachmentService } from 'src/services/base-file-upload.service';
 @Module({
   imports: [
     GlobalModule,
@@ -26,6 +28,7 @@ import { NotificationsAddService } from './notifications/services/notifications.
       VisitorLogsEntity,
       ComplaintsEntity,
       NotificationsEntity,
+      AttachmentEntity,
     ]),
   ],
   controllers: [OperationsController],
@@ -40,7 +43,8 @@ import { NotificationsAddService } from './notifications/services/notifications.
     ElectricityAddReadingsService,
     VisitorLogsAddService,
     ComplaintsAddService,
-    NotificationsAddService
+    NotificationsAddService,
+    CommonAttachmentService,
   ],
 })
 export class OperationsModule {}

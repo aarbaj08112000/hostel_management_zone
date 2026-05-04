@@ -78,7 +78,7 @@ export class HostelAddService extends BaseService {
           reqParams.entity_id = reqParams.insert_hostel_data.insert_id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 
@@ -115,7 +115,7 @@ export class HostelAddService extends BaseService {
           reqParams.entity_id = reqParams.id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 

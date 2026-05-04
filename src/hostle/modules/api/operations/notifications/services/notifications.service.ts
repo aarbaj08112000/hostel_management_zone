@@ -160,7 +160,7 @@ export class NotificationsService {
       const data = await query.getOne();
       if (_.isEmpty(data)) throw new Error('No records found.');
 
-      this.blockResult = { success: 1, message: 'Record found.', data,  };
+      this.blockResult = { success: 1, message: 'Record found.', data };
     } catch (err) {
       this.blockResult = { success: 0, message: err.message, data: {} };
     }
@@ -206,7 +206,7 @@ export class NotificationsService {
     };
     return this.response.outputResponse(
       { settings: settingFields, data: inputParams },
-      { name: 'notifications' },
+      { name: inputParams.notification_details ? 'notification_details' : 'notifications' },
     );
   }
 }

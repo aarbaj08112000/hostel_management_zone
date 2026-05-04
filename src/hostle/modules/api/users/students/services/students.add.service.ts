@@ -77,7 +77,7 @@ export class StudentAddService extends BaseService {
           reqParams.entity_id = reqParams.insert_student_data.insert_id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 
@@ -117,7 +117,7 @@ export class StudentAddService extends BaseService {
           reqParams.entity_id = reqParams.id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 

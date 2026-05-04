@@ -50,11 +50,11 @@ export class AmenitiesAddService extends BaseService {
       module_name: 'amenity',
       table_name: 'amenities',
       table_alias: 'a',
-      primary_key: 'amenityId',
+      primary_key: 'amenity_id',
       primary_alias: 'a_amenity_id',
       unique_fields: {
         type: 'and',
-        fields: { amenity_code: 'amenityCode' },
+        fields: { amenity_code: 'amenity_code' },
         message: 'Record already exists with this Amenity Code',
       },
       expRefer: {},
@@ -96,13 +96,13 @@ export class AmenitiesAddService extends BaseService {
     try {
       const queryColumns: any = {};
       if ('amenity_name' in inputParams)
-        queryColumns.amenityName = inputParams.amenity_name;
+        queryColumns.amenity_name = inputParams.amenity_name;
       if ('description' in inputParams)
         queryColumns.description = inputParams.description;
       if ('amenity_code' in inputParams)
-        queryColumns.amenityCode = inputParams.amenity_code;
+        queryColumns.amenity_code = inputParams.amenity_code;
       if ('added_by' in inputParams)
-        queryColumns.addedBy = inputParams.added_by;
+        queryColumns.added_by = inputParams.added_by;
       queryColumns.added_date = () => 'NOW()';
       const res = await this.amenityRepo.insert(queryColumns);
       const data = { insert_id: res.raw.insertId };
@@ -151,21 +151,21 @@ export class AmenitiesAddService extends BaseService {
     try {
       const queryColumns: any = {};
       if ('amenity_name' in inputParams)
-        queryColumns.amenityName = inputParams.amenity_name;
+        queryColumns.amenity_name = inputParams.amenity_name;
       if ('description' in inputParams)
         queryColumns.description = inputParams.description;
       if ('amenity_code' in inputParams)
-        queryColumns.amenityCode = inputParams.amenity_code;
+        queryColumns.amenity_code = inputParams.amenity_code;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('updated_by' in inputParams)
-        queryColumns.updatedBy = inputParams.updated_by;
+        queryColumns.updated_by = inputParams.updated_by;
       queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.amenityRepo
         .createQueryBuilder()
         .update(AmenitiesEntity)
         .set(queryColumns);
       if (!custom.isEmpty(inputParams.id))
-        queryObject.andWhere('amenityId = :id', { id: inputParams.id });
+        queryObject.andWhere('amenity_id = :id', { id: inputParams.id });
       const res = await queryObject.execute();
       this.blockResult = {
         success: 1,

@@ -46,7 +46,7 @@ export class DepositsAddService extends BaseService {
       module_name: 'deposit',
       table_name: 'deposits',
       table_alias: 'd',
-      primary_key: 'depositId',
+      primary_key: 'deposit_id',
       primary_alias: 'd_deposit_id',
       unique_fields: {},
       expRefer: {},
@@ -78,15 +78,15 @@ export class DepositsAddService extends BaseService {
     this.blockResult = {};
     try {
       const queryColumns: any = {};
-      if ('stay_id' in inputParams) queryColumns.stayId = inputParams.stay_id;
+      if ('stay_id' in inputParams) queryColumns.stay_id = inputParams.stay_id;
       if ('deposit_amount' in inputParams)
-        queryColumns.depositAmount = inputParams.deposit_amount;
+        queryColumns.deposit_amount = inputParams.deposit_amount;
       if ('deposit_paid_date' in inputParams)
-        queryColumns.depositPaidDate = inputParams.deposit_paid_date;
+        queryColumns.deposit_paid_date = inputParams.deposit_paid_date;
       if ('refund_amount' in inputParams)
-        queryColumns.refundAmount = inputParams.refund_amount;
+        queryColumns.refund_amount = inputParams.refund_amount;
       if ('refund_date' in inputParams)
-        queryColumns.refundDate = inputParams.refund_date;
+        queryColumns.refund_date = inputParams.refund_date;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       const res = await this.depositRepo.insert(queryColumns);
       this.blockResult = {
@@ -127,13 +127,13 @@ export class DepositsAddService extends BaseService {
     try {
       const queryColumns: any = {};
       if ('deposit_amount' in inputParams)
-        queryColumns.depositAmount = inputParams.deposit_amount;
+        queryColumns.deposit_amount = inputParams.deposit_amount;
       if ('deposit_paid_date' in inputParams)
-        queryColumns.depositPaidDate = inputParams.deposit_paid_date;
+        queryColumns.deposit_paid_date = inputParams.deposit_paid_date;
       if ('refund_amount' in inputParams)
-        queryColumns.refundAmount = inputParams.refund_amount;
+        queryColumns.refund_amount = inputParams.refund_amount;
       if ('refund_date' in inputParams)
-        queryColumns.refundDate = inputParams.refund_date;
+        queryColumns.refund_date = inputParams.refund_date;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
 
       const queryObject = this.depositRepo

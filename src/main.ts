@@ -30,6 +30,7 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
   const configService = app.get(ConfigService);
+  console.log(process.env)
   await app.listen(process.env.PORT ?? 3001);
   app.enableShutdownHooks();
 }

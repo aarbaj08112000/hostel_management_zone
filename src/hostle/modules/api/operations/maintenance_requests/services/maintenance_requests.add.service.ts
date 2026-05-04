@@ -8,6 +8,7 @@ import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { ModuleService } from '@repo/source/services/module.service';
 import { MaintenanceRequestsEntity } from '../entities/maintenance_requests.entity';
 import { BaseService } from '@repo/source/services/base.service';
+import { CommonAttachmentService } from 'src/services/base-file-upload.service';
 import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
 
@@ -31,6 +32,7 @@ export class MaintenanceRequestsAddService extends BaseService {
   @Inject() protected readonly moduleService: ModuleService;
   @InjectRepository(MaintenanceRequestsEntity)
   protected maintenanceRepo: Repository<MaintenanceRequestsEntity>;
+  @Inject() protected readonly commonAttachment: CommonAttachmentService;
 
   constructor() {
     super();
@@ -54,6 +56,16 @@ export class MaintenanceRequestsAddService extends BaseService {
       this.requestObj = reqObject;
       this.setModuleAPI('add');
       let inputParams = await this.insertMaintenanceData(reqParams);
+      if (inputParams.insert_maintenance_data.insert_id) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'maintenance_request';
+          reqParams.entity_id = inputParams.insert_maintenance_data.insert_id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       return !_.isEmpty(inputParams.insert_maintenance_data)
         ? await this.maintenanceFinishSuccess(
             inputParams,
@@ -99,6 +111,16 @@ export class MaintenanceRequestsAddService extends BaseService {
       this.requestObj = reqObject;
       this.setModuleAPI('update');
       let inputParams = await this.updateMaintenanceData(reqParams);
+      if (!_.isEmpty(inputParams.update_maintenance_data)) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'maintenance_request';
+          reqParams.entity_id = reqParams.id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       return !_.isEmpty(inputParams.update_maintenance_data)
         ? await this.maintenanceFinishSuccess(
             inputParams,

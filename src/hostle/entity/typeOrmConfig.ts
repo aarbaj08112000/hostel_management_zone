@@ -19,7 +19,7 @@ import { MaintenanceRequestsEntity } from '../modules/api/operations/maintenance
 import { NotificationsEntity } from '../modules/api/operations/notifications/entities/notifications.entity';
 import { VisitorLogsEntity } from '../modules/api/operations/visitor_logs/entities/visitor_logs.entity';
 import { StaysEntity } from '../modules/api/users/stays/entities/stays.entity';
-import { UsersEntity } from '../modules/api/users/users/entities/users.entity';
+import { UsersEntity, AttachmentEntity } from '../modules/api/users/users/entities/users.entity';
 import { StudentsEntity } from '../modules/api/users/students/entities/students.entity';
 import { SyncElasticEntity } from '@repo/source/entities/elastic_sync.entity';
 dotenv.config();
@@ -52,6 +52,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     StaysEntity,
     UsersEntity,
     StudentsEntity,
+    AttachmentEntity,
   ],
   synchronize: false,
   migrationsRun: false,

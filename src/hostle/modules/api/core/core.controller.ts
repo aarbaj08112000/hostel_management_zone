@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Param, Patch, Delete, Query, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { HostelsService } from './hostels/services/hostels.service';
 import { HostelAddService } from './hostels/services/hostels.add.service';
 import { FloorsService } from './floors/services/floors.service';
@@ -62,118 +63,105 @@ export class CoreController {
   async sayHello() {
     return 'hello Core';
   }
-  @Post('hostle-list')
-  async getHostleList(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.hostelsService.startHostels(req, params);
+  @Get('hostle-list')
+  async getHostleList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.hostelsService.startHostels(req, query);
   }
-  @Post('floors-list')
-  async getFloorList(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.floorsService.startFloors(req, params);
+  @Get('floors-list')
+  async getFloorList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.floorsService.startFloors(req, query);
   }
-  @Post('rooms-list')
-  async getRoomList(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.roomsService.startRooms(req, params);
+  @Get('rooms-list')
+  async getRoomList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.roomsService.startRooms(req, query);
   }
-  @Post('beds-list')
-  async getBedList(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.bedsService.startBeds(req, params);
+  @Get('beds-list')
+  async getBedList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.bedsService.startBeds(req, query);
   }
-  @Post('hostle-details')
-  async getHostleDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.hostelsService.startHostelDetails(req, params);
+  @Get('hostle-details/:id')
+  async getHostleDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.hostelsService.startHostelDetails(req, { id });
   }
-  @Post('floors-details')
-  async getFloorDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.floorsService.startFloorDetails(req, params);
+  @Get('floors-details/:id')
+  async getFloorDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.floorsService.startFloorDetails(req, { id });
   }
-  @Post('rooms-details')
-  async getRoomDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.roomsService.startRoomDetails(req, params);
+  @Get('rooms-details/:id')
+  async getRoomDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.roomsService.startRoomDetails(req, { id });
   }
-  @Post('beds-details')
-  async getBedDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.bedsService.startBedDetails(req, params);
+  @Get('beds-details/:id')
+  async getBedDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.bedsService.startBedDetails(req, { id });
   }
-  @Post('amenities-list')
-  async getAmenitiesList(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.amenitiesService.startAmenities(req, params);
+  @Get('amenities-list')
+  async getAmenitiesList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.amenitiesService.startAmenities(req, query);
   }
-  @Post('hostle-amenities-list')
-  async getHostleAmenitiesList(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.hostel_amenitiesService.startHostelAmenities(req, params);
+  @Get('hostle-amenities-list')
+  async getHostleAmenitiesList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.hostel_amenitiesService.startHostelAmenities(req, query);
   }
-  @Post('food-plan-list')
-  async getFoodPlan(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.food_plansService.startFoodPlans(req, params);
+  @Get('food-plan-list')
+  async getFoodPlan(@Req() req: Request, @Query() query: ListDto) {
+    return await this.food_plansService.startFoodPlans(req, query);
   }
-  @Post('student-food-plan-list')
-  async getStudentFoodPlan(@Req() req: Request, @Body() body: ListDto) {
-    const params = body;
-    return await this.student_food_plansService.startStudentFoodPlans(
-      req,
-      params,
-    );
+  @Get('student-food-plan-list')
+  async getStudentFoodPlan(@Req() req: Request, @Query() query: ListDto) {
+    return await this.student_food_plansService.startStudentFoodPlans(req, query);
   }
-  @Post('amenities-details')
-  async getAmenitiesDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.amenitiesService.startAmenitieDetails(req, params);
+  @Get('amenities-details/:id')
+  async getAmenitiesDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.amenitiesService.startAmenitieDetails(req, { id });
   }
-  @Post('hostle-amenities-details')
-  async getHostleAmenitiesDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.hostel_amenitiesService.startHostelAmenitieDetails(req, params);
+  @Get('hostle-amenities-details/:id')
+  async getHostleAmenitiesDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.hostel_amenitiesService.startHostelAmenitieDetails(req, { id });
   }
-  @Post('food-plan-details')
-  async getFoodPlanDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.food_plansService.startFoodPlanDetails(req, params);
+  @Get('food-plan-details/:id')
+  async getFoodPlanDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.food_plansService.startFoodPlanDetails(req, { id });
   }
-  @Post('student-food-plan-details')
-  async getStudentFoodPlanDetails(@Req() req: Request, @Body() body: DetailDto) {
-    const params = body;
-    return await this.student_food_plansService.startStudentFoodPlanDetails(req, params);
+  @Get('student-food-plan-details/:id')
+  async getStudentFoodPlanDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.student_food_plansService.startStudentFoodPlanDetails(req, { id });
   }
 
   // Hostel
   @Post('hostle-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addHostle(@Req() req: Request, @Body() body: HostelsDto) {
-    return await this.hostelsAddService.startHostelAdd(req, body);
+    return await this.hostelsAddService.startHostelAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('hostle-update')
-  async updateHostle(@Req() req: Request, @Body() body: UpdateHostelsDto) {
-    return await this.hostelsAddService.startHostelUpdate(req, body);
+  @Patch('hostle-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateHostle(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateHostelsDto) {
+    return await this.hostelsAddService.startHostelUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   // Floors
   @Post('floors-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addFloor(@Req() req: Request, @Body() body: FloorsDto) {
-    return await this.floorsAddService.startFloorAdd(req, body);
+    return await this.floorsAddService.startFloorAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('floors-update')
-  async updateFloor(@Req() req: Request, @Body() body: UpdateFloorsDto) {
-    return await this.floorsAddService.startFloorUpdate(req, body);
+  @Patch('floors-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateFloor(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateFloorsDto) {
+    return await this.floorsAddService.startFloorUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   // Rooms
   @Post('rooms-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addRoom(@Req() req: Request, @Body() body: RoomsDto) {
-    return await this.roomsAddService.startRoomAdd(req, body);
+    return await this.roomsAddService.startRoomAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('rooms-update')
-  async updateRoom(@Req() req: Request, @Body() body: UpdateRoomsDto) {
-    return await this.roomsAddService.startRoomUpdate(req, body);
+  @Patch('rooms-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateRoom(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateRoomsDto) {
+    return await this.roomsAddService.startRoomUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   // Beds
@@ -181,9 +169,9 @@ export class CoreController {
   async addBed(@Req() req: Request, @Body() body: BedsDto) {
     return await this.bedsAddService.startBedAdd(req, body);
   }
-  @Post('beds-update')
-  async updateBed(@Req() req: Request, @Body() body: UpdateBedsDto) {
-    return await this.bedsAddService.startBedUpdate(req, body);
+  @Patch('beds-update/:id')
+  async updateBed(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateBedsDto) {
+    return await this.bedsAddService.startBedUpdate(req, { ...body, id });
   }
 
   // Amenities
@@ -191,9 +179,13 @@ export class CoreController {
   async addAmenities(@Req() req: Request, @Body() body: AmenitiesDto) {
     return await this.amenitiesAddService.startAmenityAdd(req, body);
   }
-  @Post('amenities-update')
-  async updateAmenities(@Req() req: Request, @Body() body: UpdateAmenitiesDto) {
-    return await this.amenitiesAddService.startAmenityUpdate(req, body);
+  @Patch('amenities-update/:id')
+  async updateAmenities(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateAmenitiesDto) {
+    return await this.amenitiesAddService.startAmenityUpdate(req, { ...body, id });
+  }
+  @Delete('amenities-delete/:id')
+  async deleteAmenities(@Param('id') id: string) {
+    return await this.amenitiesAddService.DeleteAmenity(Number(id));
   }
 
   // Hostel Amenities
@@ -201,9 +193,9 @@ export class CoreController {
   async addHostleAmenities(@Req() req: Request, @Body() body: HostelAmenitiesDto) {
     return await this.hostel_amenitiesAddService.startHostelAmenityAdd(req, body);
   }
-  @Post('hostle-amenities-update')
-  async updateHostleAmenities(@Req() req: Request, @Body() body: UpdateHostelAmenitiesDto) {
-    return await this.hostel_amenitiesAddService.startHostelAmenityUpdate(req, body);
+  @Patch('hostle-amenities-update/:id')
+  async updateHostleAmenities(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateHostelAmenitiesDto) {
+    return await this.hostel_amenitiesAddService.startHostelAmenityUpdate(req, { ...body, id });
   }
 
   // Food Plans
@@ -211,9 +203,13 @@ export class CoreController {
   async addFoodPlan(@Req() req: Request, @Body() body: FoodPlansDto) {
     return await this.food_plansAddService.startFoodPlanAdd(req, body);
   }
-  @Post('food-plan-update')
-  async updateFoodPlan(@Req() req: Request, @Body() body: UpdateFoodPlansDto) {
-    return await this.food_plansAddService.startFoodPlanUpdate(req, body);
+  @Patch('food-plan-update/:id')
+  async updateFoodPlan(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateFoodPlansDto) {
+    return await this.food_plansAddService.startFoodPlanUpdate(req, { ...body, id });
+  }
+  @Delete('food-plan-delete/:id')
+  async deleteFoodPlan(@Param('id') id: string) {
+    return await this.food_plansAddService.DeleteFoodPlan(Number(id));
   }
 
   // Student Food Plans
@@ -221,8 +217,12 @@ export class CoreController {
   async addStudentFoodPlan(@Req() req: Request, @Body() body: StudentFoodPlansDto) {
     return await this.student_food_plansAddService.startPlanAdd(req, body);
   }
-  @Post('student-food-plan-update')
-  async updateStudentFoodPlan(@Req() req: Request, @Body() body: UpdateStudentFoodPlansDto) {
-    return await this.student_food_plansAddService.startPlanUpdate(req, body);
+  @Patch('student-food-plan-update/:id')
+  async updateStudentFoodPlan(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateStudentFoodPlansDto) {
+    return await this.student_food_plansAddService.startPlanUpdate(req, { ...body, id });
+  }
+  @Delete('student-food-plan-delete/:id')
+  async deleteStudentFoodPlan(@Param('id') id: string) {
+    return await this.student_food_plansAddService.DeletePlan(Number(id));
   }
 }
