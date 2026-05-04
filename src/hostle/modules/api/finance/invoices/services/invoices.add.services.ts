@@ -42,7 +42,7 @@ export class InvoiceAddService extends BaseService {
       module_name: 'invoice',
       table_name: 'invoices',
       table_alias: 'i',
-      primary_key: 'invoiceId',
+      primary_key: 'invoice_id',
       primary_alias: 'i_invoice_id',
       unique_fields: {
         type: 'and',
@@ -74,7 +74,7 @@ export class InvoiceAddService extends BaseService {
           reqParams.entity_id = reqParams.insert_invoice_data.insert_id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 
@@ -111,7 +111,7 @@ export class InvoiceAddService extends BaseService {
           reqParams.entity_id = reqParams.id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 
@@ -133,15 +133,10 @@ export class InvoiceAddService extends BaseService {
     this.blockResult = {};
     try {
       const queryColumns: any = {};
-      if ('invoice_number' in inputParams)
-        queryColumns.invoice_number = inputParams.invoice_number;
-      if ('student_id' in inputParams)
-        queryColumns.student_id = inputParams.student_id;
-      if ('amount' in inputParams) queryColumns.amount = inputParams.amount;
+      if ('stay_id' in inputParams)
+        queryColumns.stay_id = inputParams.stay_id;
+      if ('total_amount' in inputParams) queryColumns.total_amount = inputParams.total_amount;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
-      if ('added_by' in inputParams)
-        queryColumns.added_by = inputParams.added_by;
-      queryColumns.added_date = () => 'NOW()';
 
       const res = await this.invoiceRepo.insert(queryColumns);
       this.blockResult = {
@@ -162,15 +157,10 @@ export class InvoiceAddService extends BaseService {
     this.blockResult = {};
     try {
       const queryColumns: any = {};
-      if ('student_id' in inputParams)
-        queryColumns.student_id = inputParams.student_id;
-      if ('invoice_number' in inputParams)
-        queryColumns.invoice_number = inputParams.invoice_number;
-      if ('amount' in inputParams) queryColumns.amount = inputParams.amount;
+      if ('stay_id' in inputParams)
+        queryColumns.stay_id = inputParams.stay_id;
+      if ('total_amount' in inputParams) queryColumns.total_amount = inputParams.total_amount;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
-      if ('updated_by' in inputParams)
-        queryColumns.updated_by = inputParams.updated_by;
-      queryColumns.updated_date = () => 'NOW()';
 
       const queryObject = this.invoiceRepo
         .createQueryBuilder()

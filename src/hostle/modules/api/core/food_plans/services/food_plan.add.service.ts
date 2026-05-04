@@ -44,7 +44,7 @@ export class FoodPlansAddService extends BaseService {
       module_name: 'food_plan',
       table_name: 'food_plans',
       table_alias: 'fp',
-      primary_key: 'foodPlanId',
+      primary_key: 'food_plan_id',
       primary_alias: 'fp_food_plan_id',
       unique_fields: {},
       expRefer: {},
@@ -80,9 +80,6 @@ export class FoodPlansAddService extends BaseService {
         queryColumns.monthly_price = inputParams.monthly_price;
       if ('description' in inputParams)
         queryColumns.description = inputParams.description;
-      if ('added_by' in inputParams)
-        queryColumns.added_by = inputParams.added_by;
-      queryColumns.added_date = () => 'NOW()';
       const res = await this.foodPlanRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -124,15 +121,12 @@ export class FoodPlansAddService extends BaseService {
         queryColumns.monthly_price = inputParams.monthly_price;
       if ('description' in inputParams)
         queryColumns.description = inputParams.description;
-      if ('updated_by' in inputParams)
-        queryColumns.updated_by = inputParams.updated_by;
-      queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.foodPlanRepo
         .createQueryBuilder()
         .update(FoodPlansEntity)
         .set(queryColumns);
       if (!custom.isEmpty(inputParams.id))
-        queryObject.andWhere('foodPlanId = :id', { id: inputParams.id });
+        queryObject.andWhere('food_plan_id = :id', { id: inputParams.id });
       const res = await queryObject.execute();
       this.blockResult = {
         success: 1,

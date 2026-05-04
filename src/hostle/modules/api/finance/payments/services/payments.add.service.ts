@@ -6,6 +6,7 @@ import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { ModuleService } from '@repo/source/services/module.service';
 import { PaymentsEntity } from '../entities/payments.entity';
 import { BaseService } from '@repo/source/services/base.service';
+import { CommonAttachmentService } from 'src/services/base-file-upload.service';
 import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
 
@@ -25,6 +26,7 @@ export class PaymentsAddService extends BaseService {
 
   @Inject() protected readonly response: ResponseLibrary;
   @Inject() protected readonly moduleService: ModuleService;
+  @Inject() protected readonly commonAttachment: CommonAttachmentService;
   @InjectRepository(PaymentsEntity)
   protected paymentRepo: Repository<PaymentsEntity>;
 
@@ -36,7 +38,7 @@ export class PaymentsAddService extends BaseService {
       module_name: 'payment',
       table_name: 'payments',
       table_alias: 'p',
-      primary_key: 'paymentId',
+      primary_key: 'payment_id',
       primary_alias: 'p_payment_id',
       unique_fields: {},
       expRefer: {},
@@ -49,6 +51,16 @@ export class PaymentsAddService extends BaseService {
       this.inputParams = reqParams;
       this.requestObj = reqObject;
       let inputParams = await this.insertPaymentData(reqParams);
+      if (inputParams.insert_payment_data.insert_id) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'payment';
+          reqParams.entity_id = inputParams.insert_payment_data.insert_id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       return !_.isEmpty(inputParams.insert_payment_data)
         ? await this.paymentFinishSuccess(
           inputParams,
@@ -66,6 +78,16 @@ export class PaymentsAddService extends BaseService {
       this.inputParams = reqParams;
       this.requestObj = reqObject;
       let inputParams = await this.updatePaymentData(reqParams);
+      if (!_.isEmpty(inputParams.update_payment_data)) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'payment';
+          reqParams.entity_id = reqParams.id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       return !_.isEmpty(inputParams.update_payment_data)
         ? await this.paymentFinishSuccess(
           inputParams,

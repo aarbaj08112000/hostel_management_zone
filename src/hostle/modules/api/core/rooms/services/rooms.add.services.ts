@@ -71,7 +71,7 @@ export class RoomAddService extends BaseService {
           reqParams.entity_id = reqParams.insert_room_data.insert_id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 
@@ -105,7 +105,7 @@ export class RoomAddService extends BaseService {
           reqParams.entity_id = reqParams.id;
           await this.commonAttachment.startAttachmentAdd(
             this.requestObj,
-            reqParams.files,
+            reqParams,
           );
         }
 

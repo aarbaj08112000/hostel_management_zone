@@ -12,6 +12,7 @@ import { ResponseLibrary } from '@repo/source/utilities/response-library';
 import { ModuleService } from '@repo/source/services/module.service';
 import { BaseService } from '@repo/source/services/base.service';
 import { ElectricityReadingsEntity } from '../entities/electricity_readings.entity';
+import { CommonAttachmentService } from 'src/services/base-file-upload.service';
 import * as custom from '@repo/source/utilities/custom-helper';
 import * as _ from 'lodash';
 
@@ -35,6 +36,7 @@ export class ElectricityAddReadingsService extends BaseService {
   @Inject() protected readonly moduleService: ModuleService;
   @InjectRepository(ElectricityReadingsEntity)
   protected repo: Repository<ElectricityReadingsEntity>;
+  @Inject() protected readonly commonAttachment: CommonAttachmentService;
 
   constructor() {
     super();
@@ -59,6 +61,16 @@ export class ElectricityAddReadingsService extends BaseService {
       this.inputParams = reqParams;
       this.setModuleAPI('add');
       const inputParams = await this.insertData(reqParams);
+      if (inputParams.insert_reading_data.insert_id) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'electricity_reading';
+          reqParams.entity_id = inputParams.insert_reading_data.insert_id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       if (!_.isEmpty(inputParams.insert_reading_data)) {
         outputResponse = await this.finishSuccess(
           inputParams,
@@ -93,7 +105,7 @@ export class ElectricityAddReadingsService extends BaseService {
         data: { insert_id: res.raw.insertId },
       };
     } catch (err) {
-      this.blockResult = { success: 0, message: err, data: [] };
+      this.blockResult = { success: 0, message: err.message, data: [] };
     }
     inputParams.insert_reading_data = this.blockResult.data;
     inputParams = this.response.assignSingleRecord(
@@ -110,6 +122,16 @@ export class ElectricityAddReadingsService extends BaseService {
       this.inputParams = reqParams;
       this.setModuleAPI('update');
       const inputParams = await this.updateData(reqParams);
+      if (!_.isEmpty(inputParams.update_reading_data)) {
+        if (!_.isEmpty(reqParams.files)) {
+          reqParams.entity_type = 'electricity_reading';
+          reqParams.entity_id = reqParams.id;
+          await this.commonAttachment.startAttachmentAdd(
+            this.requestObj,
+            reqParams,
+          );
+        }
+      }
       if (!_.isEmpty(inputParams.update_reading_data)) {
         outputResponse = await this.finishSuccess(
           inputParams,
@@ -134,11 +156,9 @@ export class ElectricityAddReadingsService extends BaseService {
         'units_consumed',
         'rate_per_unit',
         'total_amount',
-        'updated_by',
       ].forEach((field) => {
         if (field in inputParams) queryColumns[field] = inputParams[field];
       });
-      queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.repo
         .createQueryBuilder()
         .update()
@@ -152,7 +172,7 @@ export class ElectricityAddReadingsService extends BaseService {
         data: { affected_rows: res.affected },
       };
     } catch (err) {
-      this.blockResult = { success: 0, message: err, data: [] };
+      this.blockResult = { success: 0, message: err.message, data: [] };
     }
     inputParams.update_reading_data = this.blockResult.data;
     inputParams = this.response.assignSingleRecord(

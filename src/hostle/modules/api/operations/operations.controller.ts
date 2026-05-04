@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Param, Patch, Delete, Query, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { MaintenanceRequestsService } from './maintenance_requests/services/maintenance_requests.service';
 import { ElectricityReadingsService } from './electricity_readings/services/electricity_readings.service';
@@ -40,93 +41,105 @@ export class OperationsController {
 
   // Maintenance Requests
   @Post('maintenance-requests-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addMaintenanceRequest(@Req() req: Request, @Body() body: MaintenanceRequestsDto) {
-    return await this.maintenance_requestsAddService.startMaintenanceAdd(req, body);
+    return await this.maintenance_requestsAddService.startMaintenanceAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('maintenance-requests-update')
-  async updateMaintenanceRequest(@Req() req: Request, @Body() body: UpdateMaintenanceRequestsDto) {
-    return await this.maintenance_requestsAddService.startMaintenanceUpdate(req, body);
+  @Patch('maintenance-requests-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateMaintenanceRequest(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateMaintenanceRequestsDto) {
+    return await this.maintenance_requestsAddService.startMaintenanceUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   // Electricity Readings
   @Post('electricity-readings-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addElectricityReading(@Req() req: Request, @Body() body: ElectricityReadingsDto) {
-    return await this.electricity_readingsAddService.startAdd(req, body);
+    return await this.electricity_readingsAddService.startAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('electricity-readings-update')
-  async updateElectricityReading(@Req() req: Request, @Body() body: UpdateElectricityReadingsDto) {
-    return await this.electricity_readingsAddService.startUpdate(req, body);
+  @Patch('electricity-readings-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateElectricityReading(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateElectricityReadingsDto) {
+    return await this.electricity_readingsAddService.startUpdate(req, { ...body, id, files: (req as any).files });
+  }
+  @Delete('electricity-readings-delete/:id')
+  async deleteElectricityReading(@Param('id') id: string) {
+    return await this.electricity_readingsAddService.delete(Number(id));
   }
 
   // Visitor Logs
   @Post('visitor-logs-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addVisitorLog(@Req() req: Request, @Body() body: VisitorLogsDto) {
-    return await this.visitor_logsAddService.startVisitorAdd(req, body);
+    return await this.visitor_logsAddService.startVisitorAdd(req, { ...body, files: (req as any).files });
   }
 
   // Complaints
   @Post('complaints-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addComplaint(@Req() req: Request, @Body() body: ComplaintsDto) {
-    return await this.complaintsAddService.startComplaintAdd(req, body);
+    return await this.complaintsAddService.startComplaintAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('complaints-update')
-  async updateComplaint(@Req() req: Request, @Body() body: UpdateComplaintsDto) {
-    return await this.complaintsAddService.startComplaintUpdate(req, body);
+  @Patch('complaints-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateComplaint(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateComplaintsDto) {
+    return await this.complaintsAddService.startComplaintUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   // Notifications
   @Post('notifications-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addNotification(@Req() req: Request, @Body() body: NotificationsDto) {
-    return await this.notificationsAddService.startNotificationAdd(req, body);
+    return await this.notificationsAddService.startNotificationAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('maintenance-requests-list')
-  async getmaintenancerequestsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.maintenance_requestsService.startMaintenanceRequests(req, body);
-  }
-
-  @Post('maintenance-requests-details')
-  async getmaintenancerequestsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.maintenance_requestsService.startMaintenanceRequestDetails(req, body);
+  @Get('maintenance-requests-list')
+  async getmaintenancerequestsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.maintenance_requestsService.startMaintenanceRequests(req, query);
   }
 
-  @Post('electricity-readings-list')
-  async getelectricityreadingsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.electricity_readingsService.startElectricityReadings(req, body);
+  @Get('maintenance-requests-details/:id')
+  async getmaintenancerequestsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.maintenance_requestsService.startMaintenanceRequestDetails(req, { id });
   }
 
-  @Post('electricity-readings-details')
-  async getelectricityreadingsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.electricity_readingsService.startElectricityReadingDetails(req, body);
+  @Get('electricity-readings-list')
+  async getelectricityreadingsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.electricity_readingsService.startElectricityReadings(req, query);
   }
 
-  @Post('visitor-logs-list')
-  async getvisitorlogsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.visitor_logsService.startVisitorLogs(req, body);
+  @Get('electricity-readings-details/:id')
+  async getelectricityreadingsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.electricity_readingsService.startElectricityReadingDetails(req, { id });
   }
 
-  @Post('visitor-logs-details')
-  async getvisitorlogsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.visitor_logsService.startVisitorLogDetails(req, body);
+  @Get('visitor-logs-list')
+  async getvisitorlogsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.visitor_logsService.startVisitorLogs(req, query);
   }
 
-  @Post('complaints-list')
-  async getcomplaintsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.complaintsService.startComplaints(req, body);
+  @Get('visitor-logs-details/:id')
+  async getvisitorlogsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.visitor_logsService.startVisitorLogDetails(req, { id });
   }
 
-  @Post('complaints-details')
-  async getcomplaintsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.complaintsService.startComplaintDetails(req, body);
+  @Get('complaints-list')
+  async getcomplaintsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.complaintsService.startComplaints(req, query);
   }
 
-  @Post('notifications-list')
-  async getnotificationsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.notificationsService.startNotifications(req, body);
+  @Get('complaints-details/:id')
+  async getcomplaintsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.complaintsService.startComplaintDetails(req, { id });
   }
 
-  @Post('notifications-details')
-  async getnotificationsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.notificationsService.startNotificationDetails(req, body);
+  @Get('notifications-list')
+  async getnotificationsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.notificationsService.startNotifications(req, query);
+  }
+
+  @Get('notifications-details/:id')
+  async getnotificationsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.notificationsService.startNotificationDetails(req, { id });
   }
 
 }

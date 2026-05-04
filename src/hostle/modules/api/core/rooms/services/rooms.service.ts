@@ -170,7 +170,7 @@ export class RoomsService {
         throw new Error('ID is required.');
       }
 
-      const data = await query.getOne();
+      const data = await query.getRawOne();
       if (_.isEmpty(data)) throw new Error('No records found.');
 
       this.blockResult = { success: 1, message: 'Record found.', data };

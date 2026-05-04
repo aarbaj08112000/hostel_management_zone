@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Param, Patch, Query, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { UsersService } from './users/services/users.service';
 import { UsersAuthService } from './users/services/users.auth.service';
@@ -32,12 +33,14 @@ export class UsersController {
 
   // Users
   @Post('users-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addUser(@Req() req: Request, @Body() body: UsersDto) {
-    return await this.usersAddService.startUserAdd(req, body);
+    return await this.usersAddService.startUserAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('users-update')
-  async updateUser(@Req() req: Request, @Body() body: UpdateUsersDto) {
-    return await this.usersAddService.startUserUpdate(req, body);
+  @Patch('users-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateUser(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateUsersDto) {
+    return await this.usersAddService.startUserUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   @Post('users-login')
@@ -52,51 +55,54 @@ export class UsersController {
 
   // Students
   @Post('students-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addStudent(@Req() req: Request, @Body() body: StudentsDto) {
-    return await this.studentsAddService.startStudentAdd(req, body);
+    return await this.studentsAddService.startStudentAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('students-update')
-  async updateStudent(@Req() req: Request, @Body() body: UpdateStudentsDto) {
-    return await this.studentsAddService.startStudentUpdate(req, body);
+  @Patch('students-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateStudent(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateStudentsDto) {
+    return await this.studentsAddService.startStudentUpdate(req, { ...body, id, files: (req as any).files });
   }
 
   // Stays
   @Post('stays-add')
+  @UseInterceptors(AnyFilesInterceptor())
   async addStay(@Req() req: Request, @Body() body: StaysDto) {
-    return await this.staysAddService.startStayAdd(req, body);
+    return await this.staysAddService.startStayAdd(req, { ...body, files: (req as any).files });
   }
-  @Post('stays-update')
-  async updateStay(@Req() req: Request, @Body() body: UpdateStaysDto) {
-    return await this.staysAddService.startStayUpdate(req, body);
+  @Patch('stays-update/:id')
+  async updateStay(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateStaysDto) {
+    return await this.staysAddService.startStayUpdate(req, { ...body, id });
   }
-  @Post('users-list')
-  async getusersList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.usersService.startUsers(req, body);
-  }
-
-  @Post('users-details')
-  async getusersDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.usersService.startUserDetails(req, body);
+  @Get('users-list')
+  async getusersList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.usersService.startUsers(req, query);
   }
 
-  @Post('students-list')
-  async getstudentsList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.studentsService.startStudents(req, body);
+  @Get('users-details/:id')
+  async getusersDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.usersService.startUserDetails(req, { id });
   }
 
-  @Post('students-details')
-  async getstudentsDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.studentsService.startStudentDetails(req, body);
+  @Get('students-list')
+  async getstudentsList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.studentsService.startStudents(req, query);
   }
 
-  @Post('stays-list')
-  async getstaysList(@Req() req: Request, @Body() body: ListDto) {
-    return await this.staysService.startStays(req, body);
+  @Get('students-details/:id')
+  async getstudentsDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.studentsService.startStudentDetails(req, { id });
   }
 
-  @Post('stays-details')
-  async getstaysDetails(@Req() req: Request, @Body() body: DetailDto) {
-    return await this.staysService.startStayDetails(req, body);
+  @Get('stays-list')
+  async getstaysList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.staysService.startStays(req, query);
+  }
+
+  @Get('stays-details/:id')
+  async getstaysDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.staysService.startStayDetails(req, { id });
   }
 
 }
