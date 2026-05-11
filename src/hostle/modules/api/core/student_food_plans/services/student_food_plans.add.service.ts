@@ -83,6 +83,12 @@ export class StudentFoodPlansAddService extends BaseService {
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      const userId = this.requestObj?.user?.user_id || null;
+      queryColumns.added_by = { user_id: userId };
+      queryColumns.updated_by = { user_id: userId };
+      queryColumns.added_date = new Date();
+      queryColumns.updated_date = new Date();
+      if (!queryColumns.status) queryColumns.status = 'Active';
       const res = await this.studentFoodPlanRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -127,6 +133,9 @@ export class StudentFoodPlansAddService extends BaseService {
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      const userId = this.requestObj?.user?.user_id || null;
+      queryColumns.updated_by = { user_id: userId };
+      queryColumns.updated_date = new Date();
       const queryObject = this.studentFoodPlanRepo
         .createQueryBuilder()
         .update(StudentFoodPlansEntity)

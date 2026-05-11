@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity('users')
 export class UsersEntity {
@@ -20,11 +20,13 @@ export class UsersEntity {
   @Column({ type: 'varchar', nullable: true })
   status: string;
 
-  @Column({ type: 'decimal', nullable: true })
-  added_by: number;
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'added_by' })
+  added_by: UsersEntity;
 
-  @Column({ type: 'decimal', nullable: true })
-  updated_by: number;
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'updated_by' })
+  updated_by: UsersEntity;
 
   @Column({ type: 'datetime', nullable: true })
   added_date: Date;
@@ -56,9 +58,17 @@ export class AttachmentEntity {
   @Column({ type: 'int', nullable: true })
   file_size: number;
 
-  @Column({ type: 'timestamp' })
-  created_date: Date;
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'added_by' })
+  added_by: UsersEntity;
 
-  @Column({ type: 'timestamp' })
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'updated_by' })
+  updated_by: UsersEntity;
+
+  @Column({ type: 'datetime', nullable: true })
+  added_date: Date;
+
+  @Column({ type: 'datetime', nullable: true })
   updated_date: Date;
 }

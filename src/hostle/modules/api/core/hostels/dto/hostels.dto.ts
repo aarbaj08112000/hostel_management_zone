@@ -12,6 +12,7 @@ import { Transform, Type } from 'class-transformer';
 import { PartialType } from '@nestjs/mapped-types';
 
 export class HostelsDto {
+  @IsOptional()
   @IsNumber()
   @Transform(({ value }) => Number(value))
   hostel_id?: number;
@@ -39,6 +40,14 @@ export class HostelsDto {
   @IsOptional()
   @IsString()
   contact_number?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsNumber()

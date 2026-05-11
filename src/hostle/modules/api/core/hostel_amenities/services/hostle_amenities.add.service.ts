@@ -81,6 +81,9 @@ export class HostelAmenitiesAddService extends BaseService {
         queryColumns.hostel_id = inputParams.hostel_id;
       if ('amenity_id' in inputParams)
         queryColumns.amenity_id = inputParams.amenity_id;
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      queryColumns.added_date = () => 'NOW()';
       const res = await this.hostelAmenityRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -120,6 +123,9 @@ export class HostelAmenitiesAddService extends BaseService {
         queryColumns.hostel_id = inputParams.hostel_id;
       if ('amenity_id' in inputParams)
         queryColumns.amenity_id = inputParams.amenity_id;
+      if ('updated_by' in inputParams)
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
+      queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.hostelAmenityRepo
         .createQueryBuilder()
         .update(HostelAmenitiesEntity)

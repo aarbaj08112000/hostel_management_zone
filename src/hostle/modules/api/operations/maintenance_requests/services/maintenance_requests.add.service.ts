@@ -92,6 +92,9 @@ export class MaintenanceRequestsAddService extends BaseService {
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      queryColumns.added_date = () => 'NOW()';
       const res = await this.maintenanceRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -147,6 +150,9 @@ export class MaintenanceRequestsAddService extends BaseService {
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      if ('updated_by' in inputParams)
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
+      queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.maintenanceRepo
         .createQueryBuilder()
         .update(MaintenanceRequestsEntity)

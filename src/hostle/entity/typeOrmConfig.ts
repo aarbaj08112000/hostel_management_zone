@@ -1,6 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 import { SettingEntity } from '@repo/source/entities/setting.entity';
+import { AdminEntity } from '@repo/source/entities/admin.entity';
 import { AmenitiesEntity } from '../modules/api/core/amenities/entities/amenities.entity';
 import { BedsEntity } from '../modules/api/core/beds/entities/beds.entity';
 import { FloorsEntity } from '../modules/api/core/floors/entities/floors.entity';
@@ -22,6 +23,7 @@ import { StaysEntity } from '../modules/api/users/stays/entities/stays.entity';
 import { UsersEntity, AttachmentEntity } from '../modules/api/users/users/entities/users.entity';
 import { StudentsEntity } from '../modules/api/users/students/entities/students.entity';
 import { SyncElasticEntity } from '@repo/source/entities/elastic_sync.entity';
+import { PropertyManagersEntity } from '../modules/api/users/property_managers/entities/property_managers.entity';
 dotenv.config();
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: process.env.DB_CLIENT as 'mysql',
@@ -32,6 +34,8 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   database: process.env.DB_NAME,
   entities: [
     SettingEntity,
+    AdminEntity,
+    SyncElasticEntity,
     AmenitiesEntity,
     BedsEntity,
     FloorsEntity,
@@ -53,6 +57,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     UsersEntity,
     StudentsEntity,
     AttachmentEntity,
+    PropertyManagersEntity,
   ],
   synchronize: false,
   migrationsRun: false,

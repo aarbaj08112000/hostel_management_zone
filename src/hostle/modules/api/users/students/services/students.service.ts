@@ -60,21 +60,31 @@ export class StudentsService {
     try {
       const query = this.dataSource
         .getRepository(StudentsEntity)
-        .createQueryBuilder('s');
+        .createQueryBuilder('s')
+        .leftJoinAndMapOne('s.current_stay', 'stays', 'st', 'st.student_id = s.student_id AND st.status = :active', { active: 'Active' })
+        .leftJoinAndMapOne('s.bed', 'beds', 'b', 'b.bed_id = st.bed_id')
+        .leftJoinAndMapOne('s.room', 'rooms', 'r', 'r.room_id = b.room_id')
+        .leftJoinAndMapOne('s.hostel', 'hostels', 'h', 'h.hostel_id = r.hostel_id');
 
       if ('student_id' in inputParams) {
-        query.where('s.student_id = :sid', { sid: inputParams.student_id });
+        query.andWhere('s.student_id = :sid', { sid: inputParams.student_id });
       }
 
       if ('gender' in inputParams) {
         query.andWhere('s.gender = :gender', { gender: inputParams.gender });
       }
 
+      if ('search' in inputParams && inputParams.search) {
+        query.andWhere('(s.first_name LIKE :search OR s.last_name LIKE :search OR s.phone_number LIKE :search OR s.email LIKE :search)', { search: `%${inputParams.search}%` });
+      }
 
       const page = inputParams.page ? Number(inputParams.page) : 1;
       const limit = inputParams.limit ? Number(inputParams.limit) : 10;
       query.skip((page - 1) * limit).take(limit);
       const [data, count] = await query.getManyAndCount();
+      
+      inputParams.total_count = count;
+
       if (_.isEmpty(data)) throw new Error('No records found.');
 
       // Fetch attachments
@@ -86,6 +96,12 @@ export class StudentsService {
 
       data.forEach((s) => {
         s['attachments'] = attachmentMap[s.student_id] || [];
+        // Map joined data to flatter structure for easier consumption if needed
+        s['propertyName'] = s['hostel']?.hostel_name || 'N/A';
+        s['roomNumber'] = s['room']?.room_number || 'N/A';
+        s['bedNumber'] = s['bed']?.bed_number || 'N/A';
+        s['status'] = s['current_stay'] ? 'Active' : 'Inactive';
+        s['joiningDate'] = s['current_stay']?.check_in_date || null;
       });
 
       this.blockResult = { success: 1, message: 'Records found.', data };
@@ -124,6 +140,11 @@ export class StudentsService {
         'added_date',
         'updated_date',
         'attachments',
+        'propertyName',
+        'roomNumber',
+        'bedNumber',
+        'status',
+        'joiningDate',
       ],
       page,
       limit,
@@ -175,7 +196,6 @@ export class StudentsService {
         throw new Error('ID is required.');
       }
 
-      const data = await query.getOne();
       const data = await query.getOne();
       if (_.isEmpty(data)) throw new Error('No records found.');
 

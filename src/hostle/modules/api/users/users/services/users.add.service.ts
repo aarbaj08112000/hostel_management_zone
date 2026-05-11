@@ -140,7 +140,7 @@ export class UserAddService extends BaseService {
       if ('role' in inputParams) queryColumns.role = inputParams.role;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('added_by' in inputParams)
-        queryColumns.added_by = inputParams.added_by;
+        queryColumns.added_by = { user_id: inputParams.added_by };
       queryColumns.added_date = () => 'NOW()';
 
       const res = await this.userRepo.insert(queryColumns);
@@ -167,7 +167,7 @@ export class UserAddService extends BaseService {
       if ('role' in inputParams) queryColumns.role = inputParams.role;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('updated_by' in inputParams)
-        queryColumns.updated_by = inputParams.updated_by;
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
       queryColumns.updated_date = () => 'NOW()';
 
       const queryObject = this.userRepo

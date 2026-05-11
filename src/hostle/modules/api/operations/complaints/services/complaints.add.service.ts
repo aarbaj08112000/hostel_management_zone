@@ -103,6 +103,9 @@ export class ComplaintsAddService extends BaseService {
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('created_date' in inputParams)
         queryColumns.created_date = inputParams.created_date;
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      queryColumns.added_date = () => 'NOW()';
       const res = await this.complaintRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -156,6 +159,9 @@ export class ComplaintsAddService extends BaseService {
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('resolved_date' in inputParams)
         queryColumns.resolved_date = inputParams.resolved_date;
+      if ('updated_by' in inputParams)
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
+      queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.complaintRepo
         .createQueryBuilder()
         .update(ComplaintsEntity)

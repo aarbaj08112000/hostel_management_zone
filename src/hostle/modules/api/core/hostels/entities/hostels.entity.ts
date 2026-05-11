@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { UsersEntity } from '../../../users/users/entities/users.entity';
 
 @Entity('hostels')
 export class HostelsEntity {
@@ -23,11 +24,19 @@ export class HostelsEntity {
   @Column({ type: 'varchar', nullable: true })
   contact_number: string;
 
-  @Column({ type: 'decimal', nullable: true })
-  added_by: number;
+  @Column({ type: 'varchar', nullable: true })
+  category: string;
 
-  @Column({ type: 'decimal', nullable: true })
-  updated_by: number;
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'added_by' })
+  added_by: UsersEntity;
+
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'updated_by' })
+  updated_by: UsersEntity;
 
   @Column({ type: 'datetime', nullable: true })
   added_date: Date;

@@ -98,6 +98,9 @@ export class ElectricityAddReadingsService extends BaseService {
       ].forEach((field) => {
         if (field in inputParams) queryColumns[field] = inputParams[field];
       });
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      queryColumns.added_date = () => 'NOW()';
       const res = await this.repo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -159,6 +162,9 @@ export class ElectricityAddReadingsService extends BaseService {
       ].forEach((field) => {
         if (field in inputParams) queryColumns[field] = inputParams[field];
       });
+      if ('updated_by' in inputParams)
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
+      queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.repo
         .createQueryBuilder()
         .update()

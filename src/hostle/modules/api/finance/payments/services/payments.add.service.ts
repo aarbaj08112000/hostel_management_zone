@@ -112,10 +112,11 @@ export class PaymentsAddService extends BaseService {
         'reference_number',
         'status',
         'invoice_id',
-        'added_by',
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
       queryColumns.added_date = () => 'NOW()';
 
       const res = await this.paymentRepo.insert(queryColumns);
@@ -143,10 +144,11 @@ export class PaymentsAddService extends BaseService {
         'reference_number',
         'status',
         'invoice_id',
-        'updated_by',
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      if ('updated_by' in inputParams)
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
       queryColumns.updated_date = () => 'NOW()';
 
       const queryObject = this.paymentRepo

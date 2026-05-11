@@ -80,7 +80,7 @@ export class HostelsService {
       // Fetch attachments
       const ids = data.map((item) => item.hostel_id);
       const attachments = await this.dataSource.getRepository(AttachmentEntity).find({
-        where: { module: 'hostel', reference_id: In(ids) },
+        where: { module: In(['hostel', 'hostel_primary', 'hostel_gallery']), reference_id: In(ids) },
       });
       const attachmentMap = _.groupBy(attachments, 'reference_id');
 
@@ -119,6 +119,8 @@ export class HostelsService {
         'state',
         'pincode',
         'contact_number',
+        'category',
+        'description',
         'added_by',
         'updated_by',
         'added_date',
@@ -178,7 +180,7 @@ export class HostelsService {
 
       // Fetch attachments
       const attachments = await this.dataSource.getRepository(AttachmentEntity).find({
-        where: { module: 'hostel', reference_id: data.hostel_id },
+        where: { module: In(['hostel', 'hostel_primary', 'hostel_gallery']), reference_id: data.hostel_id },
       });
       data['attachments'] = attachments;
 
@@ -205,10 +207,13 @@ export class HostelsService {
         'state',
         'pincode',
         'contact_number',
+        'category',
+        'description',
         'added_by',
         'updated_by',
         'added_date',
         'updated_date',
+        'attachments',
       ],
     };
 

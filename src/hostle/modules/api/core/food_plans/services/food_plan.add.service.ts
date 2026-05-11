@@ -80,6 +80,11 @@ export class FoodPlansAddService extends BaseService {
         queryColumns.monthly_price = inputParams.monthly_price;
       if ('description' in inputParams)
         queryColumns.description = inputParams.description;
+      const userId = this.requestObj?.user?.user_id || null;
+      queryColumns.added_by = { user_id: userId };
+      queryColumns.updated_by = { user_id: userId };
+      queryColumns.added_date = new Date();
+      queryColumns.updated_date = new Date();
       const res = await this.foodPlanRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -121,6 +126,9 @@ export class FoodPlansAddService extends BaseService {
         queryColumns.monthly_price = inputParams.monthly_price;
       if ('description' in inputParams)
         queryColumns.description = inputParams.description;
+      const userId = this.requestObj?.user?.user_id || null;
+      queryColumns.updated_by = { user_id: userId };
+      queryColumns.updated_date = new Date();
       const queryObject = this.foodPlanRepo
         .createQueryBuilder()
         .update(FoodPlansEntity)

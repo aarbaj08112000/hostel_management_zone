@@ -106,6 +106,11 @@ export class StudentFoodPlansService {
         'food_plan_id',
         'start_date',
         'end_date',
+        'status',
+        'added_by',
+        'updated_by',
+        'added_date',
+        'updated_date',
       ],
       page,
       limit,
@@ -180,6 +185,11 @@ export class StudentFoodPlansService {
         'food_plan_id',
         'start_date',
         'end_date',
+        'status',
+        'added_by',
+        'updated_by',
+        'added_date',
+        'updated_date',
       ],
     };
 

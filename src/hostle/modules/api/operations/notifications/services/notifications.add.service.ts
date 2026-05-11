@@ -75,6 +75,9 @@ export class NotificationsAddService extends BaseService {
       ].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      queryColumns.added_date = () => 'NOW()';
       const res = await this.notificationRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,

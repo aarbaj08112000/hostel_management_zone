@@ -6,12 +6,26 @@ import { Transport } from '@nestjs/microservices';
 import * as cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import * as crypto from 'crypto';
+
+if (!global.crypto) {
+  (global as any).crypto = crypto;
+}
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  
+  // Serve static assets from public dir
+  app.useStaticAssets(join(process.cwd(), 'public'), {
+    prefix: '/public/',
+  });
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   });
   app.use(cookieParser());

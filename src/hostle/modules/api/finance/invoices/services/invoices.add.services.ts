@@ -137,6 +137,9 @@ export class InvoiceAddService extends BaseService {
         queryColumns.stay_id = inputParams.stay_id;
       if ('total_amount' in inputParams) queryColumns.total_amount = inputParams.total_amount;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      queryColumns.added_date = () => 'NOW()';
 
       const res = await this.invoiceRepo.insert(queryColumns);
       this.blockResult = {
@@ -161,6 +164,9 @@ export class InvoiceAddService extends BaseService {
         queryColumns.stay_id = inputParams.stay_id;
       if ('total_amount' in inputParams) queryColumns.total_amount = inputParams.total_amount;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
+      if ('updated_by' in inputParams)
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
+      queryColumns.updated_date = () => 'NOW()';
 
       const queryObject = this.invoiceRepo
         .createQueryBuilder()

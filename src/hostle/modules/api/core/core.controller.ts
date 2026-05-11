@@ -63,7 +63,7 @@ export class CoreController {
   async sayHello() {
     return 'hello Core';
   }
-  @Get('hostle-list')
+  @Post('hostle-list')
   async getHostleList(@Req() req: Request, @Query() query: ListDto) {
     return await this.hostelsService.startHostels(req, query);
   }
@@ -139,6 +139,10 @@ export class CoreController {
   async updateHostle(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateHostelsDto) {
     return await this.hostelsAddService.startHostelUpdate(req, { ...body, id, files: (req as any).files });
   }
+  @Delete('hostle-attachment-delete/:attachment_id')
+  async deleteAttachment(@Param('attachment_id') attachment_id: string) {
+    return await this.hostelsAddService.deleteAttachment(Number(attachment_id));
+  }
 
   // Floors
   @Post('floors-add')
@@ -162,6 +166,10 @@ export class CoreController {
   @UseInterceptors(AnyFilesInterceptor())
   async updateRoom(@Req() req: Request, @Param('id') id: string, @Body() body: UpdateRoomsDto) {
     return await this.roomsAddService.startRoomUpdate(req, { ...body, id, files: (req as any).files });
+  }
+  @Delete('rooms-delete/:id')
+  async deleteRoom(@Param('id') id: string) {
+    return await this.roomsAddService.DeleteRoom(Number(id));
   }
 
   // Beds

@@ -93,15 +93,32 @@ export class CommonAttachmentService extends BaseService {
         // Ensure we have some record of the file even if upload result is sparse
         if (fileData) {
           const fileName = fileData.file_name || (inputParams.files && inputParams.files.find(f => f.fieldname === key)?.originalname) || 'attachment';
+          
+          let fileModule = module;
+          if (module === 'hostel') {
+            if (key === 'primary_image' || key.startsWith('primary_image_')) fileModule = 'hostel_primary';
+            else if (key === 'files' || key.startsWith('files_')) fileModule = 'hostel_gallery';
+            else fileModule = 'hostel_gallery';
+          }
+
+          // For primary image, we might want to clear old attachments first
+          if (fileModule === 'hostel_primary') {
+            await this.attachmentRepo.delete({
+              module: 'hostel_primary',
+              reference_id: reference_id,
+            });
+          }
+
           attachmentRecords.push({
-            module: module,
+            module: fileModule,
             reference_id: reference_id,
             file_name: fileName,
             file_path: fileData.file_url || fileData.file_path || fileName,
             file_type: fileData.file_type || 'application/octet-stream',
             file_size: fileData.file_size || 0,
-            created_date: () => 'NOW()',
-            updated_date: () => 'NOW()',
+            added_by: inputParams.added_by ? { user_id: Number(inputParams.added_by) } : null,
+            added_date: new Date(),
+            updated_date: new Date(),
           });
         }
       }
@@ -158,7 +175,13 @@ export class CommonAttachmentService extends BaseService {
       }
 
       params.files.forEach((file, index) => {
-        const key = file.fieldname || `file_upload_${index}`;
+        let key = file.fieldname || `file_upload_${index}`;
+        
+        // Ensure key is unique so we don't overwrite files with the same fieldname
+        if (uploadInfo[key]) {
+          key = `${key}_${index}`;
+        }
+
         let filePath = file.path;
 
         if (!filePath && file.buffer) {

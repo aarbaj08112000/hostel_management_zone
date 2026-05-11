@@ -68,9 +68,15 @@ export class BedsAddService extends BaseService {
     this.blockResult = {};
     try {
       const queryColumns: any = {};
-      ['room_id', 'bed_number', 'status', 'added_by'].forEach((key) => {
+      ['room_id', 'bed_number', 'status'].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      if ('added_by' in inputParams) {
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      }
+      if ('added_by' in inputParams) {
+        queryColumns.updated_by = { user_id: inputParams.added_by };
+      }
       queryColumns.added_date = () => 'NOW()';
       const res = await this.bedRepo.insert(queryColumns);
       this.blockResult = {
@@ -104,9 +110,12 @@ export class BedsAddService extends BaseService {
     this.blockResult = {};
     try {
       const queryColumns: any = {};
-      ['room_id', 'bed_number', 'status', 'updated_by'].forEach((key) => {
+      ['room_id', 'bed_number', 'status'].forEach((key) => {
         if (key in inputParams) queryColumns[key] = inputParams[key];
       });
+      if ('updated_by' in inputParams) {
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
+      }
       queryColumns.updated_date = () => 'NOW()';
       const queryObject = this.bedRepo
         .createQueryBuilder()

@@ -140,9 +140,15 @@ export class HostelAddService extends BaseService {
       if ('hostel_name' in inputParams)
         queryColumns.hostel_name = inputParams.hostel_name;
       if ('address' in inputParams) queryColumns.address = inputParams.address;
+      if ('city' in inputParams) queryColumns.city = inputParams.city;
+      if ('state' in inputParams) queryColumns.state = inputParams.state;
+      if ('pincode' in inputParams) queryColumns.pincode = inputParams.pincode;
+      if ('contact_number' in inputParams) queryColumns.contact_number = inputParams.contact_number;
+      if ('category' in inputParams) queryColumns.category = inputParams.category;
+      if ('description' in inputParams) queryColumns.description = inputParams.description;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('added_by' in inputParams)
-        queryColumns.added_by = inputParams.added_by;
+        queryColumns.added_by = { user_id: inputParams.added_by };
       queryColumns.added_date = () => 'NOW()';
 
       const res = await this.hostelRepo.insert(queryColumns);
@@ -167,9 +173,15 @@ export class HostelAddService extends BaseService {
       if ('hostel_name' in inputParams)
         queryColumns.hostel_name = inputParams.hostel_name;
       if ('address' in inputParams) queryColumns.address = inputParams.address;
+      if ('city' in inputParams) queryColumns.city = inputParams.city;
+      if ('state' in inputParams) queryColumns.state = inputParams.state;
+      if ('pincode' in inputParams) queryColumns.pincode = inputParams.pincode;
+      if ('contact_number' in inputParams) queryColumns.contact_number = inputParams.contact_number;
+      if ('category' in inputParams) queryColumns.category = inputParams.category;
+      if ('description' in inputParams) queryColumns.description = inputParams.description;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
       if ('updated_by' in inputParams)
-        queryColumns.updated_by = inputParams.updated_by;
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
       queryColumns.updated_date = () => 'NOW()';
 
       const queryObject = this.hostelRepo
@@ -245,5 +257,34 @@ export class HostelAddService extends BaseService {
       { settings: settingFields, data: inputParams },
       { name: 'hostel_add' },
     );
+  }
+
+  // =================== DELETE ATTACHMENT ===================
+  async deleteAttachment(attachment_id: number) {
+    try {
+      const res = await this.hostelRepo.manager.query(
+        'DELETE FROM attachments WHERE attachment_id = ?',
+        [attachment_id]
+      );
+      return {
+        settings: {
+          status: 200,
+          success: 1,
+          message: 'Attachment deleted successfully.',
+          fields: [],
+        },
+        data: {},
+      };
+    } catch (err) {
+      return {
+        settings: {
+          status: 200,
+          success: 0,
+          message: err.message,
+          fields: [],
+        },
+        data: {},
+      };
+    }
   }
 }

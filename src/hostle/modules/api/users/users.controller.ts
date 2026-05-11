@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Param, Patch, Query, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Param, Patch, Query, UseInterceptors, Delete } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { UsersService } from './users/services/users.service';
@@ -11,6 +11,9 @@ import { StaysDto, UpdateStaysDto } from './stays/dto/stays.dto';
 import { UserAddService } from './users/services/users.add.service';
 import { StudentAddService } from './students/services/students.add.service';
 import { StaysAddService } from './stays/services/stays.add.service';
+import { PropertyManagersService } from './property_managers/services/property_managers.service';
+import { PropertyManagersAddService } from './property_managers/services/property_managers.add.service';
+import { PropertyManagersDto, UpdatePropertyManagersDto } from './property_managers/dto/property_managers.dto';
 
 import { ListDto } from 'src/hostle/dto/common-list.dto';
 import { DetailDto } from 'src/hostle/dto/common-detail.dto';
@@ -24,6 +27,8 @@ export class UsersController {
     private readonly studentsAddService: StudentAddService,
     private readonly staysAddService: StaysAddService,
     private readonly usersAuthService: UsersAuthService,
+    private readonly propertyManagersService: PropertyManagersService,
+    private readonly propertyManagersAddService: PropertyManagersAddService,
   ) { }
 
   @Get()
@@ -103,6 +108,30 @@ export class UsersController {
   @Get('stays-details/:id')
   async getstaysDetails(@Req() req: Request, @Param('id') id: string) {
     return await this.staysService.startStayDetails(req, { id });
+  }
+
+  // Property Managers
+  @Post('property-managers-add')
+  @UseInterceptors(AnyFilesInterceptor())
+  async addPropertyManager(@Req() req: Request, @Body() body: PropertyManagersDto) {
+    return await this.propertyManagersAddService.startPropertyManagerAdd(req, { ...body, files: (req as any).files });
+  }
+  @Patch('property-managers-update/:id')
+  @UseInterceptors(AnyFilesInterceptor())
+  async updatePropertyManager(@Req() req: Request, @Param('id') id: string, @Body() body: UpdatePropertyManagersDto) {
+    return await this.propertyManagersAddService.startPropertyManagerUpdate(req, { ...body, id, files: (req as any).files });
+  }
+  @Get('property-managers-list')
+  async getPropertyManagersList(@Req() req: Request, @Query() query: ListDto) {
+    return await this.propertyManagersService.startPropertyManagers(req, query);
+  }
+  @Get('property-managers-details/:id')
+  async getPropertyManagersDetails(@Req() req: Request, @Param('id') id: string) {
+    return await this.propertyManagersService.startPropertyManagerDetails(req, { id });
+  }
+  @Delete('property-managers-delete/:id')
+  async deletePropertyManager(@Req() req: Request, @Param('id') id: string) {
+    return await this.propertyManagersAddService.startPropertyManagerDelete(req, { id });
   }
 
 }

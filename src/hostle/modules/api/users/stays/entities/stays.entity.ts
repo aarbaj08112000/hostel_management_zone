@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { UsersEntity } from '../../users/entities/users.entity';
 
 @Entity('stays')
 export class StaysEntity {
@@ -20,11 +21,13 @@ export class StaysEntity {
   @Column({ type: 'varchar', nullable: true })
   status: string;
 
-  @Column({ type: 'decimal', nullable: true })
-  added_by: number;
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'added_by' })
+  added_by: UsersEntity;
 
-  @Column({ type: 'decimal', nullable: true })
-  updated_by: number;
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  @JoinColumn({ name: 'updated_by' })
+  updated_by: UsersEntity;
 
   @Column({ type: 'datetime', nullable: true })
   added_date: Date;

@@ -138,9 +138,11 @@ export class RoomAddService extends BaseService {
       if ('total_beds' in inputParams)
         queryColumns.total_beds = inputParams.total_beds;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
-      if ('added_by' in inputParams)
-        queryColumns.added_by = inputParams.added_by;
-      queryColumns.added_date = () => 'NOW()';
+      const userId = this.requestObj?.user?.user_id || null;
+      queryColumns.added_by = { user_id: userId };
+      queryColumns.updated_by = { user_id: userId };
+      queryColumns.added_date = new Date();
+      queryColumns.updated_date = new Date();
 
       const res = await this.roomRepo.insert(queryColumns);
       this.blockResult = {
@@ -165,14 +167,12 @@ export class RoomAddService extends BaseService {
         queryColumns.floor_id = inputParams.floor_id;
       if ('room_number' in inputParams)
         queryColumns.room_number = inputParams.room_number;
-      if ('room_type' in inputParams)
-        queryColumns.room_type = inputParams.room_type;
       if ('total_beds' in inputParams)
         queryColumns.total_beds = inputParams.total_beds;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
-      if ('updated_by' in inputParams)
-        queryColumns.updated_by = inputParams.updated_by;
-      queryColumns.updated_date = () => 'NOW()';
+      const userId = this.requestObj?.user?.user_id || null;
+      queryColumns.updated_by = { user_id: userId };
+      queryColumns.updated_date = new Date();
 
       const queryObject = this.roomRepo
         .createQueryBuilder()
@@ -247,5 +247,18 @@ export class RoomAddService extends BaseService {
       { settings: settingFields, data: inputParams },
       { name: 'room_add' },
     );
+  }
+
+  // =================== DELETE ROOM ===================
+  async DeleteRoom(id: number) {
+    try {
+      this.setModuleAPI('delete');
+      const deleteResult = await this.roomRepo.delete({ room_id: id });
+      if (deleteResult.affected === 0)
+        return { success: 0, message: 'No Room found.' };
+      return this.roomFinishSuccess({}, 'Room Deleted Successfully.');
+    } catch (err) {
+      return this.roomFinishFailure({ message: err.message });
+    }
   }
 }

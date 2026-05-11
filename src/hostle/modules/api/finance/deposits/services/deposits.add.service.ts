@@ -88,6 +88,9 @@ export class DepositsAddService extends BaseService {
       if ('refund_date' in inputParams)
         queryColumns.refund_date = inputParams.refund_date;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
+      if ('added_by' in inputParams)
+        queryColumns.added_by = { user_id: inputParams.added_by };
+      queryColumns.added_date = () => 'NOW()';
       const res = await this.depositRepo.insert(queryColumns);
       this.blockResult = {
         success: 1,
@@ -135,6 +138,9 @@ export class DepositsAddService extends BaseService {
       if ('refund_date' in inputParams)
         queryColumns.refund_date = inputParams.refund_date;
       if ('status' in inputParams) queryColumns.status = inputParams.status;
+      if ('updated_by' in inputParams)
+        queryColumns.updated_by = { user_id: inputParams.updated_by };
+      queryColumns.updated_date = () => 'NOW()';
 
       const queryObject = this.depositRepo
         .createQueryBuilder()
